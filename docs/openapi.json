@@ -1,0 +1,292 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Live HTTP API",
+    "version": "8.0.0",
+    "description": "A deliberately scoped contract for critical authentication, discovery, reservation, planner-cart, health, and job endpoints verified in the repository. It is not a complete API inventory. Other routes must be reviewed against their implementation and tests before client generation. No production hostname or external provider integration is configured. Merchant API-key records are not accepted by routes; no bearer-auth scheme is advertised."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Local development or isolated CI only; no production origin is configured."
+    }
+  ],
+  "tags": [
+    { "name": "Health" },
+    { "name": "Authentication" },
+    { "name": "Discovery" },
+    { "name": "Reservations" },
+    { "name": "Planner cart" },
+    { "name": "Jobs" }
+  ],
+  "components": {
+    "securitySchemes": {
+      "sessionCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "live_token",
+        "description": "HttpOnly SameSite=Lax session cookie. Secure is enabled in production; server-side session records support revocation. The token is not returned in JSON."
+      },
+      "cronSecret": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-cron-secret",
+        "description": "Server-side scheduler secret; required for production job endpoints. Never expose it to browser code."
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": { "error": { "type": "string" } },
+        "required": ["error"],
+        "additionalProperties": true
+      },
+      "LoginRequest": {
+        "type": "object",
+        "properties": {
+          "emailOrPhone": { "type": "string", "minLength": 1 },
+          "password": { "type": "string", "minLength": 1 },
+          "mfaCode": { "type": "string", "description": "Required when the account has MFA enabled." }
+        },
+        "required": ["emailOrPhone", "password"],
+        "additionalProperties": false
+      },
+      "LoginResponse": {
+        "type": "object",
+        "properties": {
+          "ok": { "type": "boolean", "enum": [true] },
+          "landingPath": { "type": "string" },
+          "user": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "name": { "type": "string" },
+              "email": { "type": "string", "nullable": true },
+              "role": { "type": "string" },
+              "isAdmin": { "type": "boolean" }
+            },
+            "required": ["id", "name", "role", "isAdmin"]
+          },
+          "warning": { "type": "string" }
+        },
+        "required": ["ok", "landingPath", "user"]
+      },
+      "SearchResponse": {
+        "type": "object",
+        "description": "Search response shape is evolving; product objects include only fields selected by the route. This contract does not imply local stock is freshly confirmed or road distance is available.",
+        "properties": {
+          "query": { "type": "string" },
+          "total": { "type": "integer", "minimum": 0 },
+          "page": { "type": "integer" },
+          "pageSize": { "type": "integer" },
+          "results": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+          "parsed": { "type": "object", "additionalProperties": true }
+        },
+        "additionalProperties": true
+      },
+      "ReservationRequest": {
+        "type": "object",
+        "properties": {
+          "productId": { "type": "string", "minLength": 1 },
+          "quantity": { "type": "integer", "minimum": 1 },
+          "variantId": { "type": "string" },
+          "branchId": { "type": "string" },
+          "idempotencyKey": { "type": "string" }
+        },
+        "required": ["productId", "quantity"],
+        "additionalProperties": false
+      },
+      "ReservationResponse": {
+        "type": "object",
+        "properties": {
+          "reservation": { "type": "object", "additionalProperties": true },
+          "duplicate": { "type": "boolean" }
+        },
+        "required": ["reservation"],
+        "additionalProperties": true
+      },
+      "CartSubmissionResponse": {
+        "type": "object",
+        "properties": {
+          "created": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+          "failed": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+          "message": { "type": "string" }
+        },
+        "required": ["created", "failed", "message"]
+      }
+    },
+    "parameters": {
+      "RequestId": {
+        "name": "x-request-id",
+        "in": "header",
+        "required": false,
+        "schema": { "type": "string", "maxLength": 64 },
+        "description": "Sanitized request correlation ID returned by the app. This is request correlation, not distributed tracing."
+      },
+      "IdempotencyKey": {
+        "name": "Idempotency-Key",
+        "in": "header",
+        "required": false,
+        "schema": { "type": "string", "minLength": 1 },
+        "description": "Optional client key used to deduplicate reservation creation for the same user and payload."
+      }
+    }
+  },
+  "paths": {
+    "/api/v1/health": {
+      "get": {
+        "tags": ["Health"],
+        "summary": "Read liveness/readiness status",
+        "description": "Returns coarse database and required-environment readiness only. Provider configuration flags and secret values are not returned.",
+        "parameters": [{ "$ref": "#/components/parameters/RequestId" }],
+        "responses": {
+          "200": { "description": "Database and required configuration are available." },
+          "503": { "description": "Database or required configuration is unavailable." }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Create a session",
+        "description": "Invalid or unknown accounts receive the same generic credential error. On success, the session is set as an HttpOnly cookie; no token is returned in the JSON body.",
+        "parameters": [{ "$ref": "#/components/parameters/RequestId" }],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LoginRequest" } } }
+        },
+        "responses": {
+          "200": { "description": "Session created; Set-Cookie contains the session cookie.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LoginResponse" } } } },
+          "400": { "description": "Invalid request.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "401": { "description": "Invalid credentials or MFA challenge required.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "403": { "description": "Authenticated account is suspended.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "429": { "description": "Rate limit or account lockout." },
+          "503": { "description": "MFA secret is unavailable or unreadable; sign-in fails closed." }
+        }
+      }
+    },
+    "/api/auth/me": {
+      "get": {
+        "tags": ["Authentication"],
+        "summary": "Read the current session user",
+        "description": "Returns {user:null} when signed out; private profile fields are not served from a public cache.",
+        "security": [{ "sessionCookie": [] }, {}],
+        "responses": { "200": { "description": "Current user or null." } }
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Revoke the current session",
+        "description": "JSON clients receive 200. Native HTML form submissions receive a same-origin 303 redirect. The cookie is cleared and the server-side session is revoked where present.",
+        "security": [{ "sessionCookie": [] }, {}],
+        "responses": {
+          "200": { "description": "JSON logout response." },
+          "303": { "description": "HTML form redirect to the application root." }
+        }
+      }
+    },
+    "/api/v1/search": {
+      "get": {
+        "tags": ["Discovery"],
+        "summary": "Search public product listings",
+        "description": "Supports GET and POST. Availability reflects current merchant records and reservation/batch exclusions; it is not proof of immediate local stock. Nearest uses straight-line distance when coordinates exist, not road distance. No sponsored rank is implied.",
+        "parameters": [
+          { "name": "q", "in": "query", "schema": { "type": "string" } },
+          { "name": "scope", "in": "query", "schema": { "type": "string", "enum": ["nationwide", "admin", "locality", "multi", "nearby"] } },
+          { "name": "locationCode", "in": "query", "schema": { "type": "string" }, "description": "Repeat for multiple selected administrative areas." },
+          { "name": "category", "in": "query", "schema": { "type": "string" } },
+          { "name": "inStock", "in": "query", "schema": { "type": "boolean" } },
+          { "name": "minPrice", "in": "query", "schema": { "type": "integer" }, "description": "Amount in NGN as interpreted by the search route." },
+          { "name": "maxPrice", "in": "query", "schema": { "type": "integer" }, "description": "Amount in NGN as interpreted by the search route." },
+          { "name": "sort", "in": "query", "schema": { "type": "string" } },
+          { "name": "lat", "in": "query", "schema": { "type": "number", "minimum": -90, "maximum": 90 } },
+          { "name": "lng", "in": "query", "schema": { "type": "number", "minimum": -180, "maximum": 180 } },
+          { "name": "page", "in": "query", "schema": { "type": "integer", "minimum": 1 } },
+          { "name": "pageSize", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 50 } }
+        ],
+        "responses": {
+          "200": { "description": "Search results and applied filters.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SearchResponse" } } } },
+          "400": { "description": "Unsupported location scope or invalid location selection.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "429": { "description": "Search rate limit exceeded." }
+        }
+      },
+      "post": {
+        "tags": ["Discovery"],
+        "summary": "Search public product listings using JSON filters",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "additionalProperties": true } } } },
+        "responses": {
+          "200": { "description": "Search results; same semantics and limitations as GET.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SearchResponse" } } } },
+          "400": { "description": "Unsupported location scope or invalid location selection." },
+          "429": { "description": "Search rate limit exceeded." }
+        }
+      }
+    },
+    "/api/reservations": {
+      "get": {
+        "tags": ["Reservations"],
+        "summary": "List the authenticated consumer's reservations",
+        "security": [{ "sessionCookie": [] }],
+        "responses": {
+          "200": { "description": "Reservations owned by the current consumer." },
+          "401": { "description": "Authentication required." }
+        }
+      },
+      "post": {
+        "tags": ["Reservations"],
+        "summary": "Create a pending pickup reservation request",
+        "description": "Server-side authorization, branch, batch, price and inventory checks apply. A successful request creates a temporary stock hold immediately, before merchant confirmation. The reservation does not collect payment. Hold release requires the scheduled expiry process to be configured and operating.",
+        "security": [{ "sessionCookie": [] }],
+        "parameters": [{ "$ref": "#/components/parameters/IdempotencyKey" }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ReservationRequest" } } } },
+        "responses": {
+          "200": { "description": "Reservation created or idempotent duplicate returned.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ReservationResponse" } } } },
+          "400": { "description": "Invalid or currently ineligible reservation request.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "401": { "description": "Authentication required." },
+          "409": { "description": "Stock snapshot changed during submission; refresh and retry." },
+          "422": { "description": "Idempotency key reused with different request parameters." }
+        }
+      }
+    },
+    "/api/cart": {
+      "get": {
+        "tags": ["Planner cart"],
+        "summary": "Read the authenticated user's planning cart",
+        "description": "Totals are planning estimates. Unavailable or invalid variants are not added to the amount total. Delivery/service fees are not quoted or charged.",
+        "security": [{ "sessionCookie": [] }],
+        "responses": { "200": { "description": "Current plan and availability evidence." }, "401": { "description": "Authentication required." } }
+      }
+    },
+    "/api/cart/submit": {
+      "post": {
+        "tags": ["Planner cart"],
+        "summary": "Submit separate pending pickup reservations from the plan",
+        "description": "Each item is revalidated independently. Successful items become separate reservations and temporarily hold stock; failed items remain in the plan. No multi-merchant order, payment, delivery, or fee is created. Pickup windows are not invented or automatically populated.",
+        "security": [{ "sessionCookie": [] }],
+        "responses": {
+          "200": { "description": "Per-item created/failed result; partial success is possible.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CartSubmissionResponse" } } } },
+          "400": { "description": "No active plan or no plan items." },
+          "401": { "description": "Authentication required." }
+        }
+      }
+    },
+    "/api/jobs/process": {
+      "get": {
+        "tags": ["Jobs"],
+        "summary": "Unsupported method",
+        "responses": { "405": { "description": "Use POST." } }
+      },
+      "post": {
+        "tags": ["Jobs"],
+        "summary": "Run implemented scheduled handlers",
+        "description": "Requires x-cron-secret. Runs implemented saved-search/price alerts and webhook delivery; generic BackgroundJob handlers remain unsupported and are reported as such. This is not a hosted scheduler.",
+        "security": [{ "cronSecret": [] }],
+        "responses": {
+          "200": { "description": "Bounded handler results." },
+          "403": { "description": "Cron secret did not match." },
+          "503": { "description": "CRON_SECRET is not configured." }
+        }
+      }
+    }
+  }
+}

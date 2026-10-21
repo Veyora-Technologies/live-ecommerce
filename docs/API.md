@@ -1,0 +1,51 @@
+# Live API reference (verified scope)
+
+The machine-readable contract is [`docs/openapi.json`](openapi.json). It intentionally covers only core routes with current tests; it is **not** an exhaustive contract for all 63 API route files. For an undocumented route, inspect its route handler and integration tests before relying on it. No production API hostname is configured.
+
+## Authentication and session
+
+- `POST /api/auth/login` accepts `{ "emailOrPhone": "…", "password": "…", "mfaCode": "…" }`. Success sets a revocable `live_token` HttpOnly cookie; the cookie value is not returned in JSON. Unknown accounts and invalid passwords receive a generic credential error. MFA is required when enabled.
+- `GET /api/auth/me` returns the authenticated user or `{ "user": null }`; response is private/no-store.
+- `POST /api/auth/logout` revokes the server-side session and clears the cookie. JSON requests receive `200`; native HTML form posts receive a same-origin `303` redirect.
+- Session cookie: HttpOnly, SameSite=Lax, Secure in production. Server-side session rows support revocation. Cookie authentication is the only currently supported user-session mechanism.
+
+## Health and request correlation
+
+- `GET /api/v1/health` checks the database and core environment configuration. It returns `200` when ready and `503` when degraded. It does not expose which provider credentials are configured.
+- API responses include a sanitized `x-request-id` correlation header. This is not distributed tracing or an APM integration.
+
+## Public discovery
+
+`GET` or `POST /api/v1/search` supports text, category, price bounds, area/location scope, stock, sorting, and pagination. GET uses query parameters; POST accepts JSON. `pageSize` is capped at 50. Price bounds are interpreted in NGN; stored product prices are represented in kobo in the database/API objects where returned.
+
+Availability is based on merchant records, reservations, and batch restrictions. It is not proof that stock is physically present at arrival or freshly confirmed. `nearest` is straight-line distance when coordinates exist, not road distance. A barcode/QR hit is not proof of local stock or payment.
+
+## Reservations and the planner cart
+
+- `POST /api/reservations` requires a signed-in user and revalidates merchant status, branch, stock, active promotions, selected variant, and blocked batches server-side. `Idempotency-Key` is preferred; a matching duplicate returns the existing reservation.
+- Success creates a **pending** reservation and immediately increments the stock hold. The merchant confirms later; Live does not take payment. The default pickup window is left unset rather than invented.
+- A 24-hour expiry is recorded. The hold-release job must be scheduled and monitored by the operator; an expiry timestamp alone does not release inventory.
+- `GET /api/reservations` returns only the signed-in consumer's records.
+- `GET /api/cart` is a planning view, not an order. It excludes invalid variant prices and surfaces unreservable stock/branch states.
+- `POST /api/cart/items` accepts pickup only. Delivery requests are rejected; Live does not arrange delivery.
+- `POST /api/cart/submit` creates separate pending pickup reservations per item. Every item is revalidated; partial success is reported and failed items remain in the plan. No multi-merchant order, fee, payment, or delivery job is created.
+
+## Merchant bulk CSV
+
+- `POST /api/merchant/products/bulk` is merchant-role and branch scoped. Every row must include an explicit `currency` of `NGN`; `price` is a decimal **major-unit** amount parsed to exact kobo using the configured NGN precision. Currencyless legacy rows and non-NGN rows fail individually without conversion. An existing product in an unsupported currency is not re-priced or changed by the NGN import.
+- `GET /api/merchant/products/bulk?merchantId=…&branchId=…` exports that branch only, with an explicit currency column. If any price/currency cannot be represented by the NGN import format, the request returns `409` and produces no CSV rather than relabeling the amount.
+
+## Scheduled work
+
+- `POST /api/jobs/process` requires `x-cron-secret`. It runs implemented saved-search/price alert and webhook handlers. Generic `BackgroundJob` event handlers are **not implemented** and are reported unsupported. This endpoint is not a scheduler.
+- `POST /api/jobs/expire` requires `x-cron-secret` in production. It expires eligible holds and releases inventory transactionally when actually invoked. Configure an external scheduler and alert on failures before using reservations operationally.
+
+## Authorization, limits, and unsupported credentials
+
+- Protected routes use the server-side session and route-specific role/ownership checks. A UI role check is not authorization.
+- The merchant Connect API-key endpoint creates/list/revokes credential records, but **no API route accepts those keys today**. Do not send them as bearer credentials expecting access.
+- Current proxy rate limits are process-local: 20 auth requests/minute, 120 search/assist requests/minute, and 240 general API requests/minute, keyed from the apparent client IP. A trusted hosting proxy must overwrite/sanitize forwarded-IP headers. This is not a distributed or DDoS control.
+
+## Error handling and currency
+
+Error status/body contracts vary by route; do not assume every error is `{error}` or that every create returns `201`. Documented core statuses are in `openapi.json`. Prices and fees use integer kobo where stored; fee/payment processing is not connected. Never infer availability, distance, delivery, or provider confirmation from the presence of an API record.

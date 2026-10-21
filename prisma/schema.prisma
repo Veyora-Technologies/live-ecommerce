@@ -1,0 +1,1548 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ============ COUNTRY-AWARE GEOGRAPHY (Live 5.0 foundation) ============
+model Country {
+  code                String               @id // ISO 3166-1 alpha-2 (NG)
+  name                String
+  currencyCode        String               @default("NGN")
+  defaultTimezone     String               @default("Africa/Lagos")
+  defaultLocale       String               @default("en-NG")
+  phoneCountryCode    String               @default("+234")
+  latitude            Float?
+  longitude           Float?
+  dataSource          String?
+  sourceVersion       String?
+  sourceReviewedAt    DateTime?
+  isActive            Boolean              @default(true)
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  areas               GeographicArea[]
+  merchants           Merchant[]
+  branches            Branch[]
+  addresses           Address[]
+  marketplaceListings MarketplaceListing[] @relation("MarketplaceListingCountry")
+}
+
+model GeographicArea {
+  id                            String                @id @default(cuid())
+  code                          String                @unique // stable external/admin code; not a display name
+  sourceCode                    String?
+  countryCode                   String
+  country                       Country               @relation(fields: [countryCode], references: [code], onDelete: Restrict)
+  parentCode                    String?
+  parent                        GeographicArea?       @relation("GeoHierarchy", fields: [parentCode], references: [code], onDelete: Restrict)
+  children                      GeographicArea[]      @relation("GeoHierarchy")
+  name                          String
+  normalizedName                String
+  type                          String // COUNTRY, STATE, TERRITORY, LGA, AREA_COUNCIL, CITY, LOCALITY, WARD
+  adminLevel                    Int
+  latitude                      Float?
+  longitude                     Float?
+  dataSource                    String
+  sourceVersion                 String?
+  sourceReviewedAt              DateTime?
+  validOn                       DateTime?
+  verificationStatus            String                @default("UNVERIFIED") // SOURCE_REVIEWED, UNVERIFIED, DISPUTED
+  active                        Boolean               @default(true)
+  createdAt                     DateTime              @default(now())
+  updatedAt                     DateTime              @updatedAt
+  aliases                       GeographicAreaAlias[]
+  merchantsAsState              Merchant[]            @relation("MerchantState")
+  merchantsAsLga                Merchant[]            @relation("MerchantLga")
+  merchantsAsCity               Merchant[]            @relation("MerchantCity")
+  merchantsAsLocality           Merchant[]            @relation("MerchantLocality")
+  branchesAsState               Branch[]              @relation("BranchState")
+  branchesAsLga                 Branch[]              @relation("BranchLga")
+  branchesAsCity                Branch[]              @relation("BranchCity")
+  branchesAsLocality            Branch[]              @relation("BranchLocality")
+  preferredBy                   User[]                @relation("PreferredGeography")
+  addressesAsState              Address[]             @relation("AddressState")
+  addressesAsLga                Address[]             @relation("AddressLga")
+  addressesAsCity               Address[]             @relation("AddressCity")
+  addressesAsLocality           Address[]             @relation("AddressLocality")
+  marketplaceListingsAsState    MarketplaceListing[]  @relation("MarketplaceListingState")
+  marketplaceListingsAsLga      MarketplaceListing[]  @relation("MarketplaceListingLga")
+  marketplaceListingsAsCity     MarketplaceListing[]  @relation("MarketplaceListingCity")
+  marketplaceListingsAsLocality MarketplaceListing[]  @relation("MarketplaceListingLocality")
+
+  @@index([countryCode, parentCode, type, active])
+  @@index([normalizedName])
+  @@index([latitude, longitude])
+  @@index([sourceCode])
+}
+
+model GeographicAreaAlias {
+  id              String         @id @default(cuid())
+  areaCode        String
+  area            GeographicArea @relation(fields: [areaCode], references: [code], onDelete: Cascade)
+  alias           String
+  normalizedAlias String
+  dataSource      String?
+  createdAt       DateTime       @default(now())
+
+  @@unique([areaCode, normalizedAlias])
+  @@index([normalizedAlias])
+}
+
+// ============ CORE ============
+model User {
+  id                    String          @id @default(cuid())
+  name                  String
+  email                 String?         @unique
+  phone                 String?         @unique
+  passwordHash          String?
+  role                  String          @default("CONSUMER")
+  status                String          @default("ACTIVE")
+  preferredArea         String? // legacy display-only field; prefer preferredLocationCode
+  preferredLocationCode String?
+  preferredLocation     GeographicArea? @relation("PreferredGeography", fields: [preferredLocationCode], references: [code], onDelete: SetNull)
+  theme                 String          @default("system")
+  homeSections          String? // JSON display preference; contains no activity or product data
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+  isAdmin               Boolean         @default(false)
+  adminRole             String          @default("NONE") // NONE, SUPPORT, REVIEWER, SECURITY, SUPER
+  emailVerifiedAt       DateTime?
+  phoneVerifiedAt       DateTime?
+  mfaSecret             String? // AES-GCM envelope; production key supplied via LIVE_SECRET_ENCRYPTION_KEY
+  mfaEnabled            Boolean         @default(false)
+  passwordChangedAt     DateTime?
+  failedLoginCount      Int             @default(0)
+  lockedUntil           DateTime?
+  lastLoginAt           DateTime?
+  deletedAt             DateTime?
+  marketingConsent      Boolean         @default(false)
+
+  addresses                Address[]
+  merchantsOwned           Merchant[]                @relation("Owner")
+  memberships              MerchantMembership[]
+  reservations             Reservation[]             @relation("ConsumerReservations")
+  serviceBookings          ServiceBooking[]          @relation("ConsumerServiceBookings")
+  savedItems               SavedItem[]
+  reports                  Report[]                  @relation("Reporter")
+  notifications            Notification[]
+  auditLogs                AuditLog[]
+  organizations            Organization[]            @relation("OrgOwner")
+  savedSearches            SavedSearch[]
+  recentViews              RecentView[]
+  itemRequests             ItemRequest[]
+  lists                    ShoppingList[]            @relation("ListOwner")
+  listMembers              ShoppingListMember[]
+  reviews                  Review[]
+  orgMemberships           OrgMembership[]
+  notificationPrefs        NotificationPreference?
+  apiCredentials           ApiCredential[]
+  sessions                 Session[]
+  challenges               TokenChallenge[]
+  securityEvents           SecurityEvent[]
+  carts                    Cart[]
+  priceAlerts              PriceAlert[]
+  enquiries                Enquiry[]                 @relation("Enquirer")
+  privacyRequests          PrivacyRequest[]         @relation("PrivacyRequestSubject")
+  privacyRequestsApproved  PrivacyRequest[]         @relation("PrivacyRequestApprover")
+  marketplaceListings      MarketplaceListing[]      @relation("MarketplaceListingSeller")
+  marketplaceListingEvents MarketplaceListingEvent[] @relation("MarketplaceListingActor")
+  policyAcceptances        LegalPolicyAcceptance[]
+  complianceCasesReported ComplianceCase[]          @relation("ComplianceCaseReporter")
+  complianceCasesAssigned ComplianceCase[]           @relation("ComplianceCaseAssignee")
+  complianceCaseEvents    ComplianceCaseEvent[]      @relation("ComplianceCaseEventActor")
+  complianceTasksAssigned ComplianceTask[]            @relation("ComplianceTaskAssignee")
+  complianceTasksCreated  ComplianceTask[]            @relation("ComplianceTaskCreator")
+  complianceEvidenceAdded ComplianceEvidence[]        @relation("ComplianceEvidenceAdder")
+  legalPoliciesCreated    LegalPolicy[]               @relation("LegalPolicyCreator")
+  legalPoliciesPublished  LegalPolicy[]               @relation("LegalPolicyPublisher")
+  legalOperatorProfilesUpdated LegalOperatorProfile[]  @relation("LegalOperatorUpdater")
+  legalOperatorProfilesReviewed LegalOperatorProfile[] @relation("LegalOperatorReviewer")
+}
+
+model Address {
+  id           String          @id @default(cuid())
+  userId       String
+  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label        String          @default("Home")
+  street       String
+  area         String
+  city         String          @default("Abuja")
+  countryCode  String?
+  country      Country?        @relation(fields: [countryCode], references: [code], onDelete: SetNull)
+  stateCode    String?
+  state        GeographicArea? @relation("AddressState", fields: [stateCode], references: [code], onDelete: SetNull)
+  lgaCode      String?
+  lga          GeographicArea? @relation("AddressLga", fields: [lgaCode], references: [code], onDelete: SetNull)
+  cityCode     String?
+  cityArea     GeographicArea? @relation("AddressCity", fields: [cityCode], references: [code], onDelete: SetNull)
+  localityCode String?
+  localityArea GeographicArea? @relation("AddressLocality", fields: [localityCode], references: [code], onDelete: SetNull)
+  lat          Float?
+  lng          Float?
+  isDefault    Boolean         @default(false)
+  createdAt    DateTime        @default(now())
+}
+
+model Organization {
+  id          String   @id @default(cuid())
+  ownerId     String
+  owner       User     @relation("OrgOwner", fields: [ownerId], references: [id])
+  name        String
+  description String?
+  logoUrl     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  merchants           Merchant[]
+  members             OrgMembership[]
+  branches            Branch[]
+  subscriptions       MerchantSubscription[]
+  marketplaceListings MarketplaceListing[]
+}
+
+model OrgMembership {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User         @relation(fields: [userId], references: [id])
+  role           String       @default("MANAGER") // OWNER, MANAGER, STAFF, READ_ONLY
+  createdAt      DateTime     @default(now())
+
+  @@unique([organizationId, userId])
+}
+
+model Merchant {
+  id                 String          @id @default(cuid())
+  ownerId            String
+  owner              User            @relation("Owner", fields: [ownerId], references: [id])
+  organizationId     String?
+  organization       Organization?   @relation(fields: [organizationId], references: [id])
+  businessName       String
+  category           String
+  description        String?
+  address            String
+  area               String
+  city               String          @default("Abuja")
+  countryCode        String?
+  country            Country?        @relation(fields: [countryCode], references: [code], onDelete: SetNull)
+  stateCode          String?
+  state              GeographicArea? @relation("MerchantState", fields: [stateCode], references: [code], onDelete: SetNull)
+  lgaCode            String?
+  lga                GeographicArea? @relation("MerchantLga", fields: [lgaCode], references: [code], onDelete: SetNull)
+  cityCode           String?
+  cityArea           GeographicArea? @relation("MerchantCity", fields: [cityCode], references: [code], onDelete: SetNull)
+  localityCode       String?
+  locality           GeographicArea? @relation("MerchantLocality", fields: [localityCode], references: [code], onDelete: SetNull)
+  locationVerifiedAt DateTime?
+  lat                Float?
+  lng                Float?
+  phone              String
+  email              String?
+  whatsapp           String?
+  imageUrl           String?
+  coverImageUrl      String?
+  openingHours       String?
+  storeStatus        String          @default("OPEN")
+  pickupAvailable    Boolean         @default(true)
+  deliveryAvailable  Boolean         @default(false)
+  deliveryFee        Int?
+  verificationStatus String          @default("UNVERIFIED")
+  status             String          @default("PENDING")
+  reliabilityScore   Float?
+  reservationCount   Int             @default(0)
+  confirmationRate   Float?
+  featuredProductIds String? // JSON array
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  products             Product[]
+  reservations         Reservation[]
+  serviceBookings      ServiceBooking[]
+  memberships          MerchantMembership[]
+  reports              Report[]
+  availabilityEvents   AvailabilityEvent[]
+  branches             Branch[]
+  services             Service[]
+  reviews              Review[]
+  inventoryMovements   InventoryMovement[]
+  priceObservations    PriceObservation[]
+  integrations         IntegrationConnection[]
+  webhooks             WebhookSubscription[]
+  itemRequestResponses ItemRequestResponse[]
+  marketplaceListings  MarketplaceListing[]
+  enquiries            Enquiry[]
+  policyAcceptances    LegalPolicyAcceptance[]
+  complianceCases      ComplianceCase[]
+  verificationCases    VerificationCase[]
+
+  @@index([area])
+  @@index([city])
+  @@index([category])
+  @@index([status])
+}
+
+model Branch {
+  id                  String               @id @default(cuid())
+  merchantId          String
+  merchant            Merchant             @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  organizationId      String?
+  organization        Organization?        @relation(fields: [organizationId], references: [id])
+  name                String
+  address             String
+  area                String
+  city                String               @default("Abuja")
+  countryCode         String?
+  country             Country?             @relation(fields: [countryCode], references: [code], onDelete: SetNull)
+  stateCode           String?
+  state               GeographicArea?      @relation("BranchState", fields: [stateCode], references: [code], onDelete: SetNull)
+  lgaCode             String?
+  lga                 GeographicArea?      @relation("BranchLga", fields: [lgaCode], references: [code], onDelete: SetNull)
+  cityCode            String?
+  cityArea            GeographicArea?      @relation("BranchCity", fields: [cityCode], references: [code], onDelete: SetNull)
+  localityCode        String?
+  locality            GeographicArea?      @relation("BranchLocality", fields: [localityCode], references: [code], onDelete: SetNull)
+  locationVerifiedAt  DateTime?
+  lat                 Float?
+  lng                 Float?
+  phone               String?
+  storeStatus         String               @default("OPEN")
+  timezone            String               @default("Africa/Lagos")
+  openingHours        String?
+  hoursConfirmedAt    DateTime?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  transfersOut        BranchTransfer[]     @relation("TransferFrom")
+  transfersIn         BranchTransfer[]     @relation("TransferTo")
+  exceptions          OperatingException[]
+  products            Product[]
+  reservations        Reservation[]
+  marketplaceListings MarketplaceListing[]
+}
+
+model MerchantMembership {
+  id         String   @id @default(cuid())
+  merchantId String
+  merchant   Merchant @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role       String   @default("OWNER") // OWNER, MANAGER, INVENTORY_STAFF, RESERVATION_STAFF, READ_ONLY
+  status     String   @default("ACTIVE")
+  createdAt  DateTime @default(now())
+
+  @@unique([merchantId, userId])
+}
+
+model Product {
+  id                   String    @id @default(cuid())
+  merchantId           String
+  merchant             Merchant  @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  name                 String
+  category             String
+  brand                String?
+  description          String?
+  price                Int
+  currency             String    @default("NGN")
+  stockQuantity        Int       @default(0)
+  reservedQuantity     Int       @default(0)
+  lowStockThreshold    Int       @default(5)
+  unit                 String    @default("pcs")
+  imageUrl             String?
+  sku                  String?
+  barcode              String?
+  qrCode               String?
+  availability         String    @default("IN_STOCK")
+  pickupAvailable      Boolean   @default(true)
+  deliveryAvailable    Boolean   @default(false)
+  lastConfirmedAt      DateTime?
+  availabilityMethod   String    @default("QUANTITY") // QUANTITY, MANUAL_CONFIRM, SYNCED, UNKNOWN_SOURCE
+  dataSource           String    @default("MERCHANT") // MERCHANT, POS, IMPORT, ADMIN
+  unitType             String    @default("UNIT") // UNIT, WEIGHT, LENGTH, VOLUME, PACKAGE
+  requiresConfirmation Boolean   @default(false)
+  branchId             String?
+  branch               Branch?   @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  featured             Boolean   @default(false)
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  archived             Boolean   @default(false)
+
+  reservations       Reservation[]
+  availabilityEvents AvailabilityEvent[]
+  savedBy            SavedItem[]
+  recentViews        RecentView[]
+  savedSearchMatches SavedSearchMatch[]
+  identifiers        ProductIdentifier[]
+  priceObs           PriceObservation[]
+  reviews            Review[]
+  inventoryMovements InventoryMovement[]
+  listItems          ShoppingListItem[]
+  variants           ProductVariant[]
+  batches            ProductBatch[]
+  cartItems          CartItem[]
+  priceAlerts        PriceAlert[]
+  promotions         Promotion[]
+  substitutionsFrom  SubstitutionLink[]  @relation("SubFrom")
+  substitutionsTo    SubstitutionLink[]  @relation("SubTo")
+  marketplaceListing MarketplaceListing? @relation("MarketplaceListingProduct")
+  enquiries          Enquiry[]           @relation("EnquiryProduct")
+
+  @@index([name])
+  @@index([category])
+  @@index([merchantId])
+  @@index([availability])
+  @@index([barcode])
+  @@index([branchId])
+}
+
+model ProductIdentifier {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  type      String // BARCODE, QR, SKU
+  value     String
+  createdAt DateTime @default(now())
+
+  @@index([value])
+}
+
+model Reservation {
+  id             String   @id @default(cuid())
+  code           String   @unique
+  consumerId     String
+  consumer       User     @relation("ConsumerReservations", fields: [consumerId], references: [id])
+  merchantId     String
+  merchant       Merchant @relation(fields: [merchantId], references: [id])
+  productId      String
+  product        Product  @relation(fields: [productId], references: [id])
+  quantity       Int
+  priceSnapshot  Int
+  totalAmount    Int
+  status         String   @default("PENDING")
+  pickupWindow   String?
+  branchId       String?
+  branch         Branch?  @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  variantId      String?
+  idempotencyKey String?  @unique
+  correlationId  String?
+  expiresAt      DateTime
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  complianceCases ComplianceCase[]
+
+  @@index([consumerId])
+  @@index([merchantId])
+  @@index([status])
+}
+
+model AvailabilityEvent {
+  id               String   @id @default(cuid())
+  merchantId       String
+  merchant         Merchant @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  productId        String
+  product          Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  previousStatus   String?
+  newStatus        String?
+  previousQuantity Int?
+  newQuantity      Int?
+  changeSource     String   @default("MERCHANT")
+  actorId          String?
+  createdAt        DateTime @default(now())
+
+  @@index([productId])
+  @@index([merchantId])
+}
+
+model SavedItem {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId  String?
+  product    Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
+  merchantId String?
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, productId])
+  @@index([userId])
+}
+
+model Report {
+  id              String   @id @default(cuid())
+  reporterId      String
+  reporter        User     @relation("Reporter", fields: [reporterId], references: [id])
+  merchantId      String
+  merchant        Merchant @relation(fields: [merchantId], references: [id])
+  productId       String?
+  category        String
+  description     String
+  status          String   @default("OPEN")
+  resolutionNotes String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Notification {
+  id           String   @id @default(cuid())
+  recipientId  String
+  recipient    User     @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+  type         String
+  title        String
+  body         String
+  resourceType String?
+  resourceId   String?
+  read         Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  @@index([recipientId])
+}
+
+model NotificationPreference {
+  id                    String   @id @default(cuid())
+  userId                String   @unique
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emailEnabled          Boolean  @default(true)
+  smsEnabled            Boolean  @default(false)
+  whatsappEnabled       Boolean  @default(false)
+  pushEnabled           Boolean  @default(true)
+  alertsForAvailable    Boolean  @default(true)
+  alertsForPriceChange  Boolean  @default(false)
+  reorderReminders      Boolean  @default(true)
+  merchantAnnouncements Boolean  @default(true)
+  updatedAt             DateTime @updatedAt
+}
+
+model AuditLog {
+  id            String   @id @default(cuid())
+  actorId       String?
+  actor         User?    @relation(fields: [actorId], references: [id])
+  action        String
+  resourceType  String
+  resourceId    String?
+  metadata      String?
+  correlationId String?
+  outcome       String?
+  previousState String?
+  newState      String?
+  createdAt     DateTime @default(now())
+
+  @@index([actorId])
+  @@index([resourceType])
+  @@index([correlationId])
+}
+
+// ============ V2 EXPANSION ============
+
+model SavedSearch {
+  id              String             @id @default(cuid())
+  userId          String
+  user            User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  query           String
+  filters         String? // JSON
+  createdAt       DateTime           @default(now())
+  alertEnabled    Boolean            @default(false)
+  alertFrequency  String             @default("DAILY") // INSTANT, DAILY, WEEKLY
+  label           String?
+  lastNotifiedAt  DateTime?
+  lastEvaluatedAt DateTime?
+  matches         SavedSearchMatch[]
+
+  @@index([userId])
+}
+
+model RecentView {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  viewedAt  DateTime @default(now())
+
+  @@unique([userId, productId])
+  @@index([userId, viewedAt])
+}
+
+model SavedSearchMatch {
+  id             String      @id @default(cuid())
+  savedSearchId  String
+  savedSearch    SavedSearch @relation(fields: [savedSearchId], references: [id], onDelete: Cascade)
+  productId      String
+  product        Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  availability   String
+  price          Int
+  lastNotifiedAt DateTime?
+
+  @@unique([savedSearchId, productId])
+  @@index([savedSearchId, lastNotifiedAt])
+}
+
+model ItemRequest {
+  id          String                @id @default(cuid())
+  requesterId String
+  requester   User                  @relation(fields: [requesterId], references: [id])
+  productName String
+  category    String?
+  brand       String?
+  specs       String?
+  quantity    Int                   @default(1)
+  area        String?
+  maxBudget   Int? // kobo
+  neededBy    DateTime?
+  contactPref String                @default("IN_APP")
+  status      String                @default("OPEN") // OPEN, MATCHED, RESPONDED, FULFILLED, EXPIRED, CANCELLED
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+  responses   ItemRequestResponse[]
+
+  @@index([requesterId])
+  @@index([status])
+}
+
+model ItemRequestResponse {
+  id                String      @id @default(cuid())
+  requestId         String
+  request           ItemRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  merchantId        String
+  merchant          Merchant?   @relation(fields: [merchantId], references: [id])
+  productId         String?
+  message           String
+  price             Int?
+  branchId          String?
+  currency          String      @default("NGN")
+  quantityAvailable Int?
+  validUntil        DateTime?
+  fulfilment        String? // PICKUP, DELIVERY
+  additionalFees    Int? // kobo
+  confirmationState String      @default("MERCHANT_REPORTED") // MERCHANT_REPORTED, RECENTLY_CONFIRMED
+  status            String      @default("OPEN") // OPEN, ACCEPTED, DECLINED, EXPIRED
+  createdAt         DateTime    @default(now())
+}
+
+model ShoppingList {
+  id            String               @id @default(cuid())
+  ownerId       String
+  owner         User                 @relation("ListOwner", fields: [ownerId], references: [id])
+  name          String
+  description   String?
+  isShared      Boolean              @default(false)
+  inviteToken   String?              @unique
+  spendingLimit Int?
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+  members       ShoppingListMember[]
+  items         ShoppingListItem[]
+}
+
+model ShoppingListMember {
+  id        String       @id @default(cuid())
+  listId    String
+  list      ShoppingList @relation(fields: [listId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User         @relation(fields: [userId], references: [id])
+  role      String       @default("MEMBER")
+  createdAt DateTime     @default(now())
+
+  @@unique([listId, userId])
+}
+
+model ShoppingListItem {
+  id         String       @id @default(cuid())
+  listId     String
+  list       ShoppingList @relation(fields: [listId], references: [id], onDelete: Cascade)
+  productId  String?
+  product    Product?     @relation(fields: [productId], references: [id])
+  customName String?
+  quantity   Int          @default(1)
+  checked    Boolean      @default(false)
+  createdAt  DateTime     @default(now())
+}
+
+model InventoryMovement {
+  id               String   @id @default(cuid())
+  merchantId       String
+  merchant         Merchant @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  productId        String
+  product          Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  previousQuantity Int?
+  newQuantity      Int?
+  delta            Int?
+  reason           String?
+  actorId          String?
+  reservationId    String?
+  createdAt        DateTime @default(now())
+
+  @@index([productId])
+  @@index([merchantId])
+}
+
+model PriceObservation {
+  id         String   @id @default(cuid())
+  merchantId String
+  merchant   Merchant @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  price      Int
+  observedAt DateTime @default(now())
+  source     String   @default("MERCHANT")
+
+  @@index([productId])
+  @@index([merchantId])
+}
+
+model Review {
+  id               String         @id @default(cuid())
+  authorId         String
+  author           User           @relation(fields: [authorId], references: [id])
+  merchantId       String
+  merchant         Merchant       @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  productId        String?
+  product          Product?       @relation(fields: [productId], references: [id])
+  rating           Int
+  text             String?
+  verifiedPurchase Boolean        @default(false)
+  status           String         @default("VISIBLE") // VISIBLE, HIDDEN, REPORTED
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  reports          ReviewReport[]
+
+  @@index([merchantId])
+  @@index([productId])
+}
+
+model ReviewReport {
+  id         String   @id @default(cuid())
+  reviewId   String
+  review     Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  reporterId String
+  reason     String
+  status     String   @default("OPEN")
+  createdAt  DateTime @default(now())
+}
+
+model DemandAggregate {
+  id              String   @id @default(cuid())
+  query           String
+  normalizedQuery String
+  category        String?
+  area            String?
+  count           Int      @default(1)
+  lastSeen        DateTime @default(now())
+  createdAt       DateTime @default(now())
+
+  @@index([normalizedQuery])
+  @@index([area])
+}
+
+model IntegrationConnection {
+  id         String    @id @default(cuid())
+  merchantId String
+  merchant   Merchant  @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  provider   String // POS, DELIVERY, SUPPLIER
+  name       String
+  config     String? // Encrypted envelope only; null until a provider adapter is configured
+  status     String    @default("DISCONNECTED") // CONNECTED, DISCONNECTED, ERROR
+  lastSyncAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
+
+model ApiCredential {
+  id         String    @id @default(cuid())
+  userId     String?
+  user       User?     @relation(fields: [userId], references: [id])
+  merchantId String?
+  name       String
+  keyHash    String    @unique
+  prefix     String
+  scopes     String    @default("read")
+  lastUsedAt DateTime?
+  createdAt  DateTime  @default(now())
+  revoked    Boolean   @default(false)
+}
+
+model WebhookSubscription {
+  id         String            @id @default(cuid())
+  merchantId String?
+  merchant   Merchant?         @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  url        String
+  events     String // JSON array: ["reservation.created","product.updated"]
+  secret     String?
+  active     Boolean           @default(true)
+  createdAt  DateTime          @default(now())
+  deliveries WebhookDelivery[]
+}
+
+model WebhookDelivery {
+  id             String              @id @default(cuid())
+  subscriptionId String
+  subscription   WebhookSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  event          String
+  payload        String // JSON
+  status         String              @default("PENDING") // PENDING, SUCCESS, FAILED, RETRYING
+  attempts       Int                 @default(0)
+  lastAttemptAt  DateTime?
+  createdAt      DateTime            @default(now())
+}
+
+model Service {
+  id                 String              @id @default(cuid())
+  merchantId         String
+  merchant           Merchant            @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  name               String
+  description        String?
+  price              Int?
+  durationMin        Int?
+  capacity           Int                 @default(1)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  bookings           ServiceBooking[]
+  marketplaceListing MarketplaceListing? @relation("MarketplaceListingService")
+  enquiries          Enquiry[]           @relation("EnquiryService")
+}
+
+model ServiceBooking {
+  id            String   @id @default(cuid())
+  serviceId     String
+  service       Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  consumerId    String
+  consumer      User     @relation("ConsumerServiceBookings", fields: [consumerId], references: [id], onDelete: Cascade)
+  merchantId    String
+  merchant      Merchant @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  startTime     DateTime
+  endTime       DateTime
+  status        String   @default("REQUESTED") // REQUESTED, CONFIRMED, REJECTED, CANCELLED, COMPLETED, NO_SHOW
+  notes         String?
+  priceSnapshot Int?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  complianceCases ComplianceCase[]
+
+  @@index([merchantId])
+  @@index([consumerId])
+  @@index([serviceId, startTime])
+}
+
+model MerchantSubscription {
+  id               String              @id @default(cuid())
+  organizationId   String?
+  organization     Organization?       @relation(fields: [organizationId], references: [id])
+  merchantId       String?
+  plan             String              @default("FREE") // FREE, PRO, PREMIUM
+  status           String              @default("ACTIVE")
+  currentPeriodEnd DateTime?
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  usages           SubscriptionUsage[]
+}
+
+model SubscriptionUsage {
+  id             String               @id @default(cuid())
+  subscriptionId String
+  subscription   MerchantSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  metric         String // e.g. "api_calls", "listings"
+  quantity       Int                  @default(0)
+  period         String // e.g. "2026-10"
+  createdAt      DateTime             @default(now())
+}
+
+model FeatureFlag {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  name      String
+  enabled   Boolean  @default(false)
+  payload   String? // JSON
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model BackgroundJob {
+  id        String    @id @default(cuid())
+  type      String // e.g. "RESERVATION_EXPIRY", "WEBHOOK_DELIVERY"
+  payload   String // JSON
+  status    String    @default("PENDING") // PENDING, PROCESSING, SUCCESS, FAILED, DEAD_LETTER
+  attempts  Int       @default(0)
+  nextRunAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([status])
+  @@index([type])
+}
+
+model ApiKey {
+  id         String    @id @default(cuid())
+  name       String
+  keyHash    String    @unique
+  prefix     String
+  scopes     String    @default("read")
+  createdAt  DateTime  @default(now())
+  lastUsedAt DateTime?
+}
+
+// ============ V3 SECURITY & ENTERPRISE ============
+
+model Session {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash  String    @unique // sha256 of JWT id (jti), never the raw token
+  userAgent  String?
+  ipHash     String? // salted hash, not raw IP
+  createdAt  DateTime  @default(now())
+  lastSeenAt DateTime  @default(now())
+  expiresAt  DateTime
+  revokedAt  DateTime?
+
+  @@index([userId])
+}
+
+model TokenChallenge {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String // PASSWORD_RESET, EMAIL_VERIFY, MFA_STEPUP
+  tokenHash String    @unique // sha256 of single-use token
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+}
+
+model SecurityEvent {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  type      String // LOGIN_FAIL, LOGIN_OK, LOCKOUT, PASSWORD_RESET_REQ, PASSWORD_CHANGED, MFA_ENABLED, SESSION_REVOKED, ROLE_CHANGED
+  ipHash    String?
+  userAgent String?
+  metadata  String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([type])
+}
+
+model RiskEvent {
+  id          String   @id @default(cuid())
+  subjectType String // USER, MERCHANT, IP, API_KEY
+  subjectId   String?
+  rule        String
+  severity    String   @default("LOW") // LOW, MEDIUM, HIGH
+  reason      String
+  status      String   @default("OPEN") // OPEN, ACKNOWLEDGED, RESOLVED, DISMISSED
+  assigneeId  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([status])
+  @@index([severity])
+}
+
+model IdempotencyRecord {
+  id           String   @id @default(cuid())
+  key          String   @unique
+  userId       String?
+  route        String
+  requestHash  String
+  responseBody String?
+  statusCode   Int?
+  createdAt    DateTime @default(now())
+  expiresAt    DateTime
+}
+
+model FreshnessPolicy {
+  id              String   @id @default(cuid())
+  category        String   @unique
+  staleAfterHours Int      @default(24)
+  recentHours     Int      @default(6)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model ProductVariant {
+  id               String   @id @default(cuid())
+  productId        String
+  product          Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  name             String // e.g. "500mg x20", "Red / XL", "5kg"
+  attributes       String? // JSON {size, colour, model}
+  priceDelta       Int      @default(0) // kobo vs base price
+  stockQuantity    Int      @default(0)
+  reservedQuantity Int      @default(0)
+  sku              String?
+  barcode          String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([productId])
+}
+
+model ProductBatch {
+  id          String    @id @default(cuid())
+  productId   String
+  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  merchantId  String
+  lotId       String
+  quantity    Int       @default(0)
+  expiresAt   DateTime?
+  receivedAt  DateTime  @default(now())
+  supplierRef String?
+  status      String    @default("ACTIVE") // ACTIVE, QUARANTINED, EXPIRED, RECALLED
+  recallNote  String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([productId])
+  @@index([expiresAt])
+}
+
+model BranchTransfer {
+  id             String   @id @default(cuid())
+  merchantId     String
+  productId      String
+  fromBranchId   String?
+  fromBranch     Branch?  @relation("TransferFrom", fields: [fromBranchId], references: [id])
+  toBranchId     String?
+  toBranch       Branch?  @relation("TransferTo", fields: [toBranchId], references: [id])
+  quantity       Int
+  status         String   @default("REQUESTED") // REQUESTED, ACKNOWLEDGED, REJECTED
+  initiatedBy    String
+  acknowledgedBy String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model OperatingException {
+  id         String   @id @default(cuid())
+  merchantId String
+  branchId   String?
+  branch     Branch?  @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  date       String // YYYY-MM-DD in branch timezone
+  type       String // CLOSED, SPECIAL_HOURS, BREAK_ONLY
+  hours      String? // e.g. "10:00-14:00" when SPECIAL_HOURS
+  note       String?
+  createdAt  DateTime @default(now())
+
+  @@index([merchantId])
+}
+
+model Cart {
+  id        String     @id @default(cuid())
+  userId    String
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String     @default("Purchase plan")
+  status    String     @default("PLANNING") // PLANNING, SUBMITTED
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  items     CartItem[]
+}
+
+model CartItem {
+  id         String   @id @default(cuid())
+  cartId     String
+  cart       Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id])
+  merchantId String
+  branchId   String?
+  variantId  String?
+  quantity   Int      @default(1)
+  priceAtAdd Int
+  fulfilment String   @default("PICKUP")
+  createdAt  DateTime @default(now())
+
+  @@unique([cartId, productId, variantId])
+}
+
+model PriceAlert {
+  id              String    @id @default(cuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId       String?
+  product         Product?  @relation(fields: [productId], references: [id])
+  query           String?
+  thresholdKobo   Int
+  active          Boolean   @default(true)
+  lastTriggeredAt DateTime?
+  createdAt       DateTime  @default(now())
+
+  @@index([userId])
+}
+
+model Promotion {
+  id         String   @id @default(cuid())
+  merchantId String
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  promoPrice Int
+  validFrom  DateTime
+  validUntil DateTime
+  createdBy  String
+  createdAt  DateTime @default(now())
+
+  @@index([productId])
+}
+
+model SubstitutionLink {
+  id            String   @id @default(cuid())
+  fromProductId String
+  fromProduct   Product  @relation("SubFrom", fields: [fromProductId], references: [id], onDelete: Cascade)
+  toProductId   String
+  toProduct     Product  @relation("SubTo", fields: [toProductId], references: [id], onDelete: Cascade)
+  kind          String // EXACT, COMPATIBLE, SIMILAR (merchant-declared, never name-inferred)
+  note          String?
+  createdBy     String
+  createdAt     DateTime @default(now())
+
+  @@unique([fromProductId, toProductId])
+}
+
+model Enquiry {
+  id            String           @id @default(cuid())
+  requesterId   String
+  requester     User             @relation("Enquirer", fields: [requesterId], references: [id])
+  merchantId    String
+  merchant      Merchant         @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  productId     String?
+  product       Product?         @relation("EnquiryProduct", fields: [productId], references: [id], onDelete: SetNull)
+  serviceId     String?
+  service       Service?         @relation("EnquiryService", fields: [serviceId], references: [id], onDelete: SetNull)
+  reservationId String?
+  subject       String
+  status        String           @default("OPEN") // OPEN, ANSWERED, CLOSED, BLOCKED
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  messages      EnquiryMessage[]
+
+  @@index([merchantId, createdAt])
+  @@index([requesterId, createdAt])
+}
+
+model EnquiryMessage {
+  id        String   @id @default(cuid())
+  enquiryId String
+  enquiry   Enquiry  @relation(fields: [enquiryId], references: [id], onDelete: Cascade)
+  authorId  String
+  body      String
+  createdAt DateTime @default(now())
+}
+
+model PrivacyRequest {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation("PrivacyRequestSubject", fields: [userId], references: [id])
+  type      String // ACCESS, RECTIFY, OBJECT, EXPORT, DELETE
+  status    String   @default("PENDING") // PENDING, APPROVED, COMPLETED, REJECTED
+  note      String?
+  approvedById String?
+  approvedBy User?   @relation("PrivacyRequestApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+  approvedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  complianceCase ComplianceCase?
+
+  @@index([userId, createdAt])
+}
+
+model ApprovalRequest {
+  id          String   @id @default(cuid())
+  merchantId  String
+  type        String // LARGE_STOCK_ADJUST, PRICE_CHANGE, BRANCH_TRANSFER
+  payload     String // JSON
+  initiatedBy String
+  approverId  String?
+  status      String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([merchantId])
+}
+
+model VerificationCase {
+  id           String    @id @default(cuid())
+  merchantId   String
+  merchant     Merchant  @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  stage        String    @default("SUBMITTED") // UNSUBMITTED, SUBMITTED, UNDER_REVIEW, INFO_REQUIRED, APPROVED, REJECTED, SUSPENDED, DUE_REVERIFICATION
+  evidenceType String?
+  evidenceRef  String? // opaque reference to restricted external storage; never a public URL
+  reviewerId   String?
+  outcomeNote  String?
+  nextReviewAt DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  complianceCases ComplianceCase[]
+
+  @@index([merchantId, stage])
+  @@index([nextReviewAt])
+}
+
+// ============ V10 UNIVERSAL MARKETPLACE FOUNDATION ============
+// A category is public only after its code-backed workflow is ready. Planned categories
+// remain stored but cannot be listed or surfaced by public search.
+model MarketplaceCategory {
+  id                         String                                  @id @default(cuid())
+  slug                       String                                  @unique
+  name                       String
+  description                String?
+  parentId                   String?
+  parent                     MarketplaceCategory?                    @relation("MarketplaceCategoryTree", fields: [parentId], references: [id], onDelete: Restrict)
+  children                   MarketplaceCategory[]                   @relation("MarketplaceCategoryTree")
+  listingKind                String // PRODUCT, SERVICE, PROPERTY, VEHICLE, RENTAL, DIGITAL, AGRICULTURE, WHOLESALE, INDUSTRIAL, OTHER
+  workflowKey                String // Maps to an implemented server workflow; not user-supplied executable code
+  readinessStatus            String                                  @default("PLANNED") // PLANNED, CONFIGURABLE, READY, SUSPENDED
+  enabledForNewListings      Boolean                                 @default(false)
+  visibleInSearch            Boolean                                 @default(false)
+  requiresReview             Boolean                                 @default(true)
+  requiresSellerVerification Boolean                                 @default(true)
+  schemaVersion              Int                                     @default(1)
+  sortOrder                  Int                                     @default(0)
+  createdAt                  DateTime                                @default(now())
+  updatedAt                  DateTime                                @updatedAt
+  listings                   MarketplaceListing[]
+  attributeDefinitions       MarketplaceListingAttributeDefinition[]
+
+  @@index([parentId, sortOrder])
+  @@index([listingKind, readinessStatus, enabledForNewListings, visibleInSearch])
+}
+
+model MarketplaceListing {
+  id                      String                             @id @default(cuid())
+  sellerUserId            String
+  seller                  User                               @relation("MarketplaceListingSeller", fields: [sellerUserId], references: [id], onDelete: Restrict)
+  merchantId              String?
+  merchant                Merchant?                          @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  organizationId          String?
+  organization            Organization?                      @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  branchId                String?
+  branch                  Branch?                            @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  categoryId              String
+  category                MarketplaceCategory                @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  listingKind             String // Must match the category's supported workflow
+  productId               String?                            @unique
+  product                 Product?                           @relation("MarketplaceListingProduct", fields: [productId], references: [id], onDelete: Cascade)
+  serviceId               String?                            @unique
+  service                 Service?                           @relation("MarketplaceListingService", fields: [serviceId], references: [id], onDelete: Cascade)
+  countryCode             String?
+  country                 Country?                           @relation("MarketplaceListingCountry", fields: [countryCode], references: [code], onDelete: SetNull)
+  stateCode               String?
+  state                   GeographicArea?                    @relation("MarketplaceListingState", fields: [stateCode], references: [code], onDelete: SetNull)
+  lgaCode                 String?
+  lga                     GeographicArea?                    @relation("MarketplaceListingLga", fields: [lgaCode], references: [code], onDelete: SetNull)
+  cityCode                String?
+  city                    GeographicArea?                    @relation("MarketplaceListingCity", fields: [cityCode], references: [code], onDelete: SetNull)
+  localityCode            String?
+  locality                GeographicArea?                    @relation("MarketplaceListingLocality", fields: [localityCode], references: [code], onDelete: SetNull)
+  title                   String
+  description             String?
+  priceModel              String // FIXED, NEGOTIABLE, QUOTE, TIERED, HOURLY, DAILY, MONTHLY, YEARLY, SUBSCRIPTION, AUCTION
+  priceAmountMinor        BigInt?
+  currencyCode            String                             @default("NGN")
+  priceUnit               String? // EACH, HOUR, DAY, MONTH, YEAR, KG, TON, SQM, LOT, SESSION, LICENSE
+  availabilityState       String                             @default("UNKNOWN") // AVAILABLE, UNAVAILABLE, UNKNOWN; not a stock claim
+  availabilityConfirmedAt DateTime?
+  transactionMode         String // RESERVATION, BOOKING_REQUEST, QUOTE_REQUEST, ENQUIRY_ONLY, NONE
+  lifecycleStatus         String                             @default("DRAFT") // DRAFT, PENDING_REVIEW, PUBLISHED, TEMP_UNAVAILABLE, RESERVED, SOLD, RENTED, LEASED, COMPLETED, EXPIRED, REJECTED, SUSPENDED, ARCHIVED
+  moderationStatus        String                             @default("PENDING") // PENDING, APPROVED, REJECTED, SUSPENDED
+  visibility              String                             @default("PUBLIC") // PUBLIC, UNLISTED, PRIVATE
+  transactionEligible     Boolean                            @default(false)
+  schemaVersion           Int                                @default(1)
+  publishedAt             DateTime?
+  expiresAt               DateTime?
+  createdAt               DateTime                           @default(now())
+  updatedAt               DateTime                           @updatedAt
+  attributes              MarketplaceListingAttributeValue[]
+  media                   MarketplaceListingMedia[]
+  priceTiers              MarketplaceListingPriceTier[]
+  events                  MarketplaceListingEvent[]
+  complianceCases        ComplianceCase[]
+
+  @@index([categoryId, lifecycleStatus, moderationStatus, visibility])
+  @@index([sellerUserId, lifecycleStatus, updatedAt])
+  @@index([merchantId, lifecycleStatus, updatedAt])
+  @@index([listingKind, lifecycleStatus, moderationStatus])
+  @@index([stateCode, lgaCode, cityCode, localityCode])
+  @@index([expiresAt])
+}
+
+model MarketplaceListingAttributeDefinition {
+  id            String                              @id @default(cuid())
+  categoryId    String
+  category      MarketplaceCategory                 @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  key           String
+  label         String
+  valueType     String // TEXT, INTEGER, DECIMAL, BOOLEAN, DATE, OPTION
+  required      Boolean                             @default(false)
+  searchable    Boolean                             @default(false)
+  filterable    Boolean                             @default(false)
+  publicVisible Boolean                             @default(true)
+  unit          String?
+  minNumber     Float?
+  maxNumber     Float?
+  maxLength     Int?
+  sortOrder     Int                                 @default(0)
+  options       MarketplaceListingAttributeOption[]
+  values        MarketplaceListingAttributeValue[]
+
+  @@unique([categoryId, key])
+  @@index([categoryId, sortOrder])
+}
+
+model MarketplaceListingAttributeOption {
+  id           String                                @id @default(cuid())
+  definitionId String
+  definition   MarketplaceListingAttributeDefinition @relation(fields: [definitionId], references: [id], onDelete: Cascade)
+  value        String
+  label        String
+  sortOrder    Int                                   @default(0)
+  values       MarketplaceListingAttributeValue[]
+
+  @@unique([definitionId, value])
+  @@index([definitionId, sortOrder])
+}
+
+model MarketplaceListingAttributeValue {
+  id           String                                @id @default(cuid())
+  listingId    String
+  listing      MarketplaceListing                    @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  definitionId String
+  definition   MarketplaceListingAttributeDefinition @relation(fields: [definitionId], references: [id], onDelete: Cascade)
+  optionId     String?
+  option       MarketplaceListingAttributeOption?    @relation(fields: [optionId], references: [id], onDelete: SetNull)
+  textValue    String?
+  numberValue  Float?
+  booleanValue Boolean?
+  dateValue    DateTime?
+  createdAt    DateTime                              @default(now())
+  updatedAt    DateTime                              @updatedAt
+
+  @@unique([listingId, definitionId])
+  @@index([definitionId, textValue])
+  @@index([definitionId, numberValue])
+}
+
+model MarketplaceListingMedia {
+  id        String             @id @default(cuid())
+  listingId String
+  listing   MarketplaceListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  mediaType String             @default("IMAGE") // IMAGE, VIDEO; private verification documents use a separate protected store
+  url       String // Public media URL only; no deed, identity, or private document URL
+  altText   String?
+  sortOrder Int                @default(0)
+  isPrimary Boolean            @default(false)
+  createdAt DateTime           @default(now())
+
+  @@unique([listingId, sortOrder])
+  @@index([listingId, isPrimary])
+}
+
+model MarketplaceListingPriceTier {
+  id              String             @id @default(cuid())
+  listingId       String
+  listing         MarketplaceListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  minimumQuantity Int
+  maximumQuantity Int?
+  unitAmountMinor BigInt
+  currencyCode    String             @default("NGN")
+  priceUnit       String
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  @@unique([listingId, minimumQuantity])
+  @@index([listingId, minimumQuantity])
+}
+
+model MarketplaceListingEvent {
+  id         String             @id @default(cuid())
+  listingId  String
+  listing    MarketplaceListing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  actorId    String?
+  actor      User?              @relation("MarketplaceListingActor", fields: [actorId], references: [id], onDelete: SetNull)
+  eventType  String
+  fromStatus String?
+  toStatus   String?
+  reason     String?
+  createdAt  DateTime           @default(now())
+
+  @@index([listingId, createdAt])
+  @@index([actorId, createdAt])
+}
+
+// ============ V11 LEGAL, PRIVACY, AND COMPLIANCE OPERATIONS ============
+// Public policies remain unavailable until an operator profile and qualified-review
+// records are supplied. This schema does not certify that external review occurred.
+model LegalOperatorProfile {
+  id                       String   @id @default("primary")
+  legalName                String?
+  tradingName              String?
+  entityType               String?
+  registrationNumber       String?
+  registeredAddress        String?
+  jurisdiction             String?
+  publicContactEmail       String?
+  privacyContactEmail      String?
+  complaintsContactEmail  String?
+  publicPhone              String?
+  reviewProfessional       String?
+  reviewQualifications     String?
+  reviewScope              String?
+  reviewEvidenceReference  String?
+  reviewedAt               DateTime?
+  reviewedById             String?
+  reviewedBy               User?    @relation("LegalOperatorReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  updatedById              String?
+  updatedBy                User?    @relation("LegalOperatorUpdater", fields: [updatedById], references: [id], onDelete: SetNull)
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+}
+
+model LegalPolicy {
+  id                      String   @id @default(cuid())
+  key                     String
+  version                 Int
+  title                   String
+  content                 String
+  acceptanceMode          String   @default("ACKNOWLEDGE") // ACCEPT, ACKNOWLEDGE, NONE
+  status                  String   @default("DRAFT") // DRAFT, REVIEW_RECORDED, PUBLISHED, SUPERSEDED, WITHDRAWN
+  reviewProfessional      String?
+  reviewQualifications    String?
+  reviewScope             String?
+  reviewEvidenceReference String?
+  reviewedAt              DateTime?
+  createdById             String
+  createdBy               User     @relation("LegalPolicyCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  publishedById           String?
+  publishedBy             User?    @relation("LegalPolicyPublisher", fields: [publishedById], references: [id], onDelete: SetNull)
+  publishedAt             DateTime?
+  effectiveAt             DateTime?
+  supersededAt            DateTime?
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+  acceptances             LegalPolicyAcceptance[]
+
+  @@unique([key, version])
+  @@index([key, status, effectiveAt])
+}
+
+model LegalPolicyAcceptance {
+  id        String     @id @default(cuid())
+  userId    String
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  policyId  String
+  policy    LegalPolicy @relation(fields: [policyId], references: [id], onDelete: Restrict)
+  merchantId String?
+  merchant  Merchant?  @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  action    String // ACCEPTED or ACKNOWLEDGED; never bundled with marketing consent
+  createdAt DateTime   @default(now())
+
+  @@unique([userId, policyId, merchantId])
+  @@index([merchantId, policyId])
+  @@index([userId, policyId])
+}
+
+model ComplianceCase {
+  id                       String             @id @default(cuid())
+  caseCode                 String             @unique
+  caseType                 String // COMPLAINT, DISPUTE, PRIVACY_REQUEST, PRIVACY_COMPLAINT, IP_REPORT, MODERATION, VERIFICATION, INCIDENT, OTHER
+  status                   String             @default("OPEN") // OPEN, TRIAGED, IN_PROGRESS, WAITING, ACTION_TAKEN, RESOLVED, CLOSED, REJECTED
+  priority                 String             @default("NORMAL") // LOW, NORMAL, HIGH, CRITICAL
+  title                    String
+  reporterSummary          String
+  internalSummary          String?
+  publicSummary            String?
+  outcome                  String?
+  outcomeSummary           String?
+  reporterId               String?
+  reporter                 User?              @relation("ComplianceCaseReporter", fields: [reporterId], references: [id], onDelete: SetNull)
+  assignedToId             String?
+  assignedTo               User?              @relation("ComplianceCaseAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+  merchantId               String?
+  merchant                 Merchant?          @relation(fields: [merchantId], references: [id], onDelete: SetNull)
+  listingId                String?
+  listing                  MarketplaceListing? @relation(fields: [listingId], references: [id], onDelete: SetNull)
+  reservationId            String?
+  reservation              Reservation?       @relation(fields: [reservationId], references: [id], onDelete: SetNull)
+  serviceBookingId         String?
+  serviceBooking           ServiceBooking?    @relation(fields: [serviceBookingId], references: [id], onDelete: SetNull)
+  privacyRequestId         String?            @unique
+  privacyRequest           PrivacyRequest?    @relation(fields: [privacyRequestId], references: [id], onDelete: Cascade)
+  verificationCaseId       String?
+  verificationCase         VerificationCase?  @relation(fields: [verificationCaseId], references: [id], onDelete: SetNull)
+  awarenessAt              DateTime?
+  incidentKind             String?
+  riskAssessment           String? // UNKNOWN, NO_IDENTIFIED_RISK, RISK, HIGH_RISK, NOT_APPLICABLE
+  containmentSummary       String?
+  ndpcNotificationDueAt    DateTime?
+  ndpcNotifiedAt           DateTime?
+  dataSubjectsNotifiedAt   DateTime?
+  externalReportReference  String? // opaque internal reference; no public URL or document content
+  dueAt                    DateTime?
+  nextReviewAt             DateTime?
+  resolvedAt               DateTime?
+  closedAt                 DateTime?
+  createdAt                DateTime           @default(now())
+  updatedAt                DateTime           @updatedAt
+  events                   ComplianceCaseEvent[]
+  tasks                    ComplianceTask[]
+  evidence                 ComplianceEvidence[]
+
+  @@index([caseType, status, priority])
+  @@index([assignedToId, status, nextReviewAt])
+  @@index([reporterId, createdAt])
+  @@index([serviceBookingId])
+  @@index([dueAt, status])
+  @@index([nextReviewAt])
+}
+
+model ComplianceCaseEvent {
+  id         String        @id @default(cuid())
+  caseId     String
+  case       ComplianceCase @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  actorId    String
+  actor      User          @relation("ComplianceCaseEventActor", fields: [actorId], references: [id], onDelete: Restrict)
+  eventType  String // CREATED, STATUS_CHANGED, ASSIGNED, PUBLIC_UPDATE, INTERNAL_NOTE, TASK_CREATED, EVIDENCE_REFERENCED
+  fromStatus String?
+  toStatus   String?
+  visibility String        @default("INTERNAL") // INTERNAL, REPORTER
+  message    String?
+  createdAt  DateTime      @default(now())
+
+  @@index([caseId, createdAt])
+  @@index([actorId, createdAt])
+}
+
+model ComplianceTask {
+  id          String        @id @default(cuid())
+  caseId      String
+  case        ComplianceCase @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  title       String
+  status      String        @default("OPEN") // OPEN, IN_PROGRESS, BLOCKED, DONE, CANCELLED
+  assigneeId  String?
+  assignee    User?         @relation("ComplianceTaskAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  createdById String
+  createdBy   User          @relation("ComplianceTaskCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  dueAt       DateTime?
+  nextReviewAt DateTime?
+  outcome     String?
+  completedAt DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([caseId, status])
+  @@index([assigneeId, status, dueAt])
+  @@index([nextReviewAt])
+}
+
+model ComplianceEvidence {
+  id            String        @id @default(cuid())
+  caseId        String
+  case          ComplianceCase @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  evidenceType  String
+  referenceCode String // opaque id to a separately controlled store; never a URL or document body
+  summary       String?
+  addedById     String
+  addedBy       User          @relation("ComplianceEvidenceAdder", fields: [addedById], references: [id], onDelete: Restrict)
+  createdAt     DateTime      @default(now())
+
+  @@index([caseId, createdAt])
+}

@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0A0A0A">
+  <title>Live — Brand Preview</title>
+  <style>
+    :root{color-scheme:light;--black:#0A0A0A;--green:#00C853;--green-ink:#007A32;--slate:#6B7280;--light:#F3F4F6;--white:#FFFFFF;--line:#D9DEE4;--muted:#626A73;--radius:22px}
+    *{box-sizing:border-box}html{background:var(--light);scroll-behavior:smooth}body{margin:0;color:var(--black);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+    .wrap{width:min(100% - 32px,1320px);margin:0 auto}.top{padding:30px 0 18px;display:flex;align-items:center;justify-content:space-between;gap:20px}.top img{width:148px;height:auto}.badge{border:1px solid var(--line);border-radius:999px;padding:8px 13px;color:var(--muted);font-size:12px;font-weight:700}
+    .hero{position:relative;overflow:hidden;padding:clamp(26px,5vw,64px);border-radius:30px;background:var(--black);color:#fff}.hero:after{content:"";position:absolute;right:-160px;top:-270px;width:520px;height:520px;border:1px solid rgba(0,200,83,.26);border-radius:50%;box-shadow:0 0 0 48px rgba(0,200,83,.06),0 0 0 96px rgba(0,200,83,.04);pointer-events:none}.hero>*{position:relative;z-index:1}.hero img{width:min(280px,72vw);height:auto}.eyebrow{margin:26px 0 10px;color:#82E8A5;font-size:12px;font-weight:800;letter-spacing:.13em;text-transform:uppercase}.hero h1{max-width:850px;margin:0;font-size:clamp(2.5rem,7vw,5.2rem);line-height:.98;letter-spacing:-.065em}.hero h1 span{color:var(--green)}.hero p{margin:20px 0 0;color:#C7CDD0;font-size:clamp(1rem,2vw,1.25rem);font-weight:600}
+    section{padding:42px 0 8px}.section-head{display:flex;align-items:end;justify-content:space-between;gap:18px;margin-bottom:16px}.section-head h2{margin:0;font-size:clamp(1.35rem,3vw,2rem);letter-spacing:-.04em}.section-head p{max-width:560px;margin:0;color:var(--muted);font-size:14px;line-height:1.55}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.card{min-width:0;overflow:hidden;border:1px solid var(--line);border-radius:var(--radius);background:var(--white)}.card-label{padding:14px 16px 0;color:var(--muted);font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase}.sample{min-height:145px;display:grid;place-items:center;padding:24px}.sample img{display:block;max-width:100%;height:auto}.sample.dark{background:var(--black)}.sample.mono{background:#fff}.sample.compact img{width:min(330px,100%)}.sample.word img{width:170px}.symbol-row{display:flex;align-items:center;justify-content:center;gap:22px;width:100%}.symbol-tile{width:92px;height:92px;display:grid;place-items:center;border-radius:20px;background:#F7F8FA}.symbol-tile.dark{background:var(--black)}.symbol-tile img{width:56px;height:56px}
+    .colors{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}.swatch{overflow:hidden;border:1px solid var(--line);border-radius:16px;background:white}.swatch-color{height:88px}.swatch p{margin:0;padding:11px 12px}.swatch strong,.swatch code{display:block}.swatch strong{font-size:12px}.swatch code{margin-top:4px;color:var(--muted);font-size:11px}
+    .assets{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.asset-preview{min-height:190px;display:grid;place-items:center;padding:20px;background:#fff}.asset-preview img{max-width:100%;max-height:160px;object-fit:contain}.asset-preview.dark{background:#E5E7EB}.asset-preview.icon img{width:128px;height:128px}
+    .note{margin:18px 0 54px;padding:14px 16px;border-left:4px solid var(--green-ink);border-radius:0 14px 14px 0;background:#fff;color:#394047;font-size:13px;line-height:1.6}.foot{padding:24px 0 32px;border-top:1px solid var(--line);color:var(--muted);font-size:12px}
+    @media(max-width:760px){.top{padding-top:20px}.grid{grid-template-columns:1fr}.colors{grid-template-columns:repeat(2,minmax(0,1fr))}.swatch:last-child{grid-column:1/-1}.assets{grid-template-columns:repeat(2,minmax(0,1fr))}.section-head{align-items:flex-start;flex-direction:column}.sample{min-height:125px}}
+    @media(max-width:380px){.wrap{width:calc(100% - 20px)}.top img{width:126px}.badge{padding:7px 9px;font-size:10px}.hero{padding:22px 17px;border-radius:22px}.assets{grid-template-columns:1fr}.asset-preview{min-height:150px}}
+    @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="top"><img src="/brand/live-logo-horizontal.svg" alt="Live"><span class="badge">Identity preview · Live Green</span></header>
+    <main>
+      <section class="hero" aria-labelledby="headline">
+        <img src="/brand/live-logo-horizontal-inverse.svg" alt="Live" width="330" height="100">
+        <p class="eyebrow">Shop · Sell · Service · Grow</p>
+        <h1 id="headline">Everything You Need.<br><span>All in One Place.</span></h1>
+        <p>One cohesive identity across the existing Live experience.</p>
+      </section>
+      <section aria-labelledby="logos">
+        <div class="section-head"><h2 id="logos">Logo system</h2><p>Choose the light or reverse lockup for its background. Use the symbol when the wordmark is already present.</p></div>
+        <div class="grid">
+          <article class="card"><div class="card-label">Primary · light surface</div><div class="sample"><img src="/brand/live-logo-horizontal.svg" alt="Live primary horizontal logo" width="330" height="100"></div></article>
+          <article class="card"><div class="card-label">Reverse · dark surface</div><div class="sample dark"><img src="/brand/live-logo-horizontal-inverse.svg" alt="Live reverse horizontal logo" width="330" height="100"></div></article>
+          <article class="card"><div class="card-label">Compact horizontal</div><div class="sample compact"><img src="/brand/live-logo-horizontal-compact.svg" alt="Live compact horizontal logo" width="290" height="100"></div></article>
+          <article class="card"><div class="card-label">Compact reverse</div><div class="sample dark compact"><img src="/brand/live-logo-horizontal-compact-inverse.svg" alt="Live compact reverse logo" width="290" height="100"></div></article>
+          <article class="card"><div class="card-label">Monochrome</div><div class="sample mono"><img src="/brand/live-logo-horizontal-mono.svg" alt="Live monochrome logo" width="330" height="100"></div></article>
+          <article class="card"><div class="card-label">Monochrome reverse</div><div class="sample dark"><img src="/brand/live-logo-horizontal-mono-inverse.svg" alt="Live monochrome reverse logo" width="330" height="100"></div></article>
+          <article class="card"><div class="card-label">Wordmark only</div><div class="sample word"><img src="/brand/live-wordmark.svg" alt="Live wordmark only" width="200" height="76"></div></article>
+          <article class="card"><div class="card-label">Symbol only</div><div class="sample"><div class="symbol-row"><span class="symbol-tile"><img src="/brand/live-symbol.svg" alt="Live green symbol" width="100" height="100"></span><span class="symbol-tile dark"><img src="/brand/live-symbol-inverse.svg" alt="Live white symbol" width="100" height="100"></span></div></div></article>
+        </div>
+      </section>
+      <section aria-labelledby="palette">
+        <div class="section-head"><h2 id="palette">Core palette</h2><p>Bright Live Green is paired with black text for solid buttons. Darker green ink is used when green text or white-on-green is required.</p></div>
+        <div class="colors">
+          <div class="swatch"><div class="swatch-color" style="background:#00C853"></div><p><strong>Live Green</strong><code>#00C853</code></p></div>
+          <div class="swatch"><div class="swatch-color" style="background:#0A0A0A"></div><p><strong>Deep Black</strong><code>#0A0A0A</code></p></div>
+          <div class="swatch"><div class="swatch-color" style="background:#6B7280"></div><p><strong>Slate Gray</strong><code>#6B7280</code></p></div>
+          <div class="swatch"><div class="swatch-color" style="background:#F3F4F6"></div><p><strong>Light Gray</strong><code>#F3F4F6</code></p></div>
+          <div class="swatch"><div class="swatch-color" style="background:#FFFFFF"></div><p><strong>White</strong><code>#FFFFFF</code></p></div>
+        </div>
+      </section>
+      <section aria-labelledby="app-assets">
+        <div class="section-head"><h2 id="app-assets">App & sharing artwork</h2><p>Square marks are centered for safe cropping. The social card contains no fabricated metrics or unverified domain.</p></div>
+        <div class="assets">
+          <article class="card"><div class="card-label">PWA · any</div><div class="asset-preview icon"><img src="/icon-512.png" alt="Live app icon 512 by 512"></div></article>
+          <article class="card"><div class="card-label">PWA · maskable</div><div class="asset-preview icon dark"><img src="/icon-maskable-512.png" alt="Live maskable app icon 512 by 512"></div></article>
+          <article class="card"><div class="card-label">Social card · 1200 × 630</div><div class="asset-preview"><img src="/brand/live-social-card.png" alt="Live social sharing card"></div></article>
+        </div>
+      </section>
+      <p class="note"><strong>Implementation note:</strong> the mark, color, header, account/merchant/admin logo placements, PWA icons, share artwork, footer, and shared design tokens are in the existing project. This gallery is an asset reference; it does not replace the working marketplace app. Brand/domain rights clearance and accessibility/browser/build verification remain separate reviews.</p>
+    </main>
+    <footer class="foot">Live · Brand assets reference · SVG sources and usage guidance are in <code>docs/BRAND_GUIDE.md</code>.</footer>
+  </div>
+</body>
+</html>
