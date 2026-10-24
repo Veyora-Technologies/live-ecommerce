@@ -8,6 +8,7 @@ import ThemeControl from "@/components/ThemeControl";
 import BrandLogo from "@/components/BrandLogo";
 import MerchantQrButton from "@/components/MerchantQrButton";
 import { merchantLocationLabel } from "@/lib/location-label";
+import ImageUploadField from "@/components/ImageUploadField";
 import { DEFAULT_MARKET_CODE, getMarketCurrencyConfiguration } from "@/lib/market-config";
 
 type MerchantService = { id: string; name: string; description: string | null; price: number | null; durationMin: number | null; capacity: number; updatedAt: string };
@@ -504,7 +505,7 @@ export default function MerchantClient({ user, merchants, activeMerchant, reserv
                 </div>
                 {branches.length > 0 ? <div><label className="text-xs font-semibold uppercase text-slate-500" htmlFor="product-branch">Stock branch</label><select id="product-branch" name="branchId" required defaultValue="" className="mt-1 w-full h-10 px-3 rounded-xl border border-slate-200 text-sm"><option value="">Choose the branch that owns this stock</option>{branches.map((branch:any) => <option key={branch.id} value={branch.id}>{branch.name} · {merchantLocationLabel(branch)}</option>)}</select><small className="mt-1 block text-xs text-slate-500">Stock quantity is stored for this branch only; it is not combined across locations.</small></div> : <p className="rounded-xl bg-amber-50 border border-amber-200 p-3 text-xs text-amber-900">No branch record exists yet. <Link className="font-bold underline" href={`/merchant/connect?merchantId=${encodeURIComponent(active.id)}`}>Create a branch</Link> before adding stock; Live will not assign inventory to an unknown location.</p>}
                 <input name="lowStockThreshold" placeholder="Low stock threshold 5" type="number" className="w-full h-10 px-3 rounded-xl border border-slate-200 text-sm" />
-                <input name="imageUrl" placeholder="Image URL (optional)" className="w-full h-10 px-3 rounded-xl border border-slate-200 text-sm" />
+                <ImageUploadField merchantId={active.id} />
                 <input name="sku" placeholder="SKU optional" className="w-full h-10 px-3 rounded-xl border border-slate-200 text-sm" />
                 <button disabled={branches.length === 0} className="w-full h-10 rounded-full bg-live-green-ink text-white font-semibold text-sm disabled:opacity-50">Add product to selected branch</button>
               </form>

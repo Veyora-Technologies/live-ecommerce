@@ -53,13 +53,15 @@ export function getEnvStatus() {
     valid: errors.length === 0,
     errors,
     integrations: {
-      email: !!process.env.RESEND_API_KEY,
+      email: !!(process.env.RESEND_API_KEY && process.env.EMAIL_FROM),
       sms: !!process.env.TWILIO_ACCOUNT_SID,
       vision: !!(process.env.VISION_PROVIDER && process.env.VISION_API_KEY),
       payments: !!(process.env.PAYSTACK_SECRET_KEY || process.env.STRIPE_SECRET_KEY),
       maps: !!process.env.MAPBOX_TOKEN,
       Sentry: !!process.env.SENTRY_DSN,
       cron: !!process.env.CRON_SECRET,
+      // Local disk storage only; multi-instance deployments need object storage.
+      uploads: !!process.env.LIVE_UPLOAD_DIR,
     },
   };
 }

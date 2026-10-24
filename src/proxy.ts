@@ -109,7 +109,8 @@ export function proxy(req: NextRequest) {
 
   // Payload size
   const len = Number(req.headers.get("content-length") || 0);
-  const cap = pathname.startsWith("/api/v1/image") ? MAX_IMAGE_BYTES : MAX_BODY_BYTES;
+  const isUploadPath = pathname.startsWith("/api/v1/image") || pathname.startsWith("/api/uploads");
+  const cap = isUploadPath ? MAX_IMAGE_BYTES : MAX_BODY_BYTES;
   if (len > cap) return withHeaders(NextResponse.json({ error: "Request too large" }, { status: 413 }));
 
   // CSRF: cross-site Origin on mutations.
@@ -152,6 +153,12 @@ export function proxy(req: NextRequest) {
   } else if (pathname.startsWith("/api/v1/search") || pathname.startsWith("/api/assist")) {
     category = "search";
     max = 120;
+  } else if (pathname.startsWith("/api/media/")) {
+    // A single listing page legitimately loads many thumbnails. They are
+    // immutable and cheap, so they get their own generous bucket instead of
+    // exhausting the general API budget (which real listings would trip).
+    category = "media";
+    max = 1200;
   }
 
   const res = limit(`${bucketIdentity}:${category}`, max);

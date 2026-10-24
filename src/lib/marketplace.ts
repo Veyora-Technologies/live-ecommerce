@@ -5,6 +5,7 @@ import { assertSafeOutboundUrl } from "./security";
 import { getLegalReleaseGate, getLegalReleaseGateInTransaction, isLegalProductionMode } from "./legal";
 import { DEFAULT_MARKET_CODE, getActiveMarketConfiguration, getMarketMerchantWhere, getMarketProductWhere } from "./market-config";
 import { MarketUnavailableError, requireOperationalMarket } from "./market-runtime";
+import { isMediaPath } from "./media-path";
 
 export const IMPLEMENTED_MARKETPLACE_WORKFLOWS = {
   PRODUCT_INVENTORY: { listingKind: "PRODUCT", transactionMode: "RESERVATION" },
@@ -159,8 +160,12 @@ export async function publicMarketplaceServiceInTransaction(tx: Prisma.Transacti
 
 export function safeListingImageUrl(raw: string | null | undefined) {
   if (!raw) return null;
+  const trimmed = raw.trim();
+  // Images uploaded through /api/uploads are served same-origin; they are safe
+  // to render but are not absolute URLs, so they are handled before URL parsing.
+  if (isMediaPath(trimmed)) return trimmed;
   try {
-    const url = assertSafeOutboundUrl(raw.trim());
+    const url = assertSafeOutboundUrl(trimmed);
     if (url.protocol !== "https:") return null;
     return url.toString().slice(0, 1000);
   } catch {

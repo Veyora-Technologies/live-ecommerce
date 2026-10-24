@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { hashPassword, createSessionForUser, cookieOptions, AUTH_COOKIE } from "@/lib/auth";
 import { registerSchema, parseOr400 } from "@/lib/validate";
 import { logSecurityEvent, randomToken, sha256 } from "@/lib/security";
+import { emailConfigured, emailLinkBase, sendEmail } from "@/lib/email";
 import { ACCOUNT_POLICY_KEYS, evaluateLegalGate, getLegalReleaseGate, isLegalProductionMode, POLICY_SPECS, type PolicyKey } from "@/lib/legal";
 
 /** A concurrent or repeat sign-up for the same email/phone. Maps to 409, not 500. */
@@ -45,10 +46,35 @@ async function issueContactVerification(userId: string, email: string | null | u
   await prisma.tokenChallenge.create({
     data: { userId, type: "VERIFY_CONTACT", tokenHash: sha256(raw), expiresAt: new Date(Date.now() + 24 * 3600000) },
   });
+  let delivered = false;
+  let deliveryReason: string | null = null;
+  if (destination === "EMAIL" && email && emailConfigured() && emailLinkBase()) {
+    const result = await sendEmail({
+      to: email,
+      subject: "Confirm your Live email address",
+      text: [
+        "Confirm the email address on your Live account.",
+        "",
+        `Open this link within 24 hours: ${emailLinkBase()}/auth/verify?token=${encodeURIComponent(raw)}`,
+        "",
+        "If you did not create a Live account, ignore this message.",
+      ].join("\n"),
+      idempotencyKey: `verify:${userId}`,
+    });
+    delivered = result.delivered;
+    if (!result.delivered) deliveryReason = result.reason;
+  }
   await prisma.notification.create({
-    data: { recipientId: userId, type: "SECURITY", title: "Verify your contact details", body: `A verification request was created for your ${destination.toLowerCase()}. No message was delivered because no sender is configured in this build.` },
+    data: {
+      recipientId: userId,
+      type: "SECURITY",
+      title: "Verify your contact details",
+      body: delivered
+        ? `A verification link was sent to your ${destination.toLowerCase()}. Your account stays unverified until it is opened.`
+        : `A verification request was created for your ${destination.toLowerCase()}, but no message was delivered because no sender is configured in this build.`,
+    },
   }).catch(() => {});
-  return { channel: destination, token: raw, expiresInHours: 24 };
+  return { channel: destination, token: raw, expiresInHours: 24, delivered, deliveryReason };
 }
 
 export async function POST(req: NextRequest) {
@@ -141,10 +167,10 @@ export async function POST(req: NextRequest) {
 
   await logSecurityEvent("REGISTER", { userId: user.id, headers: req.headers });
 
-  // Issue a single-use contact-verification challenge. Delivery is not
-  // configured in this build, so the token is only surfaced in non-production
-  // for isolated testing and the account is never reported as verified until
-  // /api/auth/verify-contact succeeds.
+  // Issue a single-use contact-verification challenge. When a sender is
+  // configured the token travels only inside the emailed link; outside
+  // production it is also returned for isolated testing. The account is never
+  // reported as verified until /api/auth/verify-contact succeeds.
   const verification = await issueContactVerification(user.id, user.email, user.phone).catch(() => null);
 
   const { token } = await createSessionForUser(user, req.headers);
@@ -154,7 +180,14 @@ export async function POST(req: NextRequest) {
     user: { id: user.id, name: user.name, email: user.email, role: user.role },
     verificationRequired: Boolean(verification),
     ...(verification && !isProduction ? { devVerification: verification } : {}),
-    ...(verification && isProduction ? { verificationNote: "Verification delivery is not configured in this release. Your account exists but is unverified; contact details are released only to verified recovery channels." } : {}),
+    ...(verification && isProduction
+      ? {
+        verificationDelivered: verification.delivered,
+        verificationNote: verification.delivered
+          ? "A confirmation email was sent. Your account remains unverified until the link is opened."
+          : "No confirmation message was delivered. Your account exists but is unverified; use the support channel for recovery.",
+      }
+      : {}),
   });
   res.cookies.set(AUTH_COOKIE, token, cookieOptions());
   res.cookies.set("live_theme", user.theme || "system", { path: "/", maxAge: 60 * 60 * 24 * 365, sameSite: "lax", secure: process.env.NODE_ENV === "production" });

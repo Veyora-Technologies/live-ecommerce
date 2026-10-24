@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { NextResponse } from "next/server";
+import { isMediaPath } from "@/lib/media-path";
 
 /** Shared server-boundary schemas (§23). Prices in kobo unless stated. */
 const integerInput = (value: unknown) => {
@@ -12,10 +13,15 @@ const requiredInteger = (min: number, max: number) =>
 const optionalInteger = (min: number, max: number) =>
   z.preprocess((value) => value === undefined || value === "" ? undefined : integerInput(value), z.coerce.number().int().min(min).max(max).optional());
 
-/** Product images must be absolute https URLs — no data:/blob:/http: values. */
-const httpsImageUrl = z.string().url().max(500).refine((value) => {
+/**
+ * Product images must be either an absolute https URL or the same-origin path of
+ * an image uploaded through /api/uploads. Relative protocol-relative values
+ * (//evil.example) and data:/blob:/javascript: values are rejected.
+ */
+const httpsImageUrl = z.string().min(1).max(500).refine((value) => {
+  if (isMediaPath(value)) return true;
   try { return new URL(value).protocol === "https:"; } catch { return false; }
-}, "Image URL must start with https://");
+}, "Image URL must be an https:// URL or an uploaded /api/media/… path");
 
 export const loginSchema = z.object({
   emailOrPhone: z.string().min(3).max(120),

@@ -31,6 +31,8 @@ The production-build HTTP suite is enabled with `LIVE_INTEGRATION=1` and a loopb
 | ESLint budget | **Pass, not clean** | `npm run lint:ci` runs `scripts/check-eslint-baseline.mjs`: 282 errors / 24 warnings against the recorded baseline with no per-file/rule regression. Re-record after deliberately fixing debt with `npm run lint:baseline`. Strict lint debt remains. |
 | Runtime dependency audit | **Pass** | `npm audit --omit=dev --audit-level=high` reported zero runtime advisories. |
 | Full dependency audit | **Unresolved: 5 high, 0 critical** | Findings are in development tooling. A forced fix would downgrade `eslint-config-next` to 14.2.35; no forced fix was applied. The blocking full-audit CI step remains unresolved. |
+| Upload/media unit spec | **15 passed** | `npx vitest run tests/unit/media-upload.test.ts` (2026-10-24). Pure-logic coverage: magic-byte identification, SVG/HTML rejection, traversal-shaped names, `LIVE_UPLOAD_DIR` fail-closed rule, and media paths accepted (or not) by the product schema. No HTTP request and no file was written. |
+| Email delivery | **Not executed** | `src/lib/email.ts` is only exercised through type checking; no provider key exists here, so neither success nor provider-error behaviour was tested against a live endpoint. |
 | Browser E2E | **Runnable, not executed here** | `@playwright/test` is now a devDependency and CI installs Chromium. `tests/e2e/flow.spec.ts` was rewritten against real UI landmarks after the previous spec referenced a placeholder that does not exist. The suite has not been executed in the audit sandbox (browser binaries are not fetchable there); the first CI `e2e` job is the real verification. No responsive, assistive-technology, or visual audit was run. |
 | GitHub Actions | **Not run** | Workflow changes were exercised locally where practical; the workflow has not run on GitHub-hosted infrastructure. |
 
@@ -43,6 +45,7 @@ The latest geography seed reported 850 active nodes and marketplace seeding repo
 - No sustained throughput/load test, failure-injection, DDoS test, external provider contract test, production secret rotation, or independent penetration/security assessment.
 - No production backup/restore or off-site/PITR drill, measured RPO/RTO, centralized observability, SLO, on-call or incident response rehearsal.
 - No legal/privacy professional review or compliance assessment.
-- No production host/domain, deployment, or provider activation.
+- No production host/domain, deployment, or provider activation — including a real Resend sender/domain, so verification and password-reset email has never been delivered anywhere.
+- Image storage is a single local directory; no multi-instance, object-storage, CDN, antivirus or EXIF-stripping behaviour was tested.
 
 Archived local SQLite backup/restore and sequential health/search timing checks are historical evidence only. They must not be described as production recovery, performance, capacity, or SLO results.

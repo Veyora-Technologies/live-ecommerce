@@ -71,3 +71,22 @@ Every successful release writes a `MERCHANT_CONTACT_REVEAL` security event conta
 ## Metrics
 
 `GET /api/metrics` requires `Authorization: Bearer $METRICS_TOKEN` in every environment. It returns `503` when the variable is unset and `401` (with `WWW-Authenticate: Bearer`) on a wrong token.
+
+## Transactional email (verification and password reset)
+
+Email is sent through Resend's HTTP API (`src/lib/email.ts`). It is **not** configured until both `RESEND_API_KEY` and `EMAIL_FROM` are set, and links additionally require an absolute public HTTPS origin (`LIVE_PUBLIC_BASE_URL` or `NEXT_PUBLIC_APP_URL`) that is not localhost or a sandbox preview host. When any of these is missing the API says so instead of pretending to deliver.
+
+- `POST /api/auth/register` returns `verificationDelivered` (`true`/`false`) plus `verificationChannel` and `verificationExpiresInHours`. With email configured, a confirmation link is emailed; the plaintext token is returned **only** outside production (`devToken`). In production a failed delivery is reported honestly and the token is not returned.
+- `PUT /api/auth/verify-contact` confirms a token from that link and sets `emailVerifiedAt` only. `src/app/auth/verify/page.tsx` is the page the link opens; it shows expired, invalid, already-used and signed-out states explicitly. `POST` re-sends the message for the signed-in account and returns `delivered`; an account without an email gets `409 NO_VERIFIABLE_CONTACT` because this deployment has no SMS provider and will not mark a phone number verified.
+- `POST /api/auth/forgot` always answers with the same generic message so account existence is not leaked. In production it sends a 30-minute reset link when email is configured; when it is not configured it returns `503` with `code: "PASSWORD_RESET_DELIVERY_UNAVAILABLE"` and creates no unusable token. A provider failure after token creation burns the token (a delivery-failure security event is logged) so a half-sent link can never be redeemed.
+- `POST /api/auth/reset` (existing) redeems the emailed token and rotates the session.
+
+Delivery is attempted once per request with an 8-second timeout; there is no in-request retry loop. A provider outage is reported as `PROVIDER_ERROR`/`TIMEOUT`, never as success.
+
+## Merchant image uploads
+
+- `POST /api/uploads` — `multipart/form-data` with `merchantId` and `file`. Requires a signed-in member of that merchant who can edit inventory or customise the storefront. Accepted types are decided by **magic bytes** (JPEG, PNG, WebP, GIF), never by the filename or the browser-supplied `Content-Type`; 5 MB cap. Returns `{ url, type, bytes }` with a same-origin `url` of the form `/api/media/<32 hex>.<ext>`.
+- `GET /api/media/<name>` serves those images with the correct `Content-Type`, `X-Content-Type-Options: nosniff` and a one-year immutable cache. Only the exact generated filename shape is served, so path traversal and arbitrary file reads are impossible.
+- The returned path (or an `https://` URL) is accepted by product create/patch (`imageUrl`) and storefront customization (`imageUrl`, `coverImageUrl`). `data:`, `javascript:`, `http:` and protocol-relative values remain rejected.
+- Storage is a **single local directory** (`LIVE_UPLOAD_DIR`, absolute path required). When it is unset the endpoint returns `503 UPLOAD_NOT_CONFIGURED` rather than silently discarding files. Multi-instance deployments must replace this with object storage — see `docs/DEPLOYMENT_READINESS.md`.
+- Do not send identity documents, payment proofs or verification evidence here: there is no such endpoint, and these uploads are public URLs.

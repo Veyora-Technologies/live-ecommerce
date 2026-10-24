@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import MerchantGeographyFields from "@/components/MerchantGeographyFields";
+import ImageUploadField from "@/components/ImageUploadField";
 import { formatNaira } from "@/lib/utils";
 
 export default function ConnectClient({ merchant }: any){
@@ -96,9 +97,22 @@ export default function ConnectClient({ merchant }: any){
         {/* Customize */}
         <section className="bg-white border border-slate-200 rounded-2xl p-5">
           <h3 className="font-bold">🎨 Storefront</h3>
-          {canManage&&<form onSubmit={async e=>{e.preventDefault(); const f=new FormData(e.currentTarget); const res=await fetch("/api/merchant/customize",{ method:"PUT", headers:{ "Content-Type":"application/json"}, body: JSON.stringify({ merchantId:mid, description:f.get("desc"), whatsapp:f.get("wa") })}); const d=await res.json(); setMsg(res.ok?"Storefront updated ✓":d.error);}} className="mt-3 space-y-2">
+          {canManage&&<form onSubmit={async e=>{
+              e.preventDefault();
+              const f=new FormData(e.currentTarget);
+              // Only send an image when one was just uploaded, so saving the form
+              // cannot wipe a logo or cover set earlier.
+              const body: Record<string, unknown> = { merchantId:mid, description:f.get("desc"), whatsapp:f.get("wa") };
+              const logo=f.get("logo"); if (logo) body.imageUrl=logo;
+              const cover=f.get("cover"); if (cover) body.coverImageUrl=cover;
+              const res=await fetch("/api/merchant/customize",{ method:"PUT", headers:{ "Content-Type":"application/json"}, body: JSON.stringify(body) });
+              const d=await res.json();
+              setMsg(res.ok?"Storefront updated ✓":d.error);
+            }} className="mt-3 space-y-2">
             <input name="desc" defaultValue={merchant.description||""} placeholder="Business description" className="w-full h-10 px-3 rounded-xl border border-slate-200"/>
             <input name="wa" defaultValue={merchant.whatsapp||""} placeholder="WhatsApp number" className="w-full h-10 px-3 rounded-xl border border-slate-200"/>
+            <ImageUploadField merchantId={mid} name="logo" label="Business logo" />
+            <ImageUploadField merchantId={mid} name="cover" label="Cover photo" />
             <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">Delivery integrations are not configured. Live does not verify or arrange delivery; contact a seller directly about any seller-managed option.</p>
             <button className="h-10 px-6 rounded-full bg-live-black text-white text-sm font-semibold">Save storefront</button>
             <span className="block text-xs text-slate-400">Verification & reliability badges cannot be edited here.</span>
