@@ -105,7 +105,7 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: "This verification link is invalid or expired. Request a new one." }, { status: 400, ...noStore });
   }
 
-  const account = await prisma.user.findUnique({ where: { id: user.id }, select: { email: true, phone: true } });
+  const account = await prisma.user.findUnique({ where: { id: user.id }, select: { email: true, phoneVerifiedAt: true } });
   if (!account) return NextResponse.json({ error: "Unauthorized" }, { status: 401, ...noStore });
   if (!account.email) {
     // An email challenge cannot exist for an account without an email, but a
