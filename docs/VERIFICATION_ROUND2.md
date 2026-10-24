@@ -278,3 +278,70 @@ Only **after** that works should you create the Resend account. Then:
 
 Items 10–12 are the reason this is a verification report and not a sign-off. Do §7 first; it costs
 nothing and it will surface any wiring mistake before a single account is created.
+
+---
+
+## 9. Full suite run — 2026-10-24 (follow-up)
+
+`npx vitest run` on HEAD (`40bc4e6`), clean tree:
+
+```text
+Test Files  8 failed | 19 passed | 4 skipped (31)
+     Tests  91 passed | 18 skipped (109)
+   Duration  7.12s
+vitest_exit=1
+```
+
+### 9.1 Passing (19 files, 91 tests)
+
+`admin-roles` 6 · `auth-navigation` 8 · `auth-user-view` 1 · `bulk-csv-money` 3 · `client-ip` 7 ·
+`geography-data` 3 · `image-url-validation` 6 · `market-config` 7 · **`media-upload` 15** ·
+`middleware` 4 · `money` 5 · `notification-category` 3 · `notifications-api` 3 ·
+`reservation-stock` 3 · `secret-vault` 2 · `seed-safety` 6 · `service-bookings` 4 · `stock` 3 ·
+`transitions` 2
+
+### 9.2 Skipped (4 files, 18 tests)
+
+`integration/auth-flow` 8 · `integration/list-authorization` 1 · `integration/marketplace` 2 ·
+`integration/reservation` 7 — gated behind `LIVE_INTEGRATION=1` plus a seeded, running server, which
+this environment cannot provide (no generated Prisma client, no database).
+
+### 9.3 Failing (8 files, 0 tests executed)
+
+`integration/cart-submit`, `unit/{marketplace,nlp,permissions,production-env-gate,saved-search-alerts,security,unified-search}`
+
+Every one dies at import with the same error:
+
+```text
+Error: @prisma/client did not initialize yet. Please run "prisma generate" and try to import it again.
+ ❯ new PrismaClient node_modules/.prisma/client/default.js:43:11
+ ❯ src/lib/db.ts:5:49
+```
+
+`node_modules/.prisma/client/index.d.ts` is the placeholder that ships with `@prisma/client`
+(`export declare const PrismaClient: any`), there is no query-engine binary, and `prisma generate`
+still fails: `request to https://binaries.prisma.sh/…/libquery_engine.so.node.gz.sha256 failed`
+(even with `--no-engine`, which still fetches the checksum). These are import-time crashes, **no
+assertion failed**.
+
+### 9.4 Control experiment — these are not regressions
+
+A detached worktree of the pre-round-2 commit `0da3dac` (same `node_modules`) reports:
+
+```text
+Test Files  8 failed | 18 passed | 4 skipped (30)
+     Tests  76 passed | 18 skipped (94)
+```
+
+**Identical 8 failing files.** Round 2 therefore added 15 passing tests and changed no existing
+outcome — no test that passed before fails now.
+
+### 9.5 Why the ESLint check on `main` fails, and why this branch may pass
+
+The single recorded CI run (push to `main`, 1 day ago) failed at *ESLint debt budget*. `8028513`
+declared `"lint:ci": "node scripts/check-eslint-baseline.mjs"` but did not contain that file;
+running the same command in a worktree of `8028513` prints
+`Error: Cannot find module '/tmp/lc-main/scripts/check-eslint-baseline.mjs'`. `3f2ac55` added the
+script, so this branch runs it successfully (`OK — 282 errors / 24 warnings`). The GitHub log itself
+could not be downloaded from this sandbox (EOF from GitHub's log host), so that link in the chain is
+repository-state inference, not a read log.
