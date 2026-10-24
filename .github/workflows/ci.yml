@@ -119,15 +119,42 @@ jobs:
         run: |
           ./node_modules/.bin/prisma db push --skip-generate
           npm run db:seed
+      - name: Production build
+        run: npm run build
       - name: Browser smoke tests
         shell: bash
-        # Playwright's console output is captured and, on failure, also emitted
-        # as a single error annotation. That keeps the reason for a red run
-        # visible from the pull-request UI and from `gh api .../annotations`
-        # even where downloaded job logs are not reachable.
+        # Runs against the optimized build rather than `next dev`: dev compiles
+        # each route on first request, which made navigation assertions time out
+        # on a cold /search route. Output is captured and re-emitted as a single
+        # error annotation so a red run is diagnosable from the PR UI and from
+        # `gh api .../check-runs/<id>/annotations` even where job logs are not
+        # downloadable.
         run: |
+          set -euo pipefail
+          npm run start -- --hostname 127.0.0.1 --port 3000 > /tmp/live-e2e-server.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true; wait "$server_pid" 2>/dev/null || true' EXIT
+
+          ready=0
+          for attempt in $(seq 1 90); do
+            if curl --silent --show-error --fail http://127.0.0.1:3000/api/v1/health >/dev/null; then
+              ready=1
+              break
+            fi
+            if ! kill -0 "$server_pid" 2>/dev/null; then
+              cat /tmp/live-e2e-server.log
+              exit 1
+            fi
+            sleep 1
+          done
+          if [ "$ready" -ne 1 ]; then
+            cat /tmp/live-e2e-server.log
+            echo "Production server did not become ready within 90 seconds." >&2
+            exit 1
+          fi
+
           set +e
-          npm run test:e2e -- --reporter=list > /tmp/e2e.log 2>&1
+          LIVE_BASE_URL=http://127.0.0.1:3000 npm run test:e2e -- --reporter=list > /tmp/e2e.log 2>&1
           status=$?
           cat /tmp/e2e.log
           if [ "$status" -ne 0 ]; then

@@ -20,7 +20,7 @@ test("visitor searches from the home page and lands on results", async ({ page }
   await expect(search).toBeVisible();
   await search.fill("Rice");
   await page.getByRole("button", { name: /^Search$/ }).first().click();
-  await expect(page).toHaveURL(/\/search\?/);
+  await expect(page).toHaveURL(/\/search\?q=Rice/, { timeout: 20_000 });
   await expect(page.getByRole("heading", { level: 1 })).toContainText(/product listings/i);
 });
 
