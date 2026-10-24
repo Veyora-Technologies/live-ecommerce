@@ -13,7 +13,10 @@ import { test, expect } from "@playwright/test";
  */
 test("visitor searches from the home page and lands on results", async ({ page }) => {
   await page.goto("/");
-  const search = page.getByRole("searchbox", { name: /Search for real availability/i }).first();
+  // The field is an <input type="text">, which exposes the `textbox` role — the
+  // surrounding <form role="search"> is the landmark, not the input. Using
+  // `searchbox` here made the test fail even though the input was on screen.
+  const search = page.getByRole("textbox", { name: /Search for real availability/i }).first();
   await expect(search).toBeVisible();
   await search.fill("Rice");
   await page.getByRole("button", { name: /^Search$/ }).first().click();
