@@ -49,3 +49,25 @@ Availability is based on merchant records, reservations, and batch restrictions.
 ## Error handling and currency
 
 Error status/body contracts vary by route; do not assume every error is `{error}` or that every create returns `201`. Documented core statuses are in `openapi.json`. Prices and fees use integer kobo where stored; fee/payment processing is not connected. Never infer availability, distance, delivery, or provider confirmation from the presence of an API record.
+
+## Contact release (signed-in only)
+
+Merchant phone, WhatsApp and email are **not** part of public discovery responses. They are released on demand:
+
+- `GET /api/products/[id]/contact` — `401` with `code: "SIGN_IN_REQUIRED"` when unauthenticated, `404` when the listing is not publicly eligible, otherwise `{ merchantId, businessName, phone, whatsapp, email }` with `Cache-Control: private, no-store`.
+- `GET /api/merchant/[id]/contact` — same contract for an approved merchant profile.
+
+Every successful release writes a `MERCHANT_CONTACT_REVEAL` security event containing the requesting user id, merchant id, and whether the caller is store staff. Respond to moderation or abuse questions using those events.
+
+## Contact verification
+
+- `POST /api/auth/verify-contact` — issues a single-use challenge for the signed-in account's unverified email or phone. Returns `{ channel, expiresInHours }`; outside production it also returns `devVerificationToken` because no sender adapter exists in this build.
+- `PUT /api/auth/verify-contact` with `{ token }` — consumes the challenge, sets `emailVerifiedAt`/`phoneVerifiedAt`, and returns `{ emailVerified, phoneVerified }`. Tokens are stored only as SHA-256 hashes and expire after 24 hours.
+
+## Notification pagination
+
+`GET /api/notifications` now paginates before filtering. Unfiltered requests use normal `skip`/`take`. Category-filtered requests scan newest-first in bounded chunks (up to 5000 rows) and return `filteredCount`, `scanned` and `truncated` alongside `notifications`. `totalCount` remains the account-wide unfiltered count; when `truncated` is `true`, `filteredCount` is `null` because the scan window was exhausted before the category total was known.
+
+## Metrics
+
+`GET /api/metrics` requires `Authorization: Bearer $METRICS_TOKEN` in every environment. It returns `503` when the variable is unset and `401` (with `WWW-Authenticate: Bearer`) on a wrong token.

@@ -51,3 +51,20 @@ The latest fresh-fixture HTTP integration suite passed 159/159 tests across 27 f
 ## Not claimed / required before launch
 
 No production database or migrations, hard-blocked admin MFA, global/shared rate limiting, production scheduler, centralized observability, external providers, independent penetration test, ASVS/NIST assessment, WCAG conformance audit, production backup/restore, load capacity, SLO, or production deployment is verified. See `docs/GO_LIVE.md`.
+
+## Hardening applied 2026-10-24
+
+These changes close findings from the repository audit. They do not change the NO-GO deployment decision.
+
+- **Trusted-proxy client IPs.** `X-Forwarded-For` is no longer parsed by taking the left-most value (which a caller controls). `src/lib/client-ip.ts` counts back `TRUSTED_PROXY_HOPS` entries from the right, validates the result as an IP, and returns `null` when the chain is shorter than configured. Set `TRUSTED_PROXY_HOPS=0` when the app is directly internet-facing.
+- **Separate IP-hash key.** Audit IP hashes use `IP_HASH_SECRET` when set, falling back to `JWT_SECRET`. Rotating the JWT signing key no longer invalidates stored IP hashes.
+- **Stronger CSRF signal.** Mutations with no `Origin` header are now checked against `Sec-Fetch-Site`; a browser-asserted `cross-site` value is rejected. Non-browser clients (cron, server-to-server, integration tests) send neither header and are unaffected.
+- **Merchant contact details are no longer public.** Phone, WhatsApp and email were previously returned by `GET /api/products/[id]` and `GET /api/v1/merchants` and embedded in server-rendered HTML (`tel:` links), which made every approved merchant trivially harvestable. They are now released only to signed-in accounts via `GET /api/products/[id]/contact` and `GET /api/merchant/[id]/contact`, and each release writes a `MERCHANT_CONTACT_REVEAL` security event.
+- **Admin roles are enforced, not decorative.** `src/lib/admin-access.ts` requires the persisted `adminRole`, not just `isAdmin`, for merchant moderation and platform analytics. Feature flags and freshness policies are `SUPER`-only. An account with `isAdmin=true` and `adminRole="NONE"` can no longer suspend merchants or change platform configuration.
+- **`/api/metrics` fails closed everywhere.** It returns 503 when `METRICS_TOKEN` is unset and 401 on a wrong bearer token, in every environment. It previously exposed cross-tenant counters whenever `NODE_ENV !== "production"`, which includes staging and preview deployments.
+- **Explicit production data mode.** In a production build, an unset `LIVE_DATA_MODE` now blocks requests with 503 and marks health degraded, instead of silently behaving like demo mode.
+- **Image URLs are https-only.** Product create/patch and storefront customization reject `http:`, `data:` and `javascript:` image URLs; marketplace media already enforced https through `safeListingImageUrl`.
+- **Concurrent duplicate sign-up returns 409.** A unique-constraint violation during registration maps to a clean `ACCOUNT_EXISTS` response instead of an unhandled 500.
+- **Contact verification exists.** `POST/PUT /api/auth/verify-contact` issues and consumes a single-use, hashed, 24-hour challenge and sets `emailVerifiedAt`/`phoneVerifiedAt`. No sender adapter is configured, so the token is surfaced only outside production. Accounts remain unverified until the challenge is consumed; sign-in behaviour is unchanged.
+
+Residual gaps unchanged by this pass: per-process rate limiting (no shared store), optional admin MFA, no email/SMS delivery, no payments, no object storage for merchant image uploads, SQLite-only datasource with no committed migration history.

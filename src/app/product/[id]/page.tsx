@@ -11,6 +11,7 @@ import RecentViewTracker from "@/components/RecentViewTracker";
 import ShareButton from "@/components/ShareButton";
 import PriceAlertButton from "@/components/PriceAlertButton";
 import ImageWithFallback from "@/components/ImageWithFallback";
+import MerchantContactActions from "@/components/MerchantContactActions";
 import QRCode from "qrcode";
 import { headers } from "next/headers";
 import Link from "next/link";
@@ -183,11 +184,11 @@ export default async function ProductPage({ params }: { params: Promise<{id:stri
               <span className="text-live-green-ink font-semibold text-sm">View store →</span>
             </Link>
 
-            <div className="mt-4 flex gap-2">
-              <a href={`tel:${product.merchant.phone}`} className="flex-1 h-11 grid place-items-center rounded-full bg-white border border-slate-200 font-semibold text-sm">Call</a>
-              {product.merchant.whatsapp && <a href={`https://wa.me/${product.merchant.whatsapp.replace(/\D/g,"")}`} target="_blank" className="flex-1 h-11 grid place-items-center rounded-full bg-[#25D366] text-white font-semibold text-sm">WhatsApp</a>}
+            <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+              <MerchantContactActions productId={product.id} signedIn={Boolean(user)} className="flex-1" />
               {product.merchant.lat != null && product.merchant.lng != null && product.merchant.locationVerifiedAt && <a href={`https://www.google.com/maps/search/?api=1&query=${product.merchant.lat},${product.merchant.lng}`} target="_blank" rel="noreferrer" className="flex-1 h-11 grid place-items-center rounded-full bg-live-black text-white font-semibold text-sm">Map location</a>}
             </div>
+            <p className="mt-2 text-[11px] text-slate-400">Merchant contact details are released to signed-in accounts only and are never included in public page source.</p>
           </div>
         </div>
 

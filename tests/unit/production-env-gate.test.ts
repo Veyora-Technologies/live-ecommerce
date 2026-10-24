@@ -23,6 +23,24 @@ describe("production data mode release gate", () => {
     expect(status.errors).toContain("LIVE_DATA_MODE");
   });
 
+  it("treats an unset data mode in production as invalid instead of defaulting to demo", () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("LIVE_DATA_MODE", undefined);
+    vi.stubEnv("DATABASE_URL", "file:/tmp/live-production-gate-test.sqlite");
+    vi.stubEnv("JWT_SECRET", "unit-test-secret-that-is-long-enough-for-production-check");
+    const status = getEnvStatus();
+    expect(status.valid).toBe(false);
+    expect(status.errors).toContain("LIVE_DATA_MODE");
+  });
+
+  it("accepts an explicit demo data mode in a production build", () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("LIVE_DATA_MODE", "demo");
+    vi.stubEnv("DATABASE_URL", "file:/tmp/live-production-gate-test.sqlite");
+    vi.stubEnv("JWT_SECRET", "unit-test-secret-that-is-long-enough-for-production-check");
+    expect(getEnvStatus().valid).toBe(true);
+  });
+
   it("marks short production JWT secrets as invalid in the health configuration check", () => {
     vi.stubEnv("NODE_ENV", "production");
     vi.stubEnv("LIVE_DATA_MODE", "demo");

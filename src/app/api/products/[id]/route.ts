@@ -18,7 +18,7 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ id: st
           lga: { select: { code: true, name: true, type: true } },
           cityArea: { select: { code: true, name: true, type: true } },
           locality: { select: { code: true, name: true, type: true } },
-          phone: true, email: true, whatsapp: true, imageUrl: true,
+          imageUrl: true,
           storeStatus: true, openingHours: true, verificationStatus: true,
           pickupAvailable: true,
         },

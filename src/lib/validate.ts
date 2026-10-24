@@ -12,6 +12,11 @@ const requiredInteger = (min: number, max: number) =>
 const optionalInteger = (min: number, max: number) =>
   z.preprocess((value) => value === undefined || value === "" ? undefined : integerInput(value), z.coerce.number().int().min(min).max(max).optional());
 
+/** Product images must be absolute https URLs — no data:/blob:/http: values. */
+const httpsImageUrl = z.string().url().max(500).refine((value) => {
+  try { return new URL(value).protocol === "https:"; } catch { return false; }
+}, "Image URL must start with https://");
+
 export const loginSchema = z.object({
   emailOrPhone: z.string().min(3).max(120),
   password: z.string().min(1).max(200),
@@ -41,7 +46,7 @@ export const productCreateSchema = z.object({
   stockQuantity: requiredInteger(0, 1_000_000),
   lowStockThreshold: optionalInteger(0, 100_000),
   unit: z.string().min(1).max(20).optional(),
-  imageUrl: z.preprocess((value) => value === "" ? null : value, z.string().url().max(500).optional().nullable()),
+  imageUrl: z.preprocess((value) => value === "" ? null : value, httpsImageUrl.optional().nullable()),
   sku: z.string().max(80).optional().nullable(),
   barcode: z.string().max(80).optional().nullable(),
   branchId: z.string().min(1).max(64).optional().nullable(),
@@ -54,7 +59,7 @@ export const productPatchSchema = z.object({
   category: z.string().max(60).optional(),
   brand: z.string().max(80).optional().nullable(),
   description: z.string().max(2000).optional().nullable(),
-  imageUrl: z.string().url().max(500).optional().nullable(),
+  imageUrl: httpsImageUrl.optional().nullable(),
   unit: z.string().max(20).optional(),
   reason: z.string().max(200).optional(),
   expectedUpdatedAt: z.string().datetime().optional(),

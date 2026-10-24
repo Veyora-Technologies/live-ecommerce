@@ -10,11 +10,17 @@ import { parseMajorAmountToMinor } from "@/lib/money";
 const customizeSchema = z.object({
   merchantId: z.string().trim().min(1).max(40),
   description: z.string().max(2000).nullable().optional(),
-  imageUrl: z.string().max(500).nullable().optional(),
-  coverImageUrl: z.string().max(500).nullable().optional(),
-  phone: z.string().max(32).optional(),
-  email: z.string().max(254).nullable().optional(),
-  whatsapp: z.string().max(32).nullable().optional(),
+  // Only absolute https image URLs are rendered; reject data:/javascript:/http:.
+  imageUrl: z.preprocess((value) => value === "" ? null : value, z.string().url().max(500).refine((value) => {
+    try { return new URL(value).protocol === "https:"; } catch { return false; }
+  }, "Image URL must start with https://").nullable().optional()),
+  coverImageUrl: z.preprocess((value) => value === "" ? null : value, z.string().url().max(500).refine((value) => {
+    try { return new URL(value).protocol === "https:"; } catch { return false; }
+  }, "Cover image URL must start with https://").nullable().optional()),
+  // Contact details are rendered inside tel:/wa.me links for signed-in users.
+  phone: z.string().trim().regex(/^\+?[0-9 ()-]{7,20}$/, "Use a phone number with digits, spaces, +, - or parentheses").optional(),
+  email: z.string().trim().email().max(254).nullable().optional(),
+  whatsapp: z.preprocess((value) => value === "" ? null : value, z.string().trim().regex(/^\+?[0-9 ()-]{7,20}$/, "Use a WhatsApp number with digits, spaces, +, - or parentheses").nullable().optional()),
   pickupAvailable: z.boolean().optional(),
   deliveryAvailable: z.boolean().optional(),
   deliveryFee: z.union([z.string().max(30), z.number().finite()]).nullable().optional(),

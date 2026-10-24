@@ -200,3 +200,35 @@ This file is the canonical current architecture, feature and readiness record. S
 - [`API.md`](API.md), [`openapi.json`](openapi.json) — documented API surface; not a complete proof of all routes.
 - [`DEPLOYMENT.md`](DEPLOYMENT.md), [`SECURITY.md`](SECURITY.md), [`THREAT_MODEL.md`](THREAT_MODEL.md), [`INTEGRATIONS.md`](INTEGRATIONS.md) — operational/security/integration boundaries.
 - [`ARCHITECTURE.md`](ARCHITECTURE.md) and [`FEATURE_STATUS.md`](FEATURE_STATUS.md) now point here for current status. Older readiness docs, feature snapshots, and backlog/performance artifacts are historical records, not current acceptance.
+
+## 9. Audit remediation 2026-10-24
+
+A read-only repository audit was followed by a remediation pass on the branch `arena/bf3e275f-live-ecommerce`. The deployment decision is unchanged (**NO-GO**); these changes remove defects that were not dependent on provider or owner decisions.
+
+### Fixed in source
+
+| Finding | Change | Evidence |
+|---|---|---|
+| `npm run lint:ci` referenced a missing `scripts/` directory and failed with `MODULE_NOT_FOUND` | Added `scripts/check-eslint-baseline.mjs` (debt-budget gate with `--update`) | `npm run lint:ci` → `OK — 282 errors / 24 warnings` |
+| `db:encrypt-secrets` referenced a missing script | Added `scripts/encrypt-existing-secrets.ts` (dry-run by default, refuses non-file DBs, never prints values) | Script parses and runs to the Prisma client construction |
+| `@prisma/client` was a devDependency | Moved to `dependencies`; added `postinstall: prisma generate` | `package.json` |
+| `test:e2e` had no runner installed and its spec used a selector that does not exist | Added `@playwright/test`; rewrote `tests/e2e/flow.spec.ts` against real landmarks; added a dedicated CI `e2e` job | Local run not possible (browser binaries are not fetchable in the audit sandbox) |
+| Spoofable `X-Forwarded-For` left-most entry | Trusted-proxy resolver `src/lib/client-ip.ts` + `TRUSTED_PROXY_HOPS` | `tests/unit/client-ip.test.ts` (11 assertions incl. spoofing, short chain, IPv6) |
+| `isAdmin` alone authorised merchant suspension, feature flags, freshness policy, analytics | `src/lib/admin-roles.ts` + `src/lib/admin-access.ts`; those routes now require the persisted `adminRole` | `tests/unit/admin-roles.test.ts` |
+| `/api/metrics` unauthenticated outside production | Fails closed in every environment | `src/app/api/metrics/route.ts` |
+| Merchant phone/email/WhatsApp harvested from public JSON and HTML | Removed from public responses; signed-in, audited reveal endpoints; masked UI | `src/app/api/products/[id]/contact/route.ts`, `src/app/api/merchant/[id]/contact/route.ts`, `tests/e2e/flow.spec.ts` |
+| Unset `LIVE_DATA_MODE` in a production build behaved like demo | Production requests blocked with 503 unless explicitly `demo`; health degraded | `src/proxy.ts`, `src/lib/env.ts` |
+| Product/storefront image URLs accepted `http:`/`data:`/`javascript:` | https-only validation | `tests/unit/image-url-validation.test.ts` |
+| Concurrent duplicate registration returned 500 | Maps unique-constraint violation to `409 ACCOUNT_EXISTS` | `src/app/api/auth/register/route.ts` |
+| No email/phone verification route existed | Added `POST/PUT /api/auth/verify-contact` (hashed, single-use, 24h) | `src/app/api/auth/verify-contact/route.ts` |
+| Notifications filtered categories after the DB page was fetched | Paginate before filter, bounded scan, explicit `truncated` flag | `src/app/api/notifications/route.ts` |
+| `JWT_SECRET` reused as the audit IP-hash salt | `IP_HASH_SECRET` with documented fallback | `src/lib/security.ts` |
+
+### Corrected documentation
+
+- The dependency-audit row above recorded five high-severity dev-tooling advisories. Re-running `npm audit --audit-level=high` on 2026-10-24 reported **0 vulnerabilities** (production and full). That gate is currently green.
+- The ESLint debt budget is now enforced by a working script at 282 errors / 24 warnings.
+
+### Still blocked (owner or provider decision)
+
+SQLite→PostgreSQL conversion and committed migrations; `PRODUCTION_DATA_MODE_ENABLED`; shared rate-limit store; enforced admin MFA with bootstrap/recovery; email/SMS sender adapter (password reset and verification delivery); payments/payouts/refunds; object storage and an upload endpoint for merchant images; seller-created service/rental/quote/auction listings; independent security review and browser matrix sign-off.

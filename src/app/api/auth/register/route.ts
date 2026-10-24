@@ -3,8 +3,22 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { hashPassword, createSessionForUser, cookieOptions, AUTH_COOKIE } from "@/lib/auth";
 import { registerSchema, parseOr400 } from "@/lib/validate";
-import { logSecurityEvent } from "@/lib/security";
+import { logSecurityEvent, randomToken, sha256 } from "@/lib/security";
 import { ACCOUNT_POLICY_KEYS, evaluateLegalGate, getLegalReleaseGate, isLegalProductionMode, POLICY_SPECS, type PolicyKey } from "@/lib/legal";
+
+/** A concurrent or repeat sign-up for the same email/phone. Maps to 409, not 500. */
+class RegistrationConflict extends Error {
+  constructor(readonly field: "email" | "phone") {
+    super("Account already exists. Please sign in or reset your password.");
+    this.name = "RegistrationConflict";
+  }
+}
+
+function isUniqueConstraintError(cause: unknown): boolean {
+  // Prisma P2002 = unique constraint failed. Matched structurally so this file
+  // does not depend on a generated Prisma namespace import.
+  return Boolean(cause && typeof cause === "object" && (cause as { code?: unknown }).code === "P2002");
+}
 
 class RegistrationLegalBlock extends Error {
   constructor(
@@ -16,6 +30,25 @@ class RegistrationLegalBlock extends Error {
     super(message);
     this.name = "RegistrationLegalBlock";
   }
+}
+
+/**
+ * Create a single-use verification challenge and an in-app notification.
+ * Returns the raw token only so non-production callers can display it; the
+ * database stores a SHA-256 hash.
+ */
+async function issueContactVerification(userId: string, email: string | null | undefined, phone: string | null | undefined) {
+  const destination = email ? "EMAIL" : phone ? "PHONE" : null;
+  if (!destination) return null;
+  await prisma.tokenChallenge.updateMany({ where: { userId, type: "VERIFY_CONTACT", usedAt: null }, data: { usedAt: new Date() } });
+  const raw = randomToken(32);
+  await prisma.tokenChallenge.create({
+    data: { userId, type: "VERIFY_CONTACT", tokenHash: sha256(raw), expiresAt: new Date(Date.now() + 24 * 3600000) },
+  });
+  await prisma.notification.create({
+    data: { recipientId: userId, type: "SECURITY", title: "Verify your contact details", body: `A verification request was created for your ${destination.toLowerCase()}. No message was delivered because no sender is configured in this build.` },
+  }).catch(() => {});
+  return { channel: destination, token: raw, expiresInHours: 24 };
 }
 
 export async function POST(req: NextRequest) {
@@ -70,9 +103,20 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      const created = await tx.user.create({
-        data: { name, email: email || null, phone: phone || null, passwordHash, role: "CONSUMER", isAdmin: false, adminRole: "NONE", passwordChangedAt: new Date() },
-      });
+      let created;
+      try {
+        created = await tx.user.create({
+          data: { name, email: email || null, phone: phone || null, passwordHash, role: "CONSUMER", isAdmin: false, adminRole: "NONE", passwordChangedAt: new Date() },
+        });
+      } catch (cause) {
+        // Two concurrent sign-ups can both pass the pre-check above; the unique
+        // constraint is the real guard. Report a clean 409 instead of a 500.
+        if (isUniqueConstraintError(cause)) {
+          const target = String((cause as { meta?: { target?: unknown } }).meta?.target ?? "");
+          throw new RegistrationConflict(target.includes("phone") ? "phone" : "email");
+        }
+        throw cause;
+      }
       for (const policy of currentPolicies) {
         const key = policy.key as PolicyKey;
         const action = POLICY_SPECS[key].acceptanceMode === "ACCEPT" ? "ACCEPTED" : "ACKNOWLEDGED";
@@ -86,12 +130,32 @@ export async function POST(req: NextRequest) {
     if (cause instanceof RegistrationLegalBlock) {
       return NextResponse.json({ error: cause.message, code: cause.code, missingPolicies: cause.missing }, { status: cause.status });
     }
+    if (cause instanceof RegistrationConflict) {
+      return NextResponse.json({ error: cause.message, code: "ACCOUNT_EXISTS", field: cause.field }, { status: 409 });
+    }
+    if (isUniqueConstraintError(cause)) {
+      return NextResponse.json({ error: "Account already exists. Please sign in or reset your password.", code: "ACCOUNT_EXISTS" }, { status: 409 });
+    }
     throw cause;
   }
 
   await logSecurityEvent("REGISTER", { userId: user.id, headers: req.headers });
+
+  // Issue a single-use contact-verification challenge. Delivery is not
+  // configured in this build, so the token is only surfaced in non-production
+  // for isolated testing and the account is never reported as verified until
+  // /api/auth/verify-contact succeeds.
+  const verification = await issueContactVerification(user.id, user.email, user.phone).catch(() => null);
+
   const { token } = await createSessionForUser(user, req.headers);
-  const res = NextResponse.json({ ok: true, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
+  const isProduction = process.env.NODE_ENV === "production";
+  const res = NextResponse.json({
+    ok: true,
+    user: { id: user.id, name: user.name, email: user.email, role: user.role },
+    verificationRequired: Boolean(verification),
+    ...(verification && !isProduction ? { devVerification: verification } : {}),
+    ...(verification && isProduction ? { verificationNote: "Verification delivery is not configured in this release. Your account exists but is unverified; contact details are released only to verified recovery channels." } : {}),
+  });
   res.cookies.set(AUTH_COOKIE, token, cookieOptions());
   res.cookies.set("live_theme", user.theme || "system", { path: "/", maxAge: 60 * 60 * 24 * 365, sameSite: "lax", secure: process.env.NODE_ENV === "production" });
   return res;

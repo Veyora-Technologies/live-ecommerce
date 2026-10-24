@@ -46,12 +46,14 @@ Open `http://localhost:3000`. The base seed is destructive and now refuses to ru
 
 ```bash
 ./node_modules/.bin/tsc --noEmit --incremental false --pretty false
-npm run lint:ci
+npm run lint:ci          # ESLint debt budget (fails only if lint debt grows)
 npm test -- --reporter=dot
 npm run build
+npx playwright install chromium   # one-off, for the browser tests
+npm run test:e2e
 ```
 
-`npm run lint` is the strict full ESLint command; it currently reports a large pre-existing backlog. `lint:ci` enforces a per-file/per-rule non-regression baseline and does not mean lint is clean. HTTP integration tests require a seeded local server, the same `LIVE_DEMO_*_PASSWORD` values used for seeding, and refuse non-loopback targets. The Playwright runner/browser are not installed in the lockfile; the existing E2E spec has not been run.
+`npm run lint` is the strict full ESLint command; it currently reports a large pre-existing backlog. `lint:ci` enforces a per-file/per-rule non-regression baseline and does not mean lint is clean; `npm run lint:baseline` re-records it after deliberately paying debt down. HTTP integration tests require a seeded local server, the same `LIVE_DEMO_*_PASSWORD` values used for seeding, and refuse non-loopback targets. The Playwright runner is now a devDependency and CI installs Chromium, but the browser suite has not been executed in the audit sandbox (browser binaries are not downloadable there) — treat its first CI run as the real verification.
 
 ## Deployment and standards
 

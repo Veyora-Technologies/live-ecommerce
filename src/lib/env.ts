@@ -44,6 +44,11 @@ export function getEnvStatus() {
   if (parsed.success && parsed.data.NODE_ENV === "production" && parsed.data.LIVE_DATA_MODE === "production" && !PRODUCTION_DATA_MODE_ENABLED) {
     errors.push("LIVE_DATA_MODE");
   }
+  // Production must declare its data mode explicitly. An unset LIVE_DATA_MODE
+  // previously fell through to demo behaviour silently.
+  if (parsed.success && parsed.data.NODE_ENV === "production" && parsed.data.LIVE_DATA_MODE === undefined && !errors.includes("LIVE_DATA_MODE")) {
+    errors.push("LIVE_DATA_MODE");
+  }
   return {
     valid: errors.length === 0,
     errors,

@@ -4,20 +4,28 @@ import { lookup } from "node:dns/promises";
 import { request as httpRequest } from "node:http";
 import { request as httpsRequest } from "node:https";
 import { prisma } from "./db";
+import { clientIp } from "./client-ip";
 
 export function sha256(value: string) {
   return crypto.createHash("sha256").update(value).digest("hex");
 }
 
+/**
+ * Resolve the caller IP from trusted proxy headers.
+ * Re-exported here so existing server code keeps one import path.
+ */
+export { clientIp };
+
+/**
+ * Keyed hash of an IP address for audit logs. Uses a dedicated key when
+ * configured so rotating JWT signing keys does not silently invalidate every
+ * stored IP hash (and vice versa).
+ */
 export function hashIp(ip: string | null | undefined) {
   if (!ip) return null;
-  const salt = process.env.JWT_SECRET;
+  const salt = process.env.IP_HASH_SECRET || process.env.JWT_SECRET;
   if (!salt || salt.length < 16) return null;
   return crypto.createHmac("sha256", salt).update(ip).digest("hex").slice(0, 32);
-}
-
-export function clientIp(headers: Headers) {
-  return headers.get("x-forwarded-for")?.split(",")[0]?.trim() || headers.get("x-real-ip") || null;
 }
 
 export function randomToken(bytes = 32) {

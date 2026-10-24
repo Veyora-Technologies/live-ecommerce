@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+import { clientIp } from "@/lib/client-ip";
 
 /**
  * Next.js 16 proxy protections (§21/§45):
  * - Rate limiting (in-memory per instance; move to Redis for multi-instance)
+ * - Trusted-proxy aware client IPs (TRUSTED_PROXY_HOPS); forwarded headers are
+ *   only honoured as far as the configured proxy chain makes them trustworthy
  * - Security headers on every response
  * - Request correlation IDs (x-request-id)
  * - Payload-size guard for APIs
@@ -85,11 +88,14 @@ export function proxy(req: NextRequest) {
   };
 
   const configuredMode = process.env.LIVE_DATA_MODE;
-  const productionDataModeBlocked = process.env.NODE_ENV === "production"
-    && (configuredMode === "production" || (configuredMode !== undefined && configuredMode !== "demo"));
+  // Fail closed in production unless demo mode is explicitly declared. An
+  // unset LIVE_DATA_MODE must not silently behave like a demo deployment.
+  const productionDataModeBlocked = process.env.NODE_ENV === "production" && configuredMode !== "demo";
   const isReadinessProbe = pathname === "/api/v1/health" && req.method === "GET";
   if (productionDataModeBlocked && !isReadinessProbe) {
-    const message = "Live is unavailable until production release configuration is approved.";
+    const message = configuredMode === "production"
+      ? "Live is unavailable until production release configuration is approved."
+      : "Live is unavailable: LIVE_DATA_MODE must be explicitly set to \"demo\" in this build.";
     if (pathname.startsWith("/api/")) {
       return withHeaders(NextResponse.json({ error: message }, { status: 503, headers: { "Cache-Control": "no-store" } }));
     }
@@ -106,7 +112,14 @@ export function proxy(req: NextRequest) {
   const cap = pathname.startsWith("/api/v1/image") ? MAX_IMAGE_BYTES : MAX_BODY_BYTES;
   if (len > cap) return withHeaders(NextResponse.json({ error: "Request too large" }, { status: 413 }));
 
-  // CSRF: cross-site Origin on mutations
+  // CSRF: cross-site Origin on mutations.
+  //
+  // Browsers send `Origin` on cross-site form/fetch POSTs, but the header can be
+  // absent on some legacy or same-origin navigation cases. `Sec-Fetch-Site` is
+  // sent by every modern browser and cannot be set by page script, so it is used
+  // as a second, independent signal. Non-browser clients (curl, cron, server-to-
+  // server, the integration suite) send neither header and hold no ambient
+  // cookie, so they are not blocked by this check.
   const method = req.method.toUpperCase();
   if (["POST", "PUT", "PATCH", "DELETE"].includes(method) && !CSRF_EXEMPT_PREFIXES.some(p => pathname.startsWith(p))) {
     const origin = req.headers.get("origin");
@@ -118,10 +131,19 @@ export function proxy(req: NextRequest) {
           return withHeaders(NextResponse.json({ error: "Cross-site request rejected" }, { status: 403 }));
         }
       } catch { return withHeaders(NextResponse.json({ error: "Invalid origin" }, { status: 403 })); }
+    } else {
+      const site = req.headers.get("sec-fetch-site");
+      if (site === "cross-site") {
+        return withHeaders(NextResponse.json({ error: "Cross-site request rejected" }, { status: 403 }));
+      }
     }
   }
 
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || "local";
+  const ip = clientIp(req.headers);
+  // Without a resolvable, trustworthy client address (e.g. no proxy configured),
+  // fall back to a single shared bucket rather than letting a caller mint a new
+  // bucket per request by rotating a spoofed header.
+  const bucketIdentity = ip ?? "unresolved";
   let category = "api";
   let max = 240;
   if (pathname.startsWith("/api/auth/")) {
@@ -132,7 +154,7 @@ export function proxy(req: NextRequest) {
     max = 120;
   }
 
-  const res = limit(`${ip}:${category}`, max);
+  const res = limit(`${bucketIdentity}:${category}`, max);
   if (!res.ok) {
     const retry = Math.max(1, Math.ceil((res.resetAt - Date.now()) / 1000));
     return withHeaders(NextResponse.json(
