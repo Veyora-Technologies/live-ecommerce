@@ -153,6 +153,11 @@ export function proxy(req: NextRequest) {
   } else if (pathname.startsWith("/api/v1/search") || pathname.startsWith("/api/assist")) {
     category = "search";
     max = 120;
+  } else if (pathname.startsWith("/api/uploads")) {
+    // Each accepted upload can write 5MB to disk; keep this far below the
+    // general API budget so one client cannot fill the upload directory.
+    category = "upload";
+    max = 30;
   } else if (pathname.startsWith("/api/media/")) {
     // A single listing page legitimately loads many thumbnails. They are
     // immutable and cheap, so they get their own generous bucket instead of

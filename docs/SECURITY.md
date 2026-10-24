@@ -23,7 +23,7 @@
 - The Origin check rejects a mismatched `Origin` but does not reject a missing Origin. Only `/api/jobs/*` is exempt because production job requests require `CRON_SECRET`; webhook subscription management is cookie-authenticated and remains Origin-protected. CSRF protections must be reviewed with the actual hosting proxy and future custom domains.
 - CSP currently permits inline script/style for framework compatibility. This is not a strict nonce-based CSP; assess the impact before production.
 - The body-size check uses request `Content-Length` (1 MB general, 5 MB image); it is not a substitute for a proxy-level streaming limit/WAF.
-- Rate limits (20 auth/min, 120 search/assist/min, 240 general API/min) live in one process-local map. It is bounded against unbounded bucket growth but is not shared across instances or a DDoS control. The host must sanitize `x-forwarded-for` before it is trusted.
+- Rate limits (20 auth/min, 120 search/assist/min, 30 uploads/min, 1200 media reads/min, 240 general API/min) live in one process-local map. It is bounded against unbounded bucket growth but is not shared across instances or a DDoS control. The host must sanitize `x-forwarded-for` before it is trusted.
 - Request IDs are correlation labels, not trace spans. There is no configured APM, OpenTelemetry collector, central log shipper, or alert target.
 
 ## Input, inventory, and outbound requests

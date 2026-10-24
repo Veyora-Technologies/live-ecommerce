@@ -44,7 +44,7 @@ Availability is based on merchant records, reservations, and batch restrictions.
 
 - Protected routes use the server-side session and route-specific role/ownership checks. A UI role check is not authorization.
 - The merchant Connect API-key endpoint creates/list/revokes credential records, but **no API route accepts those keys today**. Do not send them as bearer credentials expecting access.
-- Current proxy rate limits are process-local: 20 auth requests/minute, 120 search/assist requests/minute, and 240 general API requests/minute, keyed from the apparent client IP. A trusted hosting proxy must overwrite/sanitize forwarded-IP headers. This is not a distributed or DDoS control.
+- Current proxy rate limits are process-local: 20 auth requests/minute, 120 search/assist requests/minute, 30 image uploads/minute, 1200 media reads/minute, and 240 general API requests/minute, keyed from the apparent client IP. A trusted hosting proxy must overwrite/sanitize forwarded-IP headers. This is not a distributed or DDoS control.
 
 ## Error handling and currency
 
