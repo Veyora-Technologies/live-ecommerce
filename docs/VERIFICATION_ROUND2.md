@@ -345,3 +345,57 @@ running the same command in a worktree of `8028513` prints
 script, so this branch runs it successfully (`OK — 282 errors / 24 warnings`). The GitHub log itself
 could not be downloaded from this sandbox (EOF from GitHub's log host), so that link in the chain is
 repository-state inference, not a read log.
+
+---
+
+## 10. CI results — the verification that was missing
+
+Pull request [#1](https://github.com/Veyora-Technologies/live-ecommerce/pull/1) made GitHub Actions
+run this branch for the first time. Both jobs are now green (run
+[`40088710530`](https://github.com/Veyora-Technologies/live-ecommerce/actions/runs/40088710530)):
+
+| Job | Step | Result |
+|---|---|---|
+| `verify` | Validate Prisma schema + client (`prisma generate`) | ✓ |
+| | TypeScript (`tsc --noEmit`) | ✓ |
+| | ESLint debt budget (`lint:ci`) | ✓ |
+| | Unit tests | ✓ |
+| | Production dependency audit | ✓ |
+| | `prisma db push` into isolated CI SQLite | ✓ |
+| | Seed isolated accounts and sample records | ✓ |
+| | Production build (`next build`) | ✓ |
+| | HTTP integration suite against the production build | ✓ |
+| | Full dependency audit | ✓ |
+| `e2e` | Install Chromium | ✓ |
+| | Fixture database + seed | ✓ |
+| | Production build | ✓ |
+| | Browser smoke tests (4/4) | ✓ |
+
+This closes the three gaps listed in §0 and §10 of the earlier draft: the app **does** build, the
+database-backed suites **do** pass, and the browser suite **does** run — on a machine with a real
+Prisma client and a real Chromium.
+
+### 10.1 Four real defects that only CI could find
+
+The sandbox could not type-check model shapes or run a browser, and each of these would have shipped:
+
+1. **`phoneVerifiedAt` missing from a `select`** — `src/app/api/auth/verify-contact/route.ts`
+   reported a field the query never fetched. Fixed (local `tsc` could not see it because the Prisma
+   client is a stub here).
+2. **`searchbox` role** — `tests/e2e/flow.spec.ts` queried a role that `<input type="text">` never
+   exposes (`textbox` is correct; `searchbox` is only for `type="search"`).
+3. **Dev-mode compile latency** — the e2e job ran `next dev`, so the first request to `/search`
+   compiled the route and the navigation assertion timed out. The job now builds and runs the
+   optimized server (also more representative of production).
+4. **Header form shadowing the hero** — the header renders its own search form before the hero, so a
+   global "Search" button lookup clicked the *header's* empty form and never navigated. The test now
+   submits the hero field directly.
+
+All four are recorded as separate commits on the PR rather than squashed away.
+
+### 10.2 What remains unverified even now
+
+CI proves the code works against a **disposable SQLite fixture with seeded demo data**. It does not
+prove: PostgreSQL behaviour, a real email delivery, a verified sending domain, multi-instance
+storage, load/capacity, or legal compliance. Those remain owner decisions (§4 and
+`docs/DEPLOYMENT_READINESS.md`).
