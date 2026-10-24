@@ -13,13 +13,14 @@ import { test, expect } from "@playwright/test";
  */
 test("visitor searches from the home page and lands on results", async ({ page }) => {
   await page.goto("/");
-  // The field is an <input type="text">, which exposes the `textbox` role — the
-  // surrounding <form role="search"> is the landmark, not the input. Using
-  // `searchbox` here made the test fail even though the input was on screen.
+  // The header renders its own search form before the hero, so a global
+  // "Search" button lookup clicked the header's empty form and never navigated.
+  // This field's accessible name is unique to the hero, and pressing Enter
+  // submits exactly the form that owns it.
   const search = page.getByRole("textbox", { name: /Search for real availability/i }).first();
   await expect(search).toBeVisible();
   await search.fill("Rice");
-  await page.getByRole("button", { name: /^Search$/ }).first().click();
+  await search.press("Enter");
   await expect(page).toHaveURL(/\/search\?q=Rice/, { timeout: 20_000 });
   await expect(page.getByRole("heading", { level: 1 })).toContainText(/product listings/i);
 });
