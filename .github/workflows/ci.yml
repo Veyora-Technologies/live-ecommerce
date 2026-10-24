@@ -120,4 +120,18 @@ jobs:
           ./node_modules/.bin/prisma db push --skip-generate
           npm run db:seed
       - name: Browser smoke tests
-        run: npm run test:e2e -- --reporter=list
+        shell: bash
+        # Playwright's console output is captured and, on failure, also emitted
+        # as a single error annotation. That keeps the reason for a red run
+        # visible from the pull-request UI and from `gh api .../annotations`
+        # even where downloaded job logs are not reachable.
+        run: |
+          set +e
+          npm run test:e2e -- --reporter=list > /tmp/e2e.log 2>&1
+          status=$?
+          cat /tmp/e2e.log
+          if [ "$status" -ne 0 ]; then
+            summary=$(tail -c 1400 /tmp/e2e.log | sed ':a;N;$!ba;s/\n/%0A/g' | sed 's/\r//g')
+            echo "::error title=Playwright failure::exit ${status}%0A${summary}"
+          fi
+          exit "$status"
