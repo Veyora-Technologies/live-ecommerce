@@ -1,5 +1,5 @@
 /**
- * Real HTTP integration tests against a running Live server.
+ * Real HTTP integration tests against a running Furnivo server.
  * Run:  npm run dev  (terminal 1)
  *       LIVE_INTEGRATION=1 npm test   (terminal 2)
  * Skipped automatically when the server isn't running so unit runs stay green.
@@ -20,7 +20,7 @@ async function login(emailOrPhone: string, password: string) {
   return { res, cookie };
 }
 
-d("Live integration (requires running server)", () => {
+d("Furnivo integration (requires running server)", () => {
   let aminaCookie = "", emekaCookie = "", productId = "";
 
   beforeAll(async () => {

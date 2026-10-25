@@ -60,7 +60,7 @@ export function Header({ user }: { user?: HeaderUser | null }) {
     <header className="live-site-header sticky top-0">
       <div className="live-header-inner">
         <div className="live-header-row">
-          <Link href="/" className="live-brand" aria-label="Live home">
+          <Link href="/" className="live-brand" aria-label="Furnivo home">
             <BrandLogo variant="horizontal" width={330} height={100} className="live-header-logo live-header-logo-light" decorative priority />
             <BrandLogo variant="inverse" width={330} height={100} className="live-header-logo live-header-logo-dark" decorative priority />
             <span className="live-brand-area">NIGERIA</span>
@@ -68,7 +68,7 @@ export function Header({ user }: { user?: HeaderUser | null }) {
 
           <form onSubmit={onSearch} className="live-search-desktop" role="search">
             <Search size={18} aria-hidden="true" />
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Find a product, service or store" aria-label="Search Live" />
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Find a product, service or store" aria-label="Search Furnivo" />
             <button type="submit">Search</button>
           </form>
 
@@ -76,7 +76,7 @@ export function Header({ user }: { user?: HeaderUser | null }) {
             <div className="live-area-desktop"><GeographyPicker initialCode={user?.preferredLocationCode} userId={user?.id} persistPreference onSelectionChange={onLocationChange} /></div>
             <ThemeControl userId={user?.id} initialTheme={user?.theme} />
             <InstallPrompt />
-            <Link className="live-header-icon" href="/my-live" aria-label="My Live" title="My Live"><Bookmark size={18} aria-hidden="true" /></Link>
+            <Link className="live-header-icon" href="/my-live" aria-label="My Furnivo" title="My Furnivo"><Bookmark size={18} aria-hidden="true" /></Link>
             <Link className="live-header-icon live-plan-link" href="/cart" aria-label="Shopping plan" title="Shopping plan"><ShoppingBag size={18} aria-hidden="true" /></Link>
             {user ? (
               <Link href="/profile" className="live-user-link" aria-label={`Profile for ${user.name}`}>
@@ -95,7 +95,7 @@ export function Header({ user }: { user?: HeaderUser | null }) {
         <div className="live-mobile-search-row">
           <form onSubmit={onSearch} className="live-search-mobile" role="search">
             <Search size={17} aria-hidden="true" />
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="What are you looking for?" aria-label="Search Live" />
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="What are you looking for?" aria-label="Search Furnivo" />
             <button type="submit" aria-label="Search"><Search size={18} /></button>
           </form>
           <GeographyPicker initialCode={user?.preferredLocationCode} userId={user?.id} persistPreference compact onSelectionChange={onLocationChange} />
@@ -110,7 +110,7 @@ export function Header({ user }: { user?: HeaderUser | null }) {
         </nav>
 
         {open && <nav id="live-mobile-menu" className="live-mobile-menu" aria-label="More destinations">
-          {[...navItems, { href: "/my-live", label: "My Live", icon: Heart }, ...(user?.isAdmin ? [{ href: "/admin", label: "Admin", icon: CircleUserRound }] : [])].map(({ href, label, icon: Icon }) => (
+          {[...navItems, { href: "/my-live", label: "My Furnivo", icon: Heart }, ...(user?.isAdmin ? [{ href: "/admin", label: "Admin", icon: CircleUserRound }] : [])].map(({ href, label, icon: Icon }) => (
             <Link key={href} href={href} onClick={() => setOpen(false)}><Icon size={18} aria-hidden="true" />{label}</Link>
           ))}
           {user ? <Link href="/profile/security" onClick={() => setOpen(false)}><CircleUserRound size={18} aria-hidden="true" />Account & security</Link> : <Link href="/auth/login" onClick={() => setOpen(false)}><CircleUserRound size={18} aria-hidden="true" />Sign in</Link>}

@@ -26,7 +26,7 @@ export default function AnalyticsPanel(){
     load();
   };
   const seedFlags=async()=>{
-    for(const [key,name] of [["assist_enabled","Live Assist"],["image_search_enabled","Camera search"],["sponsored_discovery","Sponsored discovery (labelled)"],["services_enabled","Service bookings"]])
+    for(const [key,name] of [["assist_enabled","Furnivo Assist"],["image_search_enabled","Camera search"],["sponsored_discovery","Sponsored discovery (labelled)"],["services_enabled","Service bookings"]])
       await fetch("/api/admin/flags",{ method:"POST", headers:{ "Content-Type":"application/json"}, body: JSON.stringify({ key, name, enabled: key!=="sponsored_discovery" })});
     load();
   };

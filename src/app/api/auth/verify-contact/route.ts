@@ -62,9 +62,9 @@ export async function POST(req: NextRequest) {
   if (emailConfigured() && emailLinkBase()) {
     const result = await sendEmail({
       to: account.email,
-      subject: "Confirm your Live email address",
+      subject: "Confirm your Furnivo email address",
       text: [
-        "Confirm the email address on your Live account.",
+        "Confirm the email address on your Furnivo account.",
         "",
         `Open this link within 24 hours: ${emailLinkBase()}/auth/verify?token=${encodeURIComponent(raw)}`,
         "",

@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
   if (!parsed.success) return NextResponse.json({ error: parsed.error.issues[0]?.message || "Invalid merchant details" }, { status: 400 });
   const input = parsed.data;
   if (input.deliveryAvailable === true && !isMarketIntegrationReady(DEFAULT_MARKET_CODE, "deliveryIntegrations")) {
-    return NextResponse.json({ error: "Delivery is unavailable because Live has no configured delivery integration.", code: "FEATURE_NOT_CONFIGURED" }, { status: 503, headers: { "Cache-Control": "no-store" } });
+    return NextResponse.json({ error: "Delivery is unavailable because Furnivo has no configured delivery integration.", code: "FEATURE_NOT_CONFIGURED" }, { status: 503, headers: { "Cache-Control": "no-store" } });
   }
   const normalizedCityCode = input.cityCode || null;
 
@@ -94,6 +94,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ merchant }, { status: 201 });
   } catch (error: any) {
     if (error?.code === "P2002") return NextResponse.json({ error: "A merchant profile already exists with one of these unique details" }, { status: 409 });
-    return NextResponse.json({ error: "Store could not be created. Please try again or contact Live support." }, { status: 400 });
+    return NextResponse.json({ error: "Store could not be created. Please try again or contact Furnivo support." }, { status: 400 });
   }
 }

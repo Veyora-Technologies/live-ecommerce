@@ -52,7 +52,7 @@ export default function BulkClient({ merchantId, canEdit = true }: { merchantId:
 
   const doLookup=async()=>{
     if(!lookup.trim()) return;
-    setBarcodeMsg("Looking in the Live catalogue…");
+    setBarcodeMsg("Looking in the Furnivo catalogue…");
     try {
       const res=await fetch(`/api/products/barcode/${encodeURIComponent(lookup.trim())}`, { cache:"no-store" });
       const data=await res.json().catch(()=>({}));

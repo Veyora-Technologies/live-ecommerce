@@ -111,7 +111,7 @@ export async function POST(req: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const policyCheck = await requirePolicyAcceptances({ userId: user.id, keys: ["PLATFORM_TERMS", "PRIVACY_NOTICE", "CONSUMER_TERMS"] });
-  if (!policyCheck.allowed) return NextResponse.json({ error: policyCheck.message || "Review Live policies before sending a marketplace enquiry.", code: policyCheck.code, missingPolicies: policyCheck.missing, policyUrl: "/legal" }, { status: policyCheck.code === "LEGAL_RELEASE_GATE" ? 503 : 428 });
+  if (!policyCheck.allowed) return NextResponse.json({ error: policyCheck.message || "Review Furnivo policies before sending a marketplace enquiry.", code: policyCheck.code, missingPolicies: policyCheck.missing, policyUrl: "/legal" }, { status: policyCheck.code === "LEGAL_RELEASE_GATE" ? 503 : 428 });
   const parsed = createSchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Provide a valid enquiry type, listing, and message of 1–1,000 characters." }, { status: 400 });
   const input = parsed.data;
@@ -189,7 +189,7 @@ export async function PUT(req: NextRequest) {
   const policyCheck = current.side === "CONSUMER"
     ? await requirePolicyAcceptances({ userId: user.id, keys: ["PLATFORM_TERMS", "PRIVACY_NOTICE", "CONSUMER_TERMS"] })
     : await requirePolicyAcceptances({ userId: user.id, keys: ["SELLER_AGREEMENT"], merchantId: current.enquiry.merchantId });
-  if (!policyCheck.allowed) return NextResponse.json({ error: policyCheck.message || "Review current Live policies before continuing this conversation.", code: policyCheck.code, missingPolicies: policyCheck.missing, policyUrl: "/legal" }, { status: policyCheck.code === "LEGAL_RELEASE_GATE" ? 503 : 428 });
+  if (!policyCheck.allowed) return NextResponse.json({ error: policyCheck.message || "Review current Furnivo policies before continuing this conversation.", code: policyCheck.code, missingPolicies: policyCheck.missing, policyUrl: "/legal" }, { status: policyCheck.code === "LEGAL_RELEASE_GATE" ? 503 : 428 });
   if (!["OPEN", "ANSWERED"].includes(current.enquiry.status)) return NextResponse.json({ error: "This enquiry is closed." }, { status: 409 });
   if (HAS_DIRECT_CONTACT(parsed.data.body)) return NextResponse.json({ error: "Phone numbers and email addresses cannot be sent through this enquiry. No message was saved or shared." }, { status: 400 });
 

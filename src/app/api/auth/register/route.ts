@@ -51,13 +51,13 @@ async function issueContactVerification(userId: string, email: string | null | u
   if (destination === "EMAIL" && email && emailConfigured() && emailLinkBase()) {
     const result = await sendEmail({
       to: email,
-      subject: "Confirm your Live email address",
+      subject: "Confirm your Furnivo email address",
       text: [
-        "Confirm the email address on your Live account.",
+        "Confirm the email address on your Furnivo account.",
         "",
         `Open this link within 24 hours: ${emailLinkBase()}/auth/verify?token=${encodeURIComponent(raw)}`,
         "",
-        "If you did not create a Live account, ignore this message.",
+        "If you did not create a Furnivo account, ignore this message.",
       ].join("\n"),
       idempotencyKey: `verify:${userId}`,
     });

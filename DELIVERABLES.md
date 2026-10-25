@@ -1,4 +1,4 @@
-# Live — Deliverables Checklist (per §23)
+# Furnivo — Deliverables Checklist (per §23)
 
 1. Consumer app source — `src/app/page.tsx`, `/search`, `/product/[id]`, `/merchant/[id]`, `/activity`, `/saved`, `/profile` ✅
 2. Merchant console — `src/app/merchant/*` (dashboard, products, reservations, store toggle) ✅
@@ -53,7 +53,7 @@ Deferred (as per §21): rider app, delivery fleet, multi-merchant checkout, acco
 - Expiry: lazy expiry on `/activity` + manual cron ready ✅
 
 
-## Live 3.0 additions
+## Furnivo 3.0 additions
 - Auth: revocable sessions API, /auth/forgot + /auth/reset, TOTP MFA, /profile/security (password, 2FA, sessions, data export, deletion request).
 - Commerce: /cart planner, variants on product pages, batches/transfers/exceptions APIs, quotes accept, price alerts, enquiries API, privacy API.
 - Admin/ops: /api/admin/risk|privacy|freshness, /api/metrics, scripts/backup.sh + restore.sh (tested), .github/workflows/ci.yml.

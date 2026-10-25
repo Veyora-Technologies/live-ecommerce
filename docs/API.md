@@ -1,4 +1,4 @@
-# Live API reference (verified scope)
+# Furnivo API reference (verified scope)
 
 The machine-readable contract is [`docs/openapi.json`](openapi.json). It intentionally covers only core routes with current tests; it is **not** an exhaustive contract for all 63 API route files. For an undocumented route, inspect its route handler and integration tests before relying on it. No production API hostname is configured.
 
@@ -23,11 +23,11 @@ Availability is based on merchant records, reservations, and batch restrictions.
 ## Reservations and the planner cart
 
 - `POST /api/reservations` requires a signed-in user and revalidates merchant status, branch, stock, active promotions, selected variant, and blocked batches server-side. `Idempotency-Key` is preferred; a matching duplicate returns the existing reservation.
-- Success creates a **pending** reservation and immediately increments the stock hold. The merchant confirms later; Live does not take payment. The default pickup window is left unset rather than invented.
+- Success creates a **pending** reservation and immediately increments the stock hold. The merchant confirms later; Furnivo does not take payment. The default pickup window is left unset rather than invented.
 - A 24-hour expiry is recorded. The hold-release job must be scheduled and monitored by the operator; an expiry timestamp alone does not release inventory.
 - `GET /api/reservations` returns only the signed-in consumer's records.
 - `GET /api/cart` is a planning view, not an order. It excludes invalid variant prices and surfaces unreservable stock/branch states.
-- `POST /api/cart/items` accepts pickup only. Delivery requests are rejected; Live does not arrange delivery.
+- `POST /api/cart/items` accepts pickup only. Delivery requests are rejected; Furnivo does not arrange delivery.
 - `POST /api/cart/submit` creates separate pending pickup reservations per item. Every item is revalidated; partial success is reported and failed items remain in the plan. No multi-merchant order, fee, payment, or delivery job is created.
 
 ## Merchant bulk CSV

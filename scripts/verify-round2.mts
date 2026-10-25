@@ -84,7 +84,7 @@ async function main() {
   ok("an API key alone does not enable email", emailConfigured() === false);
   delete process.env.RESEND_API_KEY;
 
-  process.env.EMAIL_FROM = "Live <no-reply@example.com>";
+  process.env.EMAIL_FROM = "Furnivo <no-reply@example.com>";
   process.env.RESEND_API_KEY = "re_fake_key_for_verification_only";
   ok("key + From enables emailConfigured()", emailConfigured() === true);
 

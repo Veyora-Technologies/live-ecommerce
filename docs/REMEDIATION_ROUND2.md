@@ -92,7 +92,7 @@ initialize yet`.
 | Email that actually arrives | Code path, fail-closed behaviour and config are in place. A Resend account and a verified sending domain are commercial/identity steps. | Create the Resend account, verify the domain, set `RESEND_API_KEY`, `EMAIL_FROM`, `LIVE_PUBLIC_BASE_URL`. |
 | SMS / phone verification | Would need a provider (Twilio etc.). Rather than fake it, phone verification was removed from the code path. | Decide whether phone verification is required at all. |
 | Payments, orders, refunds, payouts | No payment provider exists anywhere in the repo; inventing one would be the single most harmful thing this pass could do. | Choose a provider (e.g. Paystack) and a legal/refund policy, then build deliberately. |
-| Delivery fulfilment | Live intentionally stops at pickup reservations. | Decide whether delivery is in scope at all. |
+| Delivery fulfilment | Furnivo intentionally stops at pickup reservations. | Decide whether delivery is in scope at all. |
 | Image storage at scale, EXIF stripping, antivirus | Single-directory storage is enough for one instance. EXIF removal and scanning need real libraries and real files to test against. | Choose object storage (S3/R2) and a scanning policy before multi-instance deployment. |
 | Dependabot alert #1 | `gh api …/dependabot/alerts` returns `403` for this token, so its contents are unknown. Guessing would be fabrication. | Open the alert link GitHub printed on push and apply the fix it names. |
 | 282 remaining lint errors | Mostly `any` in older UI code. Paying that down is mechanical but large, and re-recording the baseline without reviewer sign-off would hide regressions. | Schedule a cleanup pass; `npm run lint:baseline` re-records only after the debt is actually paid. |

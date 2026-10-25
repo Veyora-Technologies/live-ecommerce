@@ -1,5 +1,5 @@
 /**
- * Additive Live 3.0 sample seed (labelled sample data):
+ * Additive Furnivo 3.0 sample seed (labelled sample data):
  * admin roles, freshness policies, variants, batches, a promotion,
  * an operating exception and a price alert.
  */
@@ -8,8 +8,8 @@ import { assertDemoSeedAllowed } from "./seed-safety";
 const prisma = new PrismaClient();
 
 async function main() {
-  assertDemoSeedAllowed("Live 3.0 additive sample seed");
-  await prisma.user.updateMany({ where:{ email: "admin@live.ng" }, data:{ adminRole: "SUPER" } });
+  assertDemoSeedAllowed("Furnivo 3.0 additive sample seed");
+  await prisma.user.updateMany({ where:{ email: "admin@furnivo.ng" }, data:{ adminRole: "SUPER" } });
 
   for (const [category, stale, recent] of [
     ["Pharmacy", 12, 4], ["Grocery", 24, 6], ["Essentials", 48, 12],

@@ -195,7 +195,7 @@ locationFilter = await getGeographicScopeFilter(locationCodes, locationScope, co
                   <label className="flex gap-2"><input type="checkbox" name="inStock" value="true" defaultChecked={inStock==="true"}/> In stock only</label>
                   <label className="flex gap-2"><input type="checkbox" name="openNow" value="true" defaultChecked={openNow==="true"}/> Merchant marked open</label>
                   <label className="flex gap-2"><input type="checkbox" name="pickup" value="true" defaultChecked={pickup==="true"}/> Pickup available</label>
-                  <p className="rounded-xl border border-amber-200 bg-amber-50 p-2 text-xs text-amber-900">Delivery filters are disabled while Live has no configured delivery integration.</p>
+                  <p className="rounded-xl border border-amber-200 bg-amber-50 p-2 text-xs text-amber-900">Delivery filters are disabled while Furnivo has no configured delivery integration.</p>
                   <label className="flex gap-2"><input type="checkbox" name="verified" value="true" defaultChecked={verified==="true"}/> Verified merchants</label>
                 </fieldset>
                 <div className="grid grid-cols-2 gap-2">
@@ -239,15 +239,15 @@ locationFilter = await getGeographicScopeFilter(locationCodes, locationScope, co
               </div>
             )}
             <p className="mt-2 text-xs text-slate-500">Ranking uses relevance, freshness, verification and the sort you select. No sponsored results. Availability uses confidence labels — never a guarantee. No GPS or road-routing service is configured; manual area selection works without location access.</p>
-            {distanceUnavailable && <p className="mt-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900" role="status">A distance filter or nearest sort was requested, but Live is not using a current location or road-routing service. That distance request was not applied; choose an area filter instead.</p>}
-            {deliveryUnavailable && <p className="mt-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900" role="status">A delivery filter was requested, but Live has no configured delivery integration. That request was not applied; Live does not verify or arrange delivery.</p>}
+            {distanceUnavailable && <p className="mt-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900" role="status">A distance filter or nearest sort was requested, but Furnivo is not using a current location or road-routing service. That distance request was not applied; choose an area filter instead.</p>}
+            {deliveryUnavailable && <p className="mt-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900" role="status">A delivery filter was requested, but Furnivo has no configured delivery integration. That request was not applied; Furnivo does not verify or arrange delivery.</p>}
 
             {(ranked.length > 0 || hasRelated) && <UnifiedSearchGroups productCount={ranked.length} businesses={related.businesses} services={related.services} activity={related.activity} signedIn={Boolean(user)} />}
             {ranked.length===0 && !hasRelated ? (
               <div className="mt-6 bg-white border border-slate-200 rounded-2xl p-10 text-center">
                 <div className="text-4xl">🔍</div>
                 <div className="mt-3 font-bold">No matches yet</div>
-                <div className="text-sm text-slate-500">Try fewer filters, change or widen the selected location scope, use a common synonym, or request an item. Nearby merchants can respond only if they have a real Live listing.</div>
+                <div className="text-sm text-slate-500">Try fewer filters, change or widen the selected location scope, use a common synonym, or request an item. Nearby merchants can respond only if they have a real Furnivo listing.</div>
                 <div className="mt-4 flex gap-2 justify-center">
                   <Link href="/search" className="px-5 py-2 rounded-full bg-white border border-slate-300 text-sm font-semibold">Clear filters</Link>
                   <Link href="/requests" className="px-5 py-2 rounded-full bg-live-green-ink text-white text-sm font-semibold">Request an item</Link>

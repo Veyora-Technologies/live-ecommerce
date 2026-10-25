@@ -28,7 +28,7 @@ function acceptanceSummary(quote: { price: number | null; additionalFees: number
 /**
  * Accepts a seller-reported quote. A linked product is rechecked and stock is
  * atomically reserved; a quote without a product remains a quote only and does
- * not create a stocked reservation. Live does not collect payment or arrange delivery.
+ * not create a stocked reservation. Furnivo does not collect payment or arrange delivery.
  */
 export async function POST(req: NextRequest) {
   const user = await getCurrentUser();
@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
   const marketplaceGate = await getLegalReleaseGate("MARKETPLACE");
   if (!marketplaceGate.ready) return NextResponse.json({ error: marketplaceGate.publicMessage, code: "LEGAL_RELEASE_GATE", policyUrl: "/legal" }, { status: 503, headers: { "Cache-Control": "no-store" } });
   const consumerPolicy = await requirePolicyAcceptances({ userId: user.id, keys: ["PLATFORM_TERMS", "PRIVACY_NOTICE", "CONSUMER_TERMS"] });
-  if (!consumerPolicy.allowed) return NextResponse.json({ error: consumerPolicy.message || "Review Live policies before accepting a quote.", code: consumerPolicy.code, missingPolicies: consumerPolicy.missing, policyUrl: "/legal" }, { status: consumerPolicy.code === "LEGAL_RELEASE_GATE" ? 503 : 428 });
+  if (!consumerPolicy.allowed) return NextResponse.json({ error: consumerPolicy.message || "Review Furnivo policies before accepting a quote.", code: consumerPolicy.code, missingPolicies: consumerPolicy.missing, policyUrl: "/legal" }, { status: consumerPolicy.code === "LEGAL_RELEASE_GATE" ? 503 : 428 });
 
   const parsed = acceptSchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Valid responseId required" }, { status: 400 });
@@ -85,7 +85,7 @@ export async function POST(req: NextRequest) {
       if (quote.productId) {
         const product = await tx.product.findUnique({ where: { id: quote.productId }, include: { merchant: true, branch: true } });
         if (!product || product.archived || product.merchantId !== quote.merchantId) throw new QuoteActionError("The quoted product is no longer available from this merchant.", 404, "PRODUCT_UNAVAILABLE");
-        if (!getMarketCurrencyConfiguration(DEFAULT_MARKET_CODE, product.currency || DEFAULT_MARKET_CODE)) throw new QuoteActionError("Reservations are not configured for this listing's currency in the active market. Live has not converted the amount.", 409, "CURRENCY_NOT_SUPPORTED");
+        if (!getMarketCurrencyConfiguration(DEFAULT_MARKET_CODE, product.currency || DEFAULT_MARKET_CODE)) throw new QuoteActionError("Reservations are not configured for this listing's currency in the active market. Furnivo has not converted the amount.", 409, "CURRENCY_NOT_SUPPORTED");
         if (!await publicMarketplaceProductInTransaction(tx, product.id)) throw new QuoteActionError("The quoted listing is no longer eligible for reservations.", 404, "MARKETPLACE_LISTING_NOT_PUBLIC");
         if (product.merchant.status !== "APPROVED" || product.merchant.storeStatus !== "OPEN") throw new QuoteActionError("This merchant is not currently accepting reservations.", 409, "MERCHANT_UNAVAILABLE");
         if (!product.pickupAvailable || !product.merchant.pickupAvailable) throw new QuoteActionError("Pickup is not available for this product or merchant.", 409, "PICKUP_UNAVAILABLE");
@@ -133,7 +133,7 @@ export async function POST(req: NextRequest) {
       reservation: result.reservation,
 accepted: { price: quotedUnitPrice, quantity, additionalFees: fees, total: totalAmount, fulfilment: "PICKUP", validUntil: quote.validUntil },
       note: result.reservation
-        ? "Seller-reported quote accepted and linked to a pending reservation. Stock was rechecked and temporarily reserved; merchant confirmation is still required. Live collected no payment and arranged no delivery."
+        ? "Seller-reported quote accepted and linked to a pending reservation. Stock was rechecked and temporarily reserved; merchant confirmation is still required. Furnivo collected no payment and arranged no delivery."
         : "Seller-reported quote accepted. No product was linked, so no reservation, stock hold, payment, or fulfillment was created.",
     }, { headers: { "Cache-Control": "private, no-store" } });
   } catch (cause) {

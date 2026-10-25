@@ -1,5 +1,5 @@
 /**
- * Live 2.0 additive seed — SAMPLE DATA, clearly labelled.
+ * Furnivo 2.0 additive seed — SAMPLE DATA, clearly labelled.
  * Run AFTER the base seed: `npm run db:seed:v2`
  * Idempotent-ish: skips creation when markers already exist.
  * Adds: organisations/branches, barcodes + identifiers, price history
@@ -21,8 +21,8 @@ const BARCODES: Record<string,string> = {
 };
 
 async function main(){
-  assertDemoSeedAllowed("Live 2.0 additive sample seed");
-  console.log("Seeding Live 2.0 sample data…");
+  assertDemoSeedAllowed("Furnivo 2.0 additive sample seed");
+  console.log("Seeding Furnivo 2.0 sample data…");
   const merchants = await prisma.merchant.findMany({ take: 6 });
   const amina = await prisma.user.findUnique({ where:{ email:"amina@example.com" }});
   const emeka = await prisma.user.findUnique({ where:{ email:"emeka@example.com" }});
@@ -95,7 +95,7 @@ async function main(){
   }
 
   // Feature flags
-  const flags:[string,string,boolean][]=[["assist_enabled","Live Assist",true],["image_search_enabled","Camera search",true],["sponsored_discovery","Sponsored discovery (labelled)",false],["services_enabled","Service bookings",true]];
+  const flags:[string,string,boolean][]=[["assist_enabled","Furnivo Assist",true],["image_search_enabled","Camera search",true],["sponsored_discovery","Sponsored discovery (labelled)",false],["services_enabled","Service bookings",true]];
   for(const [key,name,enabled] of flags) await prisma.featureFlag.upsert({ where:{ key }, update:{ name }, create:{ key, name, enabled }});
 
   // Demo item request + shared list (clearly sample)
@@ -115,6 +115,6 @@ async function main(){
     if(!prefs) await prisma.notificationPreference.create({ data:{ userId:amina.id }});
   }
 
-  console.log("Live 2.0 sample seed complete.");
+  console.log("Furnivo 2.0 sample seed complete.");
 }
 main().catch(e=>{ console.error(e); process.exit(1); }).finally(async()=>{ await prisma.$disconnect(); });

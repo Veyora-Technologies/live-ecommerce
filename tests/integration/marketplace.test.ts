@@ -32,7 +32,7 @@ async function login(emailOrPhone: string, password: string) {
   return `live_token=${token}`;
 }
 
-d("Live V10 marketplace integration (isolated local demo DB only)", () => {
+d("Furnivo V10 marketplace integration (isolated local demo DB only)", () => {
   let adminCookie = "";
   let ownerCookie = "";
   let consumerCookie = "";

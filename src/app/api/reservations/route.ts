@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const policyCheck = await requirePolicyAcceptances({ userId: user.id, keys: ["PLATFORM_TERMS", "PRIVACY_NOTICE", "CONSUMER_TERMS"] });
-  if (!policyCheck.allowed) return NextResponse.json({ error: policyCheck.message || "Review Live policies before reserving.", code: policyCheck.code, missingPolicies: policyCheck.missing, policyUrl: "/legal" }, { status: policyCheck.code === "LEGAL_RELEASE_GATE" ? 503 : 428 });
+  if (!policyCheck.allowed) return NextResponse.json({ error: policyCheck.message || "Review Furnivo policies before reserving.", code: policyCheck.code, missingPolicies: policyCheck.missing, policyUrl: "/legal" }, { status: policyCheck.code === "LEGAL_RELEASE_GATE" ? 503 : 428 });
   const correlationId = req.headers.get("x-request-id") || crypto.randomUUID();
   const parsed = parseOr400(reservationSchema, await req.json().catch(() => ({})));
   if ("response" in parsed) return parsed.response;
@@ -128,7 +128,7 @@ export async function POST(req: NextRequest) {
   } catch (e: any) {
     if (e instanceof Error && e.message === "MARKETPLACE_LISTING_NOT_PUBLIC") return NextResponse.json({ error: "This listing is not currently available for reservations." }, { status: 404 });
     if (e instanceof Error && e.message === "LEGAL_POLICY_REQUIRED") return NextResponse.json({ error: "The seller has not accepted the current seller agreement. This reservation was not created." }, { status: 428 });
-    if (e instanceof Error && e.message === "CURRENCY_NOT_SUPPORTED") return NextResponse.json({ error: "Reservations are not configured for this listing's currency in the active market. Live has not converted the amount.", code: "CURRENCY_NOT_SUPPORTED" }, { status: 409 });
+    if (e instanceof Error && e.message === "CURRENCY_NOT_SUPPORTED") return NextResponse.json({ error: "Reservations are not configured for this listing's currency in the active market. Furnivo has not converted the amount.", code: "CURRENCY_NOT_SUPPORTED" }, { status: 409 });
     // Unique idempotency race → return the winner's reservation
     if (idemKey && String(e?.code) === "P2002") {
       const winner = await prisma.reservation.findUnique({ where: { idempotencyKey: `${user.id}:${idemKey}` } });

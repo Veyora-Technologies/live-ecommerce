@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
   const alertEnabled = parsed.data.alertEnabled ?? existing?.alertEnabled ?? false;
   const alertFrequency = parsed.data.alertFrequency ?? existing?.alertFrequency ?? "DAILY";
   if (alertEnabled && deliveryUnavailable(parsed.data.query, parsed.data.filters)) {
-    return NextResponse.json({ error: "Delivery-based alerts are unavailable because Live has no configured delivery integration.", code: "FEATURE_NOT_CONFIGURED" }, { status: 503, headers: { "Cache-Control": "no-store" } });
+    return NextResponse.json({ error: "Delivery-based alerts are unavailable because Furnivo has no configured delivery integration.", code: "FEATURE_NOT_CONFIGURED" }, { status: 503, headers: { "Cache-Control": "no-store" } });
   }
   const now = new Date();
   if (existing) {
@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
         ...(!wasEnabled && alertEnabled ? { lastEvaluatedAt: now, lastNotifiedAt: null } : {}),
       },
     });
-    return NextResponse.json({ savedSearch, note: alertEnabled ? "Saved. In-app matching alerts check real merchant inventory events when the scheduler runs; no email or push message is sent." : "Saved to My Live." });
+    return NextResponse.json({ savedSearch, note: alertEnabled ? "Saved. In-app matching alerts check real merchant inventory events when the scheduler runs; no email or push message is sent." : "Saved to My Furnivo." });
   }
   const savedSearch = await prisma.savedSearch.create({
     data: {
@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
       lastEvaluatedAt: now,
     },
   });
-  return NextResponse.json({ savedSearch, note: alertEnabled ? "Saved. In-app matching alerts check only inventory events recorded after you enabled them, when the scheduler runs; no email or push message is sent." : "Saved to My Live." }, { status: 201 });
+  return NextResponse.json({ savedSearch, note: alertEnabled ? "Saved. In-app matching alerts check only inventory events recorded after you enabled them, when the scheduler runs; no email or push message is sent." : "Saved to My Furnivo." }, { status: 201 });
 }
 
 export async function PATCH(req: NextRequest) {
@@ -98,7 +98,7 @@ export async function PATCH(req: NextRequest) {
   const nextFilters = rawFilters !== undefined ? rawFilters : unpackStoredFilters(existing.filters);
   const nextAlertEnabled = fields.alertEnabled ?? existing.alertEnabled;
   if (nextAlertEnabled && deliveryUnavailable(nextQuery, nextFilters)) {
-    return NextResponse.json({ error: "Delivery-based alerts are unavailable because Live has no configured delivery integration.", code: "FEATURE_NOT_CONFIGURED" }, { status: 503, headers: { "Cache-Control": "no-store" } });
+    return NextResponse.json({ error: "Delivery-based alerts are unavailable because Furnivo has no configured delivery integration.", code: "FEATURE_NOT_CONFIGURED" }, { status: 503, headers: { "Cache-Control": "no-store" } });
   }
   const data: Record<string, unknown> = {};
   if (fields.query !== undefined) data.query = fields.query;

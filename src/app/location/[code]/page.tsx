@@ -38,12 +38,12 @@ async function getCounts(code: string) {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { code } = await params;
   const area = await getLocation(code);
-  if (!area) return { title: "Location not found · Live", robots: { index: false, follow: true } };
+  if (!area) return { title: "Location not found · Furnivo", robots: { index: false, follow: true } };
   const counts = await getCounts(area.code);
-  const title = `${area.name} on Live · Merchant listings`;
+  const title = `${area.name} on Furnivo · Merchant listings`;
   const description = counts.productCount
-    ? `Explore ${counts.productCount} currently listed product${counts.productCount === 1 ? "" : "s"} and approved merchants recorded for ${geographicPath(area)} on Live.`
-    : `See whether real merchant listings are currently recorded for ${geographicPath(area)} on Live.`;
+    ? `Explore ${counts.productCount} currently listed product${counts.productCount === 1 ? "" : "s"} and approved merchants recorded for ${geographicPath(area)} on Furnivo.`
+    : `See whether real merchant listings are currently recorded for ${geographicPath(area)} on Furnivo.`;
   return { title, description, robots: { index: counts.merchantCount > 0 || counts.productCount > 0, follow: true } };
 }
 
@@ -70,11 +70,11 @@ export default async function LocationPage({ params }: PageProps) {
   return <div className="min-h-screen">
     <Header user={user} />
     <main className="live-wrap live-main">
-      <nav aria-label="Breadcrumb" className="live-location-breadcrumb"><Link href="/">Live home</Link><span aria-hidden="true">/</span><span>{locationLabel}</span></nav>
+      <nav aria-label="Breadcrumb" className="live-location-breadcrumb"><Link href="/">Furnivo home</Link><span aria-hidden="true">/</span><span>{locationLabel}</span></nav>
       <section className="live-location-hero">
         <p className="live-eyebrow">Nigeria geography · {area.type.replaceAll("_", " ").toLowerCase()}</p>
         <h1>{area.name}</h1>
-        <p>Coverage and listings are based only on records currently in Live. A selectable location is not evidence that a merchant, item, stock or delivery service is available there.</p>
+        <p>Coverage and listings are based only on records currently in Furnivo. A selectable location is not evidence that a merchant, item, stock or delivery service is available there.</p>
         <div className="live-location-actions"><Link className="live-button live-button-primary" href={searchHref}>Search this area</Link><Link className="live-button" href="/search?scope=nationwide">Search all Nigeria</Link></div>
       </section>
 
@@ -85,7 +85,7 @@ export default async function LocationPage({ params }: PageProps) {
 
       <section className="live-location-section" aria-labelledby="location-merchants-title">
         <div className="live-section-heading"><div><div className="live-eyebrow">Approved business profiles</div><h2 id="location-merchants-title" className="live-section-title">Merchants recorded for {area.name}</h2></div><span className="live-location-count">{counts.merchantCount} recorded</span></div>
-        {merchants.length ? <div className="live-merchant-grid">{merchants.map((merchant) => <MerchantCard key={merchant.id} m={merchant} />)}</div> : <div className="live-empty-card"><strong>No approved merchant profiles are currently recorded for this location.</strong><p>Live supports searching this geography, but commercial coverage is not yet confirmed in the app.</p><Link className="live-button" href="/merchant">Add a merchant profile</Link></div>}
+        {merchants.length ? <div className="live-merchant-grid">{merchants.map((merchant) => <MerchantCard key={merchant.id} m={merchant} />)}</div> : <div className="live-empty-card"><strong>No approved merchant profiles are currently recorded for this location.</strong><p>Furnivo supports searching this geography, but commercial coverage is not yet confirmed in the app.</p><Link className="live-button" href="/merchant">Add a merchant profile</Link></div>}
       </section>
     </main>
     <BottomNav pathname="/location" />

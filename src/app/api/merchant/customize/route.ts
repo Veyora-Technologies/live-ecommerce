@@ -42,7 +42,7 @@ export async function PUT(req: NextRequest) {
 
   const deliverySettingsRequested = body.deliveryAvailable === true || (body.deliveryFee !== undefined && body.deliveryFee !== null);
   if (deliverySettingsRequested && !isMarketIntegrationReady(DEFAULT_MARKET_CODE, "deliveryIntegrations")) {
-    return NextResponse.json({ error: "Delivery is unavailable because Live has no configured delivery integration.", code: "FEATURE_NOT_CONFIGURED" }, { status: 503, headers: { "Cache-Control": "no-store" } });
+    return NextResponse.json({ error: "Delivery is unavailable because Furnivo has no configured delivery integration.", code: "FEATURE_NOT_CONFIGURED" }, { status: 503, headers: { "Cache-Control": "no-store" } });
   }
 
   const data: Record<string, unknown> = {};

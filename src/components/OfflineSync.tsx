@@ -57,7 +57,7 @@ export default function OfflineSync() {
   const applyUpdate = async () => {
     const registration = await navigator.serviceWorker.getRegistration();
     if (!registration?.waiting) { setUpdateReady(false); return; }
-    setMessage("Updating Live. Your current page will reload; unsaved text in open forms may be lost.");
+    setMessage("Updating Furnivo. Your current page will reload; unsaved text in open forms may be lost.");
     reloadOnControllerChange.current = true;
     registration.waiting.postMessage("LIVE_SKIP_WAITING");
   };
@@ -68,7 +68,7 @@ export default function OfflineSync() {
       <div className="live-connection-title"><CloudOff size={17} /> You’re offline</div>
       <p>Current stock and reservations need a connection. Cached information, if visible, is not a fresh confirmation; an offline reservation is never successful.</p>
     </> : showReconnected ? <div className="live-connection-title"><Wifi size={17} /> Connection restored · refresh listings before acting</div> : null}
-    {updateReady && <div className="live-update-row"><span><Download size={16} /> A Live update is ready.</span><button type="button" onClick={applyUpdate}><RotateCw size={14} /> Update</button></div>}
+    {updateReady && <div className="live-update-row"><span><Download size={16} /> A Furnivo update is ready.</span><button type="button" onClick={applyUpdate}><RotateCw size={14} /> Update</button></div>}
     {message && <p>{message}</p>}
     {message && <button type="button" className="live-dismiss-button" onClick={() => setMessage("")}>Dismiss</button>}
   </aside>;

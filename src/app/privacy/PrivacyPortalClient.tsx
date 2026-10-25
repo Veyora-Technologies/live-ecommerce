@@ -127,7 +127,7 @@ export default function PrivacyPortalClient({ initialMarketingConsent }: { initi
       <div className="mt-5 border-t border-slate-200 pt-4">
         <h3 className="font-semibold">Marketing preference</h3>
         <p className="mt-1 text-sm text-slate-600">This preference is stored separately from terms acceptance and does not change essential account or transaction messages.</p>
-        <label className="mt-3 flex items-start gap-3 text-sm"><input type="checkbox" checked={marketingConsent} onChange={(event) => setMarketingConsent(event.target.checked)} className="mt-1 h-4 w-4 accent-emerald-700" /><span>Allow Live marketing communications.</span></label>
+        <label className="mt-3 flex items-start gap-3 text-sm"><input type="checkbox" checked={marketingConsent} onChange={(event) => setMarketingConsent(event.target.checked)} className="mt-1 h-4 w-4 accent-emerald-700" /><span>Allow Furnivo marketing communications.</span></label>
         <button type="button" onClick={() => void saveMarketingPreference()} disabled={savingConsent} className="mt-3 min-h-10 rounded-full border border-slate-300 px-4 text-sm font-semibold disabled:opacity-50">{savingConsent ? "Saving…" : "Save marketing preference"}</button>
       </div>
     </section>

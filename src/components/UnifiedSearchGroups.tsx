@@ -15,7 +15,7 @@ export default function UnifiedSearchGroups({ productCount, businesses, services
     { id: "unified-products", label: "Products", count: productCount },
     { id: "unified-businesses", label: "Businesses", count: businesses.length },
     { id: "unified-services", label: "Services", count: services.length },
-    ...(signedIn ? [{ id: "unified-your-live", label: "Your Live", count: activity.length }] : []),
+    ...(signedIn ? [{ id: "unified-your-live", label: "Your Furnivo", count: activity.length }] : []),
   ];
 
   return <>
@@ -55,7 +55,7 @@ export default function UnifiedSearchGroups({ productCount, businesses, services
     </section>}
 
     {signedIn && <section id="unified-your-live" aria-labelledby="unified-your-live-title" className="mt-6">
-      <div className="live-section-heading"><div><div className="live-eyebrow">Private to your signed-in account</div><h2 id="unified-your-live-title" className="live-section-title">Your Live</h2></div></div>
+      <div className="live-section-heading"><div><div className="live-eyebrow">Private to your signed-in account</div><h2 id="unified-your-live-title" className="live-section-title">Your Furnivo</h2></div></div>
       {activity.length ? <div className="grid gap-2 md:grid-cols-2">
         {activity.map((item) => <Link key={`${item.type}:${item.id}`} href={item.href} className="rounded-xl border border-slate-200 bg-white p-3 hover:border-emerald-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700">
           <div className="flex items-start justify-between gap-3"><strong className="text-sm">{item.title}</strong><span className="shrink-0 rounded-full bg-slate-100 px-2 py-1 text-[11px] font-semibold">{item.status.replaceAll("_", " ")}</span></div>

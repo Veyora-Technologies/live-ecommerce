@@ -114,7 +114,7 @@ export default function ComplaintsPortalClient() {
         {listingRequired && <div>
           <label htmlFor="report-listing-id" className="text-sm font-semibold">Listing ID</label>
           <input id="report-listing-id" value={listingId} onChange={(event) => setListingId(event.target.value)} minLength={1} maxLength={64} required className="mt-1 min-h-11 w-full rounded-xl border border-slate-300 px-3" aria-describedby="listing-id-help" />
-          <p id="listing-id-help" className="mt-1 text-xs text-slate-600">Use the listing reference shown by Live. The report is checked against the listing record; submitting a report is not a finding of infringement.</p>
+          <p id="listing-id-help" className="mt-1 text-xs text-slate-600">Use the listing reference shown by Furnivo. The report is checked against the listing record; submitting a report is not a finding of infringement.</p>
         </div>}
         {(transactionRequired || type === "COMPLAINT") && <fieldset>
           <legend className="text-sm font-semibold">Related reservation or appointment{transactionRequired ? " (required)" : " (optional)"}</legend>

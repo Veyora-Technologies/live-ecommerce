@@ -3,17 +3,17 @@
 @theme {
   --color-live-black: #0A0A0A;
   --color-live-ink: #0A0A0A;
-  --color-live-green: #00C853;
-  --color-live-green-ink: #007A32;
-  --color-live-green-hover: #00AE48;
-  --color-live-green-ink-hover: #006B2C;
+  --color-live-green: #6C3BFF;
+  --color-live-green-ink: #6C3BFF;
+  --color-live-green-hover: #5A2BE8;
+  --color-live-green-ink-hover: #4B22CC;
   --color-live-slate: #6B7280;
   --color-live-light: #F3F4F6;
   --color-live-900: #0A0A0A;
   --color-live-800: #17191A;
   --color-live-700: #292D30;
-  --color-live-accent: #007A32;
-  --color-live-accent-2: #006B2C;
+  --color-live-accent: #6C3BFF;
+  --color-live-accent-2: #4B22CC;
   --color-live-amber: #8A4B00;
   --color-live-red: #B42318;
   --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -27,7 +27,7 @@
 
 :root {
   color-scheme: light;
-  --live-brand: #00C853;
+  --live-brand: #6C3BFF;
   --live-black: #0A0A0A;
   --live-slate: #6B7280;
   --live-light: #F3F4F6;
@@ -40,11 +40,11 @@
   --live-soft: #E9ECEF;
   --live-border: #D9DEE4;
   --live-green: var(--live-brand);
-  --live-green-strong: #007A32;
-  --live-green-hover: #00AE48;
-  --live-green-ink-hover: #006B2C;
-  --live-green-soft: #E8F8EE;
-  --live-focus: #007A32;
+  --live-green-strong: #4B22CC;
+  --live-green-hover: #5A2BE8;
+  --live-green-ink-hover: #4B22CC;
+  --live-green-soft: #EFEAFE;
+  --live-focus: #6C3BFF;
   --live-success: #126B43;
   --live-success-soft: #E7F4EC;
   --live-warning: #8A4B00;
@@ -102,12 +102,12 @@
   --live-muted: #B9C0C5;
   --live-soft: #222628;
   --live-border: #3A4044;
-  --live-green: #00C853;
-  --live-green-strong: #82E8A5;
-  --live-green-hover: #34D773;
-  --live-green-ink-hover: #A1F1B9;
-  --live-green-soft: #15311F;
-  --live-focus: #82E8A5;
+  --live-green: #9B7BFF;
+  --live-green-strong: #C4B0FF;
+  --live-green-hover: #5A2BE8;
+  --live-green-ink-hover: #4B22CC;
+  --live-green-soft: #211A3D;
+  --live-focus: #C4B0FF;
   --live-success: #82E8A5;
   --live-success-soft: #15311F;
   --live-warning: #FFD27D;
@@ -130,12 +130,12 @@
     --live-muted: #B9C0C5;
     --live-soft: #222628;
     --live-border: #3A4044;
-    --live-green: #00C853;
-    --live-green-strong: #82E8A5;
-    --live-green-hover: #34D773;
-    --live-green-ink-hover: #A1F1B9;
-    --live-green-soft: #15311F;
-    --live-focus: #82E8A5;
+    --live-green: #9B7BFF;
+    --live-green-strong: #C4B0FF;
+    --live-green-hover: #5A2BE8;
+    --live-green-ink-hover: #4B22CC;
+    --live-green-soft: #211A3D;
+    --live-focus: #C4B0FF;
     --live-success: #82E8A5;
     --live-success-soft: #15311F;
     --live-warning: #FFD27D;
@@ -169,7 +169,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   outline-offset: var(--live-focus-offset);
 }
 img, video { max-width: 100%; }
-::selection { color: #0A0A0A; background: #00C853; }
+::selection { color: #FFFFFF; background: #6C3BFF; }
 .live-data-mode-notice { border-bottom: 1px solid #d69b31; background: #fff4d6; color: #3f2900; padding: 8px 12px; text-align: center; font-size: .78rem; line-height: 1.4; font-weight: 700; }
 :root[data-theme="dark"] .live-data-mode-notice { border-color: #816329; background: #302819; color: #ffe3a1; }
 @media (prefers-color-scheme: dark) { :root[data-theme="system"] .live-data-mode-notice { border-color: #816329; background: #302819; color: #ffe3a1; } }
@@ -225,7 +225,7 @@ img, video { max-width: 100%; }
   :root[data-theme="system"] .bg-blue-50 { background-color: #1c3040 !important; }
 }
 
-/* Semantic colors remain distinct from the Live brand green in dark mode. */
+/* Semantic colors remain distinct from the Furnivo brand green in dark mode. */
 :root[data-theme="dark"] .text-emerald-700,
 :root[data-theme="dark"] .text-emerald-800,
 :root[data-theme="dark"] .text-emerald-900 { color: var(--live-success) !important; }
@@ -489,7 +489,7 @@ img, video { max-width: 100%; }
 .live-product-skeleton .live-skeleton:nth-child(2) { height: 15px; width: 85%; margin-bottom: 9px; }
 .live-product-skeleton .live-skeleton:last-child { height: 12px; width: 56%; }
 
-/* Live Pulse */
+/* Furnivo Pulse */
 .live-pulse-panel { padding: clamp(16px, 2.4vw, 25px); border: 1px solid var(--live-border); border-radius: 22px; background: var(--live-surface); }
 .live-pulse-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 15px; }
 .live-pulse-head > div { min-width: 0; }
@@ -685,7 +685,7 @@ img, video { max-width: 100%; }
 .live-footer-logo-link { display: inline-flex; align-items: center; min-height: 42px; }
 .live-footer-logo-link img { display: block; width: 148px; height: auto; }
 .live-footer-tagline { margin: 4px 0 0; color: #FFFFFF; font-size: 15px; font-weight: 800; letter-spacing: -.02em; }
-.live-footer-note { margin: 0; color: #82E8A5; font-size: 12px; font-weight: 700; }
+.live-footer-note { margin: 0; color: var(--live-green-strong); font-size: 12px; font-weight: 700; }
 .live-footer-links { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); align-content: start; gap: 7px 18px; }
 .live-footer-links a { min-height: 40px; display: inline-flex; align-items: center; color: #D6DBDE; font-size: 13px; font-weight: 650; text-decoration: none; }
 .live-footer-links a:hover { color: #FFFFFF; text-decoration: underline; text-underline-offset: 3px; }

@@ -1,4 +1,4 @@
-# Live V9 engineering backlog — prioritized by release risk
+# Furnivo V9 engineering backlog — prioritized by release risk
 
 This backlog follows the repository audit and distinguishes code-level work from owner/provider work. Items marked “external” cannot be evidenced by a local build alone.
 

@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
     catch { return NextResponse.json({ error: "Encrypted MFA secret storage is not configured" }, { status: 503 }); }
     // Store the pending TOTP secret only in authenticated encrypted form; mfaEnabled stays false until verified.
     await prisma.user.update({ where:{ id: user.id }, data:{ mfaSecret: encryptedSecret } });
-    const otpauth = authenticator.keyuri(user.email || user.phone || user.id, "Live", secret);
+    const otpauth = authenticator.keyuri(user.email || user.phone || user.id, "Furnivo", secret);
     // QR is generated locally — the secret must never be sent to a third-party QR service.
     const qrDataUrl = await QRCode.toDataURL(otpauth, { width: 200 }).catch(() => null);
     return NextResponse.json({ secret, otpauth, qrDataUrl, note: "Scan with your authenticator app, then confirm with a 6-digit code. Losing the app without disabling MFA first requires support identity verification." });

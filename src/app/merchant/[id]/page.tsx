@@ -19,9 +19,9 @@ export const dynamic="force-dynamic";
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
   const merchant = await prisma.merchant.findFirst({ where: { id, status: "APPROVED" }, select: { id: true, businessName: true, description: true, imageUrl: true, countryCode: true } });
-  if (!merchant || !merchantBelongsToMarket(merchant, DEFAULT_MARKET_CODE)) return { title: "Business unavailable · Live", robots: { index: false, follow: false } };
-  const title = `${merchant.businessName} · Live`;
-  const description = (merchant.description || `View ${merchant.businessName} on Live. Merchant-provided profile information is not independent verification.`).slice(0, 300);
+  if (!merchant || !merchantBelongsToMarket(merchant, DEFAULT_MARKET_CODE)) return { title: "Business unavailable · Furnivo", robots: { index: false, follow: false } };
+  const title = `${merchant.businessName} · Furnivo`;
+  const description = (merchant.description || `View ${merchant.businessName} on Furnivo. Merchant-provided profile information is not independent verification.`).slice(0, 300);
   const baseUrl = getPublicBaseUrl();
   const canonical = baseUrl ? `${baseUrl}/merchant/${encodeURIComponent(id)}` : undefined;
   const image = safeListingImageUrl(merchant.imageUrl) || undefined;

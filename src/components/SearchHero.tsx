@@ -22,7 +22,7 @@ export default function SearchHero() {
       const data = await response.json().catch(() => ({}));
       setStatus(data.message || data.error || "Visual product search is unavailable. Text search still works.");
     } catch {
-      setStatus("Couldn't reach Live. Your image was not saved; try text or barcode search.");
+      setStatus("Couldn't reach Furnivo. Your image was not saved; try text or barcode search.");
     } finally {
       setBusy(false);
     }

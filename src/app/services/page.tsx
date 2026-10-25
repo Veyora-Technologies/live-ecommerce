@@ -17,7 +17,7 @@ export default async function ServicesPage(){
     <div className="min-h-screen"><Header user={user}/>
       <div className="mx-auto max-w-[1000px] px-4 py-6 pb-24">
         <h1 className="font-black text-2xl">Book a service</h1>
-        <p className="text-sm text-slate-500">Barbers, salons, mechanics, repairs and more. A requested slot only becomes a booking when the provider confirms — Live keeps those states separate.</p>
+        <p className="text-sm text-slate-500">Barbers, salons, mechanics, repairs and more. A requested slot only becomes a booking when the provider confirms — Furnivo keeps those states separate.</p>
         <div className="mt-5 grid md:grid-cols-2 gap-4">
           {services.map(s=>(
             <div key={s.id} className="bg-white border border-slate-200 rounded-2xl p-5">
@@ -32,7 +32,7 @@ export default async function ServicesPage(){
         {services.length===0 && (
           <div className="mt-6 bg-white border border-slate-200 rounded-2xl p-8 text-center">
             <p className="font-bold">No services published yet</p>
-            <p className="text-sm text-slate-500 mt-1">Only approved services that pass Live’s category, review, and marketplace-readiness checks appear here.</p>
+            <p className="text-sm text-slate-500 mt-1">Only approved services that pass Furnivo’s category, review, and marketplace-readiness checks appear here.</p>
           </div>
         )}
       </div>

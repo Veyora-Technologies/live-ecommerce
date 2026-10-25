@@ -13,7 +13,7 @@ type AssistAction = "search_products" | "compare_prices" | "get_reservations";
 /** A small rule-based helper. It only reads the signed-in user's reservations
  * and public, approved merchant listings; it does not create reservations. */
 export async function POST(req: NextRequest) {
-  if (process.env.ASSIST_ENABLED === "false") return NextResponse.json({ error: "Live Assist is disabled. Use Search, Compare, or My Live instead." }, { status: 503, headers: { "Cache-Control": "no-store" } });
+  if (process.env.ASSIST_ENABLED === "false") return NextResponse.json({ error: "Furnivo Assist is disabled. Use Search, Compare, or My Furnivo instead." }, { status: 503, headers: { "Cache-Control": "no-store" } });
   const payload = await req.json().catch(() => null) as { message?: unknown } | null;
   if (!payload || typeof payload.message !== "string" || payload.message.trim().length < 1 || payload.message.length > 1000) {
     return NextResponse.json({ error: "Enter a message of 1–1000 characters." }, { status: 400 });
@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
   const parsed = parseNaturalQuery(message);
   if (parsed.priceFilterInvalid) return NextResponse.json({ error: "The natural-language price filter could not be read safely. Use a valid whole-Naira amount.", code: "INVALID_PRICE_FILTER" }, { status: 400, headers: { "Cache-Control": "no-store" } });
   if (parsed.delivery && !isMarketIntegrationReady(DEFAULT_MARKET_CODE, "deliveryIntegrations")) {
-    return NextResponse.json({ error: "Delivery search is unavailable because Live has no configured delivery integration.", code: "FEATURE_NOT_CONFIGURED" }, { status: 503, headers: { "Cache-Control": "no-store" } });
+    return NextResponse.json({ error: "Delivery search is unavailable because Furnivo has no configured delivery integration.", code: "FEATURE_NOT_CONFIGURED" }, { status: 503, headers: { "Cache-Control": "no-store" } });
   }
   const lower = message.toLowerCase();
   const actions: AssistAction[] = [];
@@ -37,9 +37,9 @@ export async function POST(req: NextRequest) {
   if (isSearch && !isCompare && !isTrack && !isReserve) actions.push("search_products");
   if (isCompare) actions.push("compare_prices");
   if (isTrack) actions.push("get_reservations");
-  if (isReserve) responses.push("Live Assist does not submit reservations. Open a product listing, check its merchant-reported availability and price, choose a quantity, then confirm on the product page. A reservation is not confirmed until Live returns a reservation code.");
+  if (isReserve) responses.push("Furnivo Assist does not submit reservations. Open a product listing, check its merchant-reported availability and price, choose a quantity, then confirm on the product page. A reservation is not confirmed until Furnivo returns a reservation code.");
   if (/\b(low stock|running low|my shop)\b/.test(lower) && !actions.length && !isReserve) {
-    responses.push("Merchant inventory details are available in the Merchant console to authorized team members. Live Assist does not access your store inventory.");
+    responses.push("Merchant inventory details are available in the Merchant console to authorized team members. Furnivo Assist does not access your store inventory.");
   }
 
   const supportedCurrencies = getActiveMarketConfiguration(DEFAULT_MARKET_CODE)?.supportedCurrencies.map((currency) => currency.code) ?? [];
@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
         }));
         toolResults.push({ tool: action, results });
         if (!products.length) responses.push(`No currently reservable, approved listings matched “${queryText}”. Try a broader term or area, or use Request an Item if available.`);
-        else responses.push(`Matching Live listings (merchant-reported; check the product page before reserving): ${products.map((product) => `${product.name} at ${product.merchant.businessName}, ${product.merchant.area} — ${formatNairaMinor(product.price)} • ${product.effectiveAvailability}`).join("; ")}`);
+        else responses.push(`Matching Furnivo listings (merchant-reported; check the product page before reserving): ${products.map((product) => `${product.name} at ${product.merchant.businessName}, ${product.merchant.area} — ${formatNairaMinor(product.price)} • ${product.effectiveAvailability}`).join("; ")}`);
       }
       if (action === "compare_prices") {
         const cleaned = lower.replace(/^.*?\bcompare\b/, "").replace(/\b(prices?|costs?)\b/g, " ").replace(/\b(of|for|the|across|near me)\b/g, " ").trim();
@@ -118,14 +118,14 @@ export async function POST(req: NextRequest) {
         }
       }
     } catch {
-      responses.push("Live Assist could not complete that request. Try Search or My Live; no reservation or other change was made.");
+      responses.push("Furnivo Assist could not complete that request. Try Search or My Furnivo; no reservation or other change was made.");
     }
   }
 
-  if (parsed.distanceKm && actions.some((action) => action === "search_products")) responses.push("Distance was not applied: Live Assist has no location or road-routing access. Use a named area, such as Wuse, instead.");
+  if (parsed.distanceKm && actions.some((action) => action === "search_products")) responses.push("Distance was not applied: Furnivo Assist has no location or road-routing access. Use a named area, such as Wuse, instead.");
   if (!responses.length) responses.push("I can search approved listings, compare similar-name listings, or show your reservations. Reservations must be submitted from a product page. Try: “Find rice in Wuse” or “Compare paracetamol prices”.");
   return NextResponse.json({
     reply: responses.join("\n\n"), parsed, toolsUsed: actions, toolResults,
-    disclaimer: "Listing prices and availability are merchant-reported. Similar product names are not proof of identical specifications. Live Assist does not book, order, or contact merchants.",
+    disclaimer: "Listing prices and availability are merchant-reported. Similar product names are not proof of identical specifications. Furnivo Assist does not book, order, or contact merchants.",
   }, { headers: { "Cache-Control": "private, no-store" } });
 }

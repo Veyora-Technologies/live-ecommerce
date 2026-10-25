@@ -28,9 +28,9 @@ export const dynamic="force-dynamic";
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
   const product = await prisma.product.findFirst({ where: { id, archived: false, merchant: { status: "APPROVED" } }, select: { id: true, name: true, description: true, imageUrl: true } });
-  if (!product || !await isPublicMarketplaceProduct(id)) return { title: "Listing unavailable · Live", robots: { index: false, follow: false } };
-  const title = `${product.name} · Live`;
-  const description = (product.description || `View the seller-listed ${product.name} on Live. Availability and terms are provided by the merchant and must be confirmed.`).slice(0, 300);
+  if (!product || !await isPublicMarketplaceProduct(id)) return { title: "Listing unavailable · Furnivo", robots: { index: false, follow: false } };
+  const title = `${product.name} · Furnivo`;
+  const description = (product.description || `View the seller-listed ${product.name} on Furnivo. Availability and terms are provided by the merchant and must be confirmed.`).slice(0, 300);
   const baseUrl = getPublicBaseUrl();
   const canonical = baseUrl ? `${baseUrl}/product/${encodeURIComponent(id)}` : undefined;
   const image = safeListingImageUrl(product.imageUrl) || undefined;
@@ -154,18 +154,18 @@ export default async function ProductPage({ params }: { params: Promise<{id:stri
                 Last confirmed {product.lastConfirmedAt ? timeAgo(product.lastConfirmedAt) : "—"} • Record updated {timeAgo(product.updatedAt)}
               </div>
               <div className="mt-5">
-                {transactionCurrencySupported ? <ReserveButton productId={product.id} inStock={availableNow > 0} /> : <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">Reservations and price alerts are unavailable for {currencyCode} in this market. Live has not converted this amount.</p>}
+                {transactionCurrencySupported ? <ReserveButton productId={product.id} inStock={availableNow > 0} /> : <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">Reservations and price alerts are unavailable for {currencyCode} in this market. Furnivo has not converted this amount.</p>}
                 {transactionCurrencySupported && !user && <div className="mt-2 text-xs text-slate-500">You’ll be asked to sign in to reserve. Reserving never confirms by itself — the merchant must confirm.</div>}
                 {transactionCurrencySupported && <PriceAlertButton productId={product.id} loggedIn={!!user} />}
               </div>
               <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
                 <div className="bg-slate-50 rounded-xl p-3"><div className="font-semibold">Pickup</div><div className="text-slate-600 text-xs">{product.pickupAvailable && product.merchant.pickupAvailable ? "Available — reserve, merchant confirms, then collect" : "Not available"}</div></div>
-                <div className="bg-slate-50 rounded-xl p-3"><div className="font-semibold">Delivery</div><div className="text-slate-600 text-xs">Live delivery integrations are not configured. Live does not verify or arrange delivery; contact the merchant directly about any seller-managed option.</div></div>
+                <div className="bg-slate-50 rounded-xl p-3"><div className="font-semibold">Delivery</div><div className="text-slate-600 text-xs">Furnivo delivery integrations are not configured. Furnivo does not verify or arrange delivery; contact the merchant directly about any seller-managed option.</div></div>
               </div>
               <div className="mt-4 flex flex-wrap gap-2 text-sm">
                 <Link href={`/compare?productName=${encodeURIComponent(product.name)}`} className="px-4 py-2 rounded-full bg-live-black text-white font-semibold">⚖️ Compare across stores</Link>
                 <Link href={`/merchant/${product.merchant.id}`} className="px-4 py-2 rounded-full bg-white border border-slate-300 font-semibold">Visit store</Link>
-                <ShareButton title={product.name} text={`See this merchant-listed product on Live: ${product.name}`} />
+                <ShareButton title={product.name} text={`See this merchant-listed product on Furnivo: ${product.name}`} />
                 {qrDataUrl && <img src={qrDataUrl} alt={`Discovery QR code for ${product.merchant.businessName}`} width="52" height="52" className="w-[52px] h-[52px] rounded-lg border border-slate-200" />}
               </div>
               <p className="mt-2 text-[11px] text-slate-400">{qrDataUrl ? "QR opens the merchant profile for discovery only — not payment or login." : "A local discovery QR is unavailable until a public application origin is configured. Use the store link instead."}</p>
@@ -219,7 +219,7 @@ export default async function ProductPage({ params }: { params: Promise<{id:stri
               })}
             </div>
           ) : (
-            <p className="mt-2 text-sm text-slate-500">Only the current merchant-listed price ({formatProductMoney(product.price)}) is on record. Live never invents past prices — new observations are recorded each time the merchant changes price.</p>
+            <p className="mt-2 text-sm text-slate-500">Only the current merchant-listed price ({formatProductMoney(product.price)}) is on record. Furnivo never invents past prices — new observations are recorded each time the merchant changes price.</p>
           )}
         </div>
 

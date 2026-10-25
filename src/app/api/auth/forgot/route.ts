@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({
         ok: false,
         code: "PASSWORD_RESET_DELIVERY_UNAVAILABLE",
-        error: "Password reset by email is unavailable. No email was sent. Use Live's verified support channel for account recovery.",
+        error: "Password reset by email is unavailable. No email was sent. Use Furnivo's verified support channel for account recovery.",
       }, { status: 503, headers: PRIVATE_HEADERS });
     }
     if (!emailOrPhone || emailOrPhone.length > 120) return NextResponse.json(GENERIC, { headers: PRIVATE_HEADERS });
@@ -46,14 +46,14 @@ export async function POST(req: NextRequest) {
       const link = `${base}/auth/reset?token=${encodeURIComponent(raw)}`;
       const delivery = await sendEmail({
         to: user.email,
-        subject: "Reset your Live password",
+        subject: "Reset your Furnivo password",
         text: [
-          "Someone requested a password reset for your Live account.",
+          "Someone requested a password reset for your Furnivo account.",
           "",
           `Open this link within 30 minutes to choose a new password: ${link}`,
           "",
           "If you did not request this, you can ignore this message. Your password will not change.",
-          "Live will never ask you for your password or a reset code by email.",
+          "Furnivo will never ask you for your password or a reset code by email.",
         ].join("\n"),
         idempotencyKey: challenge.id,
       });

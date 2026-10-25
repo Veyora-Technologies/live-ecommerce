@@ -1,4 +1,4 @@
-# Live 3.0 — Release Gate Report
+# Furnivo 3.0 — Release Gate Report
 
 _Environment: local production build (`next start`), SQLite demo database. Every result below was executed against the running v3 build on 2026-10-20 unless marked otherwise. Nothing is marked passed that was not run._
 

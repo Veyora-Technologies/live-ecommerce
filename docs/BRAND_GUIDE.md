@@ -1,32 +1,35 @@
-# Live brand & interface reference
+# Furnivo brand & interface reference
 
-**Purpose:** implementation guide for the Live visual identity and shared UI tokens. The supplied concept board was used as direction; the production marks below are clean, independently drawn vector assets—not crops of the board. No ™ or ® is included.
+**Purpose:** implementation guide for the Furnivo visual identity and shared UI tokens. The supplied concept board was used as direction; the production marks below are clean, independently drawn vector assets—not crops of the board. No ™ or ® is included.
 
-![Live social preview artwork](../public/brand/live-social-card.png)
+![Furnivo social preview artwork](../public/brand/live-social-card.png)
 
 ## Identity
 
-- **Brand name:** Live
-- **Primary line:** “Everything You Need. All in One Place.”
-- **Supporting line:** “Shop. Sell. Service. Grow.”
-- **Mark:** a custom geometric L/forward-play symbol with a separate wordmark. Use the supplied SVGs; do not substitute emoji, the concept-board image, or a hand-built CSS approximation.
+- **Brand name:** Furnivo
+- **Primary line:** “Shop · Sell · Grow”
+- **Supporting line:** “More than a marketplace. It’s your next move.”
+- **Mark:** a custom geometric bag/forward-play symbol with a separate wordmark. Every asset is generated from the outline of the Geist typeface and the mark's own vector paths by `scripts/brand/generate-brand-assets.py`, so the mark, wordmark, icons and social card cannot drift apart. Do not substitute emoji, the concept-board image, or a hand-built CSS approximation.
+- **Asset naming:** files keep their historical `live-*` filenames. They are asset paths referenced in code and cached by browsers; renaming them would break image references for no visual gain. The *content* is Furnivo.
 - The line is brand positioning, not a statement that every marketplace category or regulated workflow is currently enabled. The product must continue to show only workflows that are actually ready.
 
 ## Palette
 
 | Token | Value | Intended use |
 | --- | --- | --- |
-| Live Green | `#00C853` | Brand accents, primary highlight, indicators on dark surfaces; pair with deep-black text on a green fill. |
-| Deep Black | `#0A0A0A` | Logo/wordmark, dark surfaces, high-contrast controls. |
+| Royal Purple | `#6C3BFF` | Primary brand: buttons, links, focus rings, active indicators. White text on it is 5.66:1. |
+| Deep Purple | `#4B22CC` | Hover/pressed state and compact brand text on light surfaces. White text is 8.75:1. |
+| Sun Orange | `#FF8A00` | Secondary accent, gradient end, marketing highlights. **Charcoal text on it only** (8.13:1); never white. |
+| Deep Charcoal | `#0B0F14` | Logo and wordmark ink, dark surfaces, primary button text. |
+| Cloud White | `#F5F7FA` | Reverse wordmark and raised surfaces on dark. |
 | Slate Gray | `#6B7280` | Secondary neutral reference; use darker `--live-muted` for small copy where needed. |
 | Light Gray | `#F3F4F6` | Main light-theme canvas. |
-| White | `#FFFFFF` | Raised surfaces and reverse marks. |
-| Accessible green ink | `#007A32` | Links, compact green text, and controls requiring white text on green. |
-| Accessible green hover | `#006B2C` | Hover for dark-green controls with white text. |
 
-**Contrast rule:** do not place white small text on `#00C853`; its contrast is 2.24:1. Use black text on the bright-green fill (8.85:1), or use `#007A32` with white text (5.48:1). These ratios are calculated from the listed hex values; they are not a full WCAG audit. Keep success, warning, danger, and info colors distinct from brand green; they are semantic state, not alternate logo colors.
+The mark is a purple→orange vertical gradient (`#6C3BFF` → `#FF8A00`) with a lighter inner shape.
 
-The core values are centralized in `src/app/globals.css` and its Tailwind 4 `@theme` block. Existing component/page code should use the `live-*` tokens/utilities rather than introducing new palette literals. Light/dark surface, text, muted, borders, focus, spacing, size, radii, shadows, motion, breakpoints, and layer tokens live in the same stylesheet.
+**Contrast rule:** white text is fine on Royal Purple (5.66:1) and Deep Purple (8.75:1) but **not** on Sun Orange (2.36:1). Use charcoal text on any orange fill (8.13:1). These ratios are calculated from the listed hex values with the WCAG relative-luminance formula; they are not a full WCAG audit. Success, warning, danger and info colours stay green/amber/red — they are semantic state, not brand colours, so the `emerald-*` utility classes in older components remain intentional.
+
+The core values are centralized in `src/app/globals.css` and its Tailwind 4 `@theme` block. Token and utility names still read `live-*` (e.g. `--color-live-green`, `bg-live-green-ink`); these are internal identifiers used by thousands of class references and were deliberately **not** renamed during the rebrand. Existing component/page code should use those tokens rather than introducing new palette literals, so the next brand change is a one-file edit. Light/dark surface, text, muted, borders, focus, spacing, size, radii, shadows, motion, breakpoints, and layer tokens live in the same stylesheet.
 
 ## Logo asset directory
 

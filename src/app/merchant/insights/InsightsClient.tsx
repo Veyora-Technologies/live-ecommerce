@@ -61,7 +61,7 @@ export default function InsightsClient({ merchantId }: { merchantId: string }){
           </div>
           <h3 className="font-bold mt-5">Advisory stock actions</h3>
           <div className="mt-2 space-y-2 text-sm">
-            {data.insights.recommendations?.map((r:any)=>(<div key={r.productId} className="bg-amber-400/15 border border-amber-300/20 rounded-xl px-3 py-2"><b>{r.name}</b> — {r.risk} risk<div className="text-xs text-white/70">{r.note} Advisory only — Live never orders stock for you.</div></div>))}
+            {data.insights.recommendations?.map((r:any)=>(<div key={r.productId} className="bg-amber-400/15 border border-amber-300/20 rounded-xl px-3 py-2"><b>{r.name}</b> — {r.risk} risk<div className="text-xs text-white/70">{r.note} Advisory only — Furnivo never orders stock for you.</div></div>))}
             {!data.insights.recommendations?.length && <p className="text-white/70">No stockout signals from current quantities and pace.</p>}
           </div>
         </div>

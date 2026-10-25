@@ -32,7 +32,7 @@ export default function CartPage() {
       <Header />
       <main className="mx-auto max-w-3xl px-4 py-8">
         <h1 className="text-3xl font-black">My plan</h1>
-        <p className="text-slate-500 text-sm mt-1">A planning cart across merchants. Nothing is reserved until submission. Each successful item becomes a separate pending pickup request with a temporary stock hold; no payment or delivery is arranged by Live.</p>
+        <p className="text-slate-500 text-sm mt-1">A planning cart across merchants. Nothing is reserved until submission. Each successful item becomes a separate pending pickup request with a temporary stock hold; no payment or delivery is arranged by Furnivo.</p>
         {err && <div className="mt-4 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 text-sm">{err} <Link href="/auth/login" className="font-semibold underline">Sign in</Link></div>}
         {result && (
           <div className="mt-4 bg-white border border-slate-200 rounded-2xl p-4 text-sm space-y-1" role="status">

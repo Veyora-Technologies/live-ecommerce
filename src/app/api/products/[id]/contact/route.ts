@@ -56,6 +56,6 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     phone: product.merchant.phone,
     whatsapp: product.merchant.whatsapp,
     email: product.merchant.email,
-    note: "Contact details are provided by the merchant and are released to signed-in accounts only. Live does not verify them or arrange delivery.",
+    note: "Contact details are provided by the merchant and are released to signed-in accounts only. Furnivo does not verify them or arrange delivery.",
   }, noStore);
 }

@@ -1,6 +1,6 @@
-# Live security posture and deployment gates
+# Furnivo security posture and deployment gates
 
-**Verification references:** OWASP ASVS 5.0.0 and NIST SSDF are used as review references. Live has not completed an ASVS assessment, NIST SSDF assessment, penetration test, security certification, or independent audit.
+**Verification references:** OWASP ASVS 5.0.0 and NIST SSDF are used as review references. Furnivo has not completed an ASVS assessment, NIST SSDF assessment, penetration test, security certification, or independent audit.
 
 ## Authentication and sessions
 

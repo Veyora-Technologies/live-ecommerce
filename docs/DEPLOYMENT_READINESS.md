@@ -1,4 +1,4 @@
-# Live — deployment readiness and platform specification
+# Furnivo — deployment readiness and platform specification
 
 **As of:** 2026-10-21  
 **Decision:** **NO-GO for production.** No deployment, production database write, migration, domain cutover, or provider activation was performed.  
@@ -8,12 +8,12 @@ The recent changes address specific, evidenced defects and strengthen fail-close
 
 ## 1. Product and operating boundary
 
-Live is a Nigeria-first merchant-discovery and reservation-request platform. It is not currently a payment processor, delivery network, escrow/custody service, POS/supplier sync service, international marketplace, or external-AI product.
+Furnivo is a Nigeria-first merchant-discovery and reservation-request platform. It is not currently a payment processor, delivery network, escrow/custody service, POS/supplier sync service, international marketplace, or external-AI product.
 
 The candidate initial service scope, **only after the gates in §7 are closed**, is deliberately narrow:
 
 1. Nigeria-only product discovery from real, permissioned merchant listings that have passed human review and have a truthful price, location, stock/freshness state, and provenance label.
-2. No payment, payout, refund, wallet, escrow, deposit, or custody of customer/seller money by Live.
+2. No payment, payout, refund, wallet, escrow, deposit, or custody of customer/seller money by Furnivo.
 3. No delivery promise. Pickup may be offered only as a merchant-confirmed request; the platform does not invent a pickup window or confirm fulfilment.
 4. Keep stock-holding reservation requests **disabled until** the expiry scheduler, monitoring, expiry/reconciliation procedure, and support ownership are proven in the selected production environment. Discovery-only is the safer interim scope.
 5. Keep service bookings, regulated/high-risk categories, public seller contact/enquiry workflows, other countries/currencies, cross-border trade, and provider-dependent features off until their separate legal, safety, operational, and provider gates are approved.
@@ -108,7 +108,7 @@ For production, disabled features must fail closed at the route/domain layer, no
 
 ### Qualified review required — not legal advice
 
-Before any real transactions or consumer-facing commercial launch, have qualified Nigerian counsel/privacy professionals review Live's actual operator role, data flows, categories, user terms, privacy notice, seller terms, pricing/disclosures, complaint and redress handling, cancellation/refund treatment, product-safety and IP processes, tax/fee/settlement design, retention, processor arrangements, data-subject rights, incident duties, and any sector-specific rules. Do not claim compliance from the presence of admin forms or an `approved` field.
+Before any real transactions or consumer-facing commercial launch, have qualified Nigerian counsel/privacy professionals review Furnivo's actual operator role, data flows, categories, user terms, privacy notice, seller terms, pricing/disclosures, complaint and redress handling, cancellation/refund treatment, product-safety and IP processes, tax/fee/settlement design, retention, processor arrangements, data-subject rights, incident duties, and any sector-specific rules. Do not claim compliance from the presence of admin forms or an `approved` field.
 
 Official/source material for review (not a legal determination):
 
@@ -161,7 +161,7 @@ The fresh-fixture HTTP integration suite passed, but these local custom-auth che
 | Register a customer and verify the account | **Code path exists; delivery not exercised** | Registration always assigns `CONSUMER`, ignores client-supplied privileged roles, and issues a local session. A single-use email token and `/auth/verify` page now exist, but no unit/integration test in this repository sends a real email, and no sender was configured here. **Do not claim a verified-account journey passed.** |
 | Sign in; keep session after refresh | **Local HTTP session lookup passed; browser refresh not run** | The suite exercised valid login and `/api/auth/me` using the HttpOnly cookie. No real browser/device refresh test or external identity provider was used. |
 | Restrict logged-out protected pages; logout revokes access | **Local HTTP integration passed** | The suite verified logged-out redirects for `/profile` and `/admin`, logout cookie clearing, and that the revoked cookie no longer resolves a user. This is not provider-backed or browser evidence. |
-| Complete successful password reset | **Code path exists; delivery not exercised** | Invalid/expired/reused tokens are rejected in unit tests. Delivery is implemented but was never exercised against a real provider from this environment, and the earlier suite only proved the 503 path when no sender is configured. Live verification needs a configured domain. |
+| Complete successful password reset | **Code path exists; delivery not exercised** | Invalid/expired/reused tokens are rejected in unit tests. Delivery is implemented but was never exercised against a real provider from this environment, and the earlier suite only proved the 503 path when no sender is configured. Furnivo verification needs a configured domain. |
 | Duplicate registration and invalid login | **Partial / incomplete** | The suite verified invalid credentials return 401 without issuing a session. It did not test duplicate registration, normalization edge cases, or concurrent duplicate registration. |
 | Merchant registration and customer/merchant/admin boundaries | **Partial** | The suite exercised local merchant login and server-side role/tenant boundaries, including customer denial of merchant/admin surfaces and redaction of customer identity from merchant responses. Merchant onboarding was not a required successful browser journey here. |
 | Production-domain redirects and recovery links | **Not run** | No canonical production domain or authorized redirect URL is selected. |
@@ -183,7 +183,7 @@ No owner identities or provider contracts were supplied. The roles below are res
 | Reservations and support | Marketplace operations + support owner | Keep holds off until scheduled expiry, alerting, retry/reconciliation, duplicate protection, stock-release audit, complaint/refund/cancellation procedure, pickup confirmation and on-call ownership pass rehearsal. |
 | Legal/privacy | Qualified Nigerian counsel/privacy professional + operator | Establish legal operator identity/contact; review current law and actual data flows/categories; publish reviewed policies and complaint/redress contact; complete privacy/DPIA/retention/processor assessment as applicable; store review evidence; do not claim compliance before sign-off. |
 | Email/SMS/notifications | Provider owner | Either keep password recovery unavailable and define a verified manual support path, or implement a real sender adapter with verified From/domain, secrets, retries, delivery/bounce handling, generic anti-enumeration behavior and monitored tests. An API key alone is insufficient. |
-| Finance/payments | Finance + qualified legal/compliance + chosen provider | Keep payments/payouts/refunds off until actual provider, signed webhooks/idempotency, fees, settlement, reconciliation, tax and funds-handling responsibilities are approved. Live must not custody funds absent an authorized reviewed arrangement. |
+| Finance/payments | Finance + qualified legal/compliance + chosen provider | Keep payments/payouts/refunds off until actual provider, signed webhooks/idempotency, fees, settlement, reconciliation, tax and funds-handling responsibilities are approved. Furnivo must not custody funds absent an authorized reviewed arrangement. |
 | Operations/continuity | Platform owner / SRE | Shared rate/abuse controls; centralized redacted logs, metrics/traces, alerts/on-call; encrypted off-site backups/PITR; documented RPO/RTO; independent restore drill; incident, breach, rollback and support runbooks. |
 | Quality/security | Engineering + independent reviewers | Add/install approved browser runner; run supported browser/device matrix, keyboard/screen-reader/zoom/contrast and WCAG 2.2 AA review; production-provider integration and load/failure tests; dependency remediation or documented risk acceptance; independent security review/penetration test. |
 | Geography/brand | Product/data owner | Review data freshness/licensing/attribution and all public listing/SEO copy; inspect the static asset gallery/brand output before replacing or publishing any asset. |

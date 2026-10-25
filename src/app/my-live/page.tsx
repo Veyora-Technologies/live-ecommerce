@@ -51,8 +51,8 @@ export default async function MyLivePage() {
     <Header user={user} />
     <main className="live-wrap live-main live-my-live-page">
       <div className="live-my-live-intro">
-        <div><div className="live-eyebrow">Your account, your utility</div><h1>My Live</h1><p>Saved discoveries and real transaction records in one place. Saved listings are not availability confirmations.</p></div>
-        <a className="live-button live-button-primary" href="/search">Search Live</a>
+        <div><div className="live-eyebrow">Your account, your utility</div><h1>My Furnivo</h1><p>Saved discoveries and real transaction records in one place. Saved listings are not availability confirmations.</p></div>
+        <a className="live-button live-button-primary" href="/search">Search Furnivo</a>
       </div>
       <MyLiveClient
         savedItems={JSON.parse(JSON.stringify(savedItems))}

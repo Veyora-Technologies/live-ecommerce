@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 import PrivacyAdminClient from "./PrivacyAdminClient";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Privacy request queue · Live operations" };
+export const metadata = { title: "Privacy request queue · Furnivo operations" };
 
 export default async function AdminPrivacyPage() {
   const user = await getCurrentUser();

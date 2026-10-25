@@ -103,7 +103,7 @@ export default function LivePulse({ initialUpdates, initialLocationCode = "", in
   return <section className="live-pulse-panel" aria-labelledby="live-pulse-title">
     <div className="live-pulse-head">
       <div>
-        <div className="live-eyebrow"><Sparkles size={14} aria-hidden="true" /> Live Pulse · merchant updates</div>
+        <div className="live-eyebrow"><Sparkles size={14} aria-hidden="true" /> Furnivo Pulse · merchant updates</div>
         <h2 id="live-pulse-title" className="live-section-title">Availability, recently confirmed {locationName ? `in ${locationName}` : "across Nigeria"}</h2>
         <p className="live-muted">Updates recorded for approved merchant listings, checked every 60 seconds. This is not proof of physical stock.</p>
       </div>
@@ -134,7 +134,7 @@ export default function LivePulse({ initialUpdates, initialLocationCode = "", in
           <div className="live-pulse-price-row"><strong>{formatNaira(item.price)}</strong><span>{item.availability === "LOW_STOCK" ? "Low stock reported" : "In stock reported"}</span></div>
         </div>
       </article>)}
-    </div> : <div className="live-empty-card"><strong>No recent merchant updates {locationName ? `in ${locationName}` : "in the selected national scope"}</strong><p>Live will show this section when real inventory confirmations are recorded. Search current listings in the meantime.</p><Link className="live-button" href={locationCode ? `/search?scope=admin&locationCode=${encodeURIComponent(locationCode)}` : "/search?scope=nationwide"}>Search this scope</Link></div>}
+    </div> : <div className="live-empty-card"><strong>No recent merchant updates {locationName ? `in ${locationName}` : "in the selected national scope"}</strong><p>Furnivo will show this section when real inventory confirmations are recorded. Search current listings in the meantime.</p><Link className="live-button" href={locationCode ? `/search?scope=admin&locationCode=${encodeURIComponent(locationCode)}` : "/search?scope=nationwide"}>Search this scope</Link></div>}
     <p className="live-pulse-disclaimer">Merchant-reported status can change. We revalidate stock in the reservation transaction; call before a long trip if the confirmation is stale.</p>
   </section>;
 }

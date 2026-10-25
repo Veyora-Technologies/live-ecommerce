@@ -76,8 +76,8 @@ export default function RegisterPage() {
   return <div className="min-h-screen flex items-center justify-center p-4 bg-slate-50">
     <form onSubmit={submit} className="w-full max-w-[480px] bg-white border border-slate-200 rounded-[24px] p-6 sm:p-8">
       <div className="live-auth-brand-mark" aria-hidden="true"><BrandLogo variant="symbol" width={40} height={40} className="live-auth-brand-light" decorative /><BrandLogo variant="symbol-inverse" width={40} height={40} className="live-auth-brand-dark" decorative /></div>
-      <h1 className="mt-4 font-black text-2xl">Create your Live account</h1>
-      <p className="text-sm text-slate-600">Create an account to use Live’s available account features.</p>
+      <h1 className="mt-4 font-black text-2xl">Create your Furnivo account</h1>
+      <p className="text-sm text-slate-600">Create an account to use Furnivo’s available account features.</p>
       {err && <div className="mt-4 bg-red-50 border border-red-200 text-red-800 rounded-xl px-3 py-2 text-sm" role="alert">{err}</div>}
       {loadingLegal && <p className="mt-4 rounded-xl bg-slate-50 p-3 text-sm text-slate-700" role="status">Loading current policy and release information…</p>}
       {legalError && <p className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800" role="alert">{legalError} Registration remains unavailable until the current information can be checked.</p>}

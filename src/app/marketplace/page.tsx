@@ -65,7 +65,7 @@ export default async function MarketplacePage({ searchParams }: { searchParams: 
   let categoryUnavailable = false;
   try {
     if (!legalGate.ready) {
-      searchError = legalGate.publicMessage ?? "Marketplace search is unavailable until Live's production legal release gate is complete.";
+      searchError = legalGate.publicMessage ?? "Marketplace search is unavailable until Furnivo's production legal release gate is complete.";
     } else {
       if (!scopeIsValid) throw new GeographyRequestError(searchError);
       locationFilter = await getGeographicScopeFilter(locationCodes, scope, countryCode);
@@ -83,9 +83,9 @@ export default async function MarketplacePage({ searchParams }: { searchParams: 
     <main className="mx-auto max-w-[1200px] px-4 py-6 pb-24">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-xs font-bold uppercase tracking-wide text-emerald-800">LIVE marketplace</p>
+          <p className="text-xs font-bold uppercase tracking-wide text-emerald-800">FURNIVO marketplace</p>
           <h1 className="mt-1 text-2xl font-black text-slate-950">Find products and services</h1>
-          <p className="mt-2 max-w-2xl text-sm text-slate-600">One search across the listing workflows Live currently supports. Future categories remain hidden until their verification, transaction, and operational workflows are ready.</p>
+          <p className="mt-2 max-w-2xl text-sm text-slate-600">One search across the listing workflows Furnivo currently supports. Future categories remain hidden until their verification, transaction, and operational workflows are ready.</p>
         </div>
         <Link href={user ? "/merchant" : "/auth/login?next=/merchant"} className="rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-800 hover:border-emerald-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700">Seller workspace</Link>
       </div>
@@ -110,7 +110,7 @@ export default async function MarketplacePage({ searchParams }: { searchParams: 
             <button className="h-11 w-full rounded-full bg-live-black font-semibold text-white hover:bg-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700">Search marketplace</button>
             <Link href={`/marketplace?countryCode=${encodeURIComponent(countryCode)}`} className="block text-center text-sm text-slate-600 underline">Clear filters</Link>
           </form>
-          <div className="mt-4 border-t border-slate-100 pt-4 text-xs text-slate-500">Location scope is explicit; Live does not silently replace it with GPS. Geography support is not commercial coverage.</div>
+          <div className="mt-4 border-t border-slate-100 pt-4 text-xs text-slate-500">Location scope is explicit; Furnivo does not silently replace it with GPS. Geography support is not commercial coverage.</div>
         </aside>
 
         <section aria-live="polite" aria-label="Marketplace search results">
@@ -126,7 +126,7 @@ export default async function MarketplacePage({ searchParams }: { searchParams: 
             {categoryUnavailable && <p role="status" className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">This category is not enabled for public search. Categories still in setup are not shown as available commerce.</p>}
             {!searchError && !categoryUnavailable && listings.length === 0 && <div className="mt-4 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
               <h3 className="font-semibold text-slate-900">No matching listings in this scope</h3>
-              <p className="mt-2 text-sm text-slate-600">Try a different term, category, or manually selected location. Live does not invent supply or widen your search without consent.</p>
+              <p className="mt-2 text-sm text-slate-600">Try a different term, category, or manually selected location. Furnivo does not invent supply or widen your search without consent.</p>
             </div>}
           </div>
 

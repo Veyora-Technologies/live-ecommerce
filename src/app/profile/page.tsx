@@ -62,7 +62,7 @@ export default async function ProfilePage() {
           <form action="/api/auth/logout" method="post">
             <button type="submit" className="w-full rounded-2xl border border-slate-200 bg-white p-5 text-left transition-colors hover:border-red-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500">
               <div className="font-bold text-red-600">Sign out</div>
-              <div className="text-sm text-slate-500">Revoke this session and return to Live</div>
+              <div className="text-sm text-slate-500">Revoke this session and return to Furnivo</div>
             </button>
           </form>
         </section>

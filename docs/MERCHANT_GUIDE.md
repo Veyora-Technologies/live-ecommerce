@@ -1,4 +1,4 @@
-# Live — Merchant Guide
+# Furnivo — Merchant Guide
 
 1. **Create account**: Sign up, then “Merchant console” → Create store (name, area, address, phone) → Pending approval
 2. **Approval**: Admin verifies phone/address; you’ll see Verified badge when approved

@@ -1,4 +1,4 @@
-# Live Connect — current integration contract
+# Furnivo Connect — current integration contract
 
 This document describes what the repository currently does, not a list of active providers. No POS, supplier, delivery, payment, mapping, email/SMS/WhatsApp, push, or external AI provider is connected or verified. A connection record is not a connection. Never treat a saved integration record as evidence that inventory, delivery, or payment has synced.
 
@@ -19,8 +19,8 @@ When adapters are built, use provider-specific credential references backed by e
 
 - Merchant owners/managers can create/list/delete merchant subscriptions via `/api/webhooks`. A validated public HTTPS URL is required in production; localhost, private/reserved IPs, credentials in URLs, and unsafe DNS answers are rejected. Outbound requests pin the validated DNS answer, do not follow redirects, cap payload/response sizes, and time out.
 - Only event types currently emitted by the code can be selected: `batch.created`, `batch.updated`, and `transfer.acknowledged`. Other event families (including product, reservation, order, payment, service booking, and delivery events) are not emitted here.
-- Creation accepts `{ merchantId, url, events }`. The raw HMAC secret is returned once. Delivery headers are `X-Live-Event`, `X-Live-Delivery-Id`, and `X-Live-Signature: sha256=<hex>`; the signature is HMAC-SHA256 over the exact request body.
-- `POST /api/jobs/process` requires `x-cron-secret` to match `CRON_SECRET`. It attempts up to 10 due deliveries per call, uses 8-second timeouts, and retries eligible failures up to five attempts with increasing delay. Receivers should deduplicate by `X-Live-Delivery-Id`: delivery is at-least-once, not proof that the partner performed the requested work.
+- Creation accepts `{ merchantId, url, events }`. The raw HMAC secret is returned once. Delivery headers are `X-Furnivo-Event`, `X-Furnivo-Delivery-Id`, and `X-Furnivo-Signature: sha256=<hex>`; the signature is HMAC-SHA256 over the exact request body.
+- `POST /api/jobs/process` requires `x-cron-secret` to match `CRON_SECRET`. It attempts up to 10 due deliveries per call, uses 8-second timeouts, and retries eligible failures up to five attempts with increasing delay. Receivers should deduplicate by `X-Furnivo-Delivery-Id`: delivery is at-least-once, not proof that the partner performed the requested work.
 - URL checks reduce SSRF/DNS-rebinding risk, but external egress allowlists and monitoring remain recommended. This is not a penetration-test result.
 
 ## Developer API credentials

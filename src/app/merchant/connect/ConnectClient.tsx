@@ -74,7 +74,7 @@ export default function ConnectClient({ merchant }: any){
           <p className="text-xs text-slate-500 mt-1">Owner = everything • Manager = stock+orders+team • Inventory staff = stock only • Reservation staff = orders only • Read-only = reports. Enforced on the server.</p>
           <div className="mt-3 space-y-2">{team?.members?.map((m:any)=>(<div key={m.id} className="flex justify-between bg-slate-50 rounded-xl p-3 text-sm"><span>{m.name} ({m.email})</span><b>{m.role}</b></div>))}</div>
           {canManage&&<form onSubmit={e=>{e.preventDefault(); const f=new FormData(e.currentTarget); post("/api/merchant/team",{ merchantId:mid, emailOrPhone:f.get("who"), role:f.get("role") });}} className="mt-3 flex gap-2">
-            <input name="who" required placeholder="Staff email/phone (must have a Live account)" className="flex-1 h-10 px-3 rounded-xl border border-slate-200"/>
+            <input name="who" required placeholder="Staff email/phone (must have a Furnivo account)" className="flex-1 h-10 px-3 rounded-xl border border-slate-200"/>
             <select name="role" className="h-10 px-3 rounded-xl border border-slate-200"><option>MANAGER</option><option>INVENTORY_STAFF</option><option>RESERVATION_STAFF</option><option>READ_ONLY</option></select>
             <button className="h-10 px-5 rounded-full bg-live-green-ink text-white text-sm font-semibold">Add</button>
           </form>}
@@ -113,7 +113,7 @@ export default function ConnectClient({ merchant }: any){
             <input name="wa" defaultValue={merchant.whatsapp||""} placeholder="WhatsApp number" className="w-full h-10 px-3 rounded-xl border border-slate-200"/>
             <ImageUploadField merchantId={mid} name="logo" label="Business logo" />
             <ImageUploadField merchantId={mid} name="cover" label="Cover photo" />
-            <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">Delivery integrations are not configured. Live does not verify or arrange delivery; contact a seller directly about any seller-managed option.</p>
+            <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">Delivery integrations are not configured. Furnivo does not verify or arrange delivery; contact a seller directly about any seller-managed option.</p>
             <button className="h-10 px-6 rounded-full bg-live-black text-white text-sm font-semibold">Save storefront</button>
             <span className="block text-xs text-slate-400">Verification & reliability badges cannot be edited here.</span>
           </form>}
@@ -121,7 +121,7 @@ export default function ConnectClient({ merchant }: any){
       </div>
 
       <section className="bg-live-black text-white rounded-2xl p-5">
-        <h3 className="font-bold">🔌 Integrations, webhooks & API (Live Connect)</h3>
+        <h3 className="font-bold">🔌 Integrations, webhooks & API (Furnivo Connect)</h3>
         <div className="grid md:grid-cols-3 gap-4 mt-4 text-sm">
           <div className="bg-white/10 rounded-xl p-4">
             <b>POS / delivery adapters</b>

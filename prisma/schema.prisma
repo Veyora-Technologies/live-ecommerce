@@ -7,7 +7,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ============ COUNTRY-AWARE GEOGRAPHY (Live 5.0 foundation) ============
+// ============ COUNTRY-AWARE GEOGRAPHY (v5 foundation) ============
 model Country {
   code                String               @id // ISO 3166-1 alpha-2 (NG)
   name                String

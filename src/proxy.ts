@@ -94,8 +94,8 @@ export function proxy(req: NextRequest) {
   const isReadinessProbe = pathname === "/api/v1/health" && req.method === "GET";
   if (productionDataModeBlocked && !isReadinessProbe) {
     const message = configuredMode === "production"
-      ? "Live is unavailable until production release configuration is approved."
-      : "Live is unavailable: LIVE_DATA_MODE must be explicitly set to \"demo\" in this build.";
+      ? "Furnivo is unavailable until production release configuration is approved."
+      : "Furnivo is unavailable: LIVE_DATA_MODE must be explicitly set to \"demo\" in this build.";
     if (pathname.startsWith("/api/")) {
       return withHeaders(NextResponse.json({ error: message }, { status: 503, headers: { "Cache-Control": "no-store" } }));
     }

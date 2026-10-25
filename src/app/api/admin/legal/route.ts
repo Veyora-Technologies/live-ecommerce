@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
   const user = await requireSuper();
   if (!user) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   const parsed = policyCreateSchema.safeParse(await request.json().catch(() => null));
-  if (!parsed.success || !isPolicyKey(parsed.data?.key ?? "")) return NextResponse.json({ error: "Provide a supported policy key, title, and complete draft text. Live does not generate or publish legal wording." }, { status: 400 });
+  if (!parsed.success || !isPolicyKey(parsed.data?.key ?? "")) return NextResponse.json({ error: "Provide a supported policy key, title, and complete draft text. Furnivo does not generate or publish legal wording." }, { status: 400 });
   const { key, title, content } = parsed.data;
   const latest = await prisma.legalPolicy.findFirst({ where: { key }, orderBy: { version: "desc" }, select: { version: true } });
   try {

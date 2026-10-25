@@ -46,7 +46,7 @@ export default function VerifyContactPage() {
           setState({ status: "error", message: data.error || "This verification link is invalid or has expired." });
         }
       } catch {
-        if (!cancelled) setState({ status: "error", message: "Live could not be reached. Check your connection and open the link again." });
+        if (!cancelled) setState({ status: "error", message: "Furnivo could not be reached. Check your connection and open the link again." });
       }
     })();
     return () => { cancelled = true; };
