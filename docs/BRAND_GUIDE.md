@@ -51,7 +51,7 @@ All paths below are relative to `public/` and are available at the matching site
 | `brand/live-app-icon-maskable.svg` | Full-bleed maskable icon artwork with centered safe-area mark. |
 | `brand/live-app-icon-light.svg` | Light-background icon artwork. |
 | `brand/live-social-card.svg` / `brand/live-social-card.png` | Share-card source and 1200×630 raster image; Open Graph/Twitter metadata points to it only when `LIVE_PUBLIC_BASE_URL` or `NEXT_PUBLIC_APP_URL` passes the existing public-HTTPS URL validation. |
-| `favicon.svg`, `icon.svg`, `icon-192.png`, `icon-512.png`, `icon-maskable-192.png`, `icon-maskable-512.png`, `apple-touch-icon.png`, `src/app/favicon.ico` | Browser, PWA, and Apple touch icons. |
+| `favicon.svg`, `icon.svg`, `icon-192.png`, `icon-512.png`, `icon-maskable-192.png`, `icon-maskable-512.png`, `apple-touch-icon.png`, and `src/app/favicon.ico` (a byte-identical copy of `public/favicon.ico`, because the App Router serves the app-directory file first) | Browser, PWA, and Apple touch icons. |
 
 Use the shared React wrapper from `@/components/BrandLogo` for UI. It supports horizontal, inverse, monochrome, symbol, and wordmark variants. Keep logos proportionally scaled; do not recolor, add effects, or place the inverse version on a light background.
 

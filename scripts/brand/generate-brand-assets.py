@@ -42,6 +42,7 @@ except ImportError:  # pragma: no cover
 
 ROOT = Path(__file__).resolve().parents[2]
 PUBLIC = ROOT / "public"
+APP = ROOT / "src" / "app"
 BRAND = PUBLIC / "brand"
 
 # ---------------------------------------------------------------------------
@@ -595,9 +596,13 @@ def render_icons() -> None:
     rounded(180, padding=0.14).save(PUBLIC / "apple-touch-icon.png", optimize=True)
     square(192).save(PUBLIC / "icon-maskable-192.png", optimize=True)
     square(512).save(PUBLIC / "icon-maskable-512.png", optimize=True)
-    rounded(64, radius_ratio=0.24).save(
-        PUBLIC / "favicon.ico", sizes=[(16, 16), (32, 32), (48, 48), (64, 64)]
-    )
+    # The App Router serves `src/app/favicon.ico` in preference to the copy in
+    # `public/`, so both must come from this one render. Writing only the public
+    # copy leaves the app-directory file as whatever was last committed by hand
+    # (this is exactly how the pre-rebrand green icon survived the rename).
+    favicon = rounded(64, radius_ratio=0.24)
+    for target in (PUBLIC / "favicon.ico", APP / "favicon.ico"):
+        favicon.save(target, sizes=[(16, 16), (32, 32), (48, 48), (64, 64)])
     print("PNG/ICO assets written")
 
 

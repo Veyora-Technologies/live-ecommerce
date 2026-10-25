@@ -40,3 +40,7 @@ backups/
 *.backup
 *.swp
 .DS_Store
+
+# Python bytecode from scripts/brand/generate-brand-assets.py
+__pycache__/
+*.pyc

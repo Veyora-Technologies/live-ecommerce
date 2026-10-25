@@ -99,6 +99,25 @@ describe("Furnivo branding", () => {
     expect(jobs).not.toContain("X-Furnivo-Signature");
   });
 
+  it("serves the same favicon from the app directory as from public", () => {
+    // Next serves `src/app/favicon.ico` in preference to `public/favicon.ico`.
+    // The rename regenerated only the public copy, so the old green mark kept
+    // being served long after the brand changed. Both files now come out of
+    // scripts/brand/generate-brand-assets.py and must stay byte-identical.
+    const appIcon = readFileSync(join(ROOT, "src", "app", "favicon.ico"));
+    const publicIcon = readFileSync(join(ROOT, "public", "favicon.ico"));
+    expect(appIcon.equals(publicIcon)).toBe(true);
+  });
+
+  it("documents the webhook headers the code actually sends", () => {
+    // The rename rewrote the integration docs to `X-Furnivo-*` while the code
+    // kept sending `X-Live-*`. Integrators following the docs would have
+    // verified signatures against header names that never arrive.
+    const docs = readFileSync(join(ROOT, "docs", "INTEGRATIONS.md"), "utf8");
+    expect(docs).toContain("X-Live-Signature");
+    expect(docs).not.toContain("X-Furnivo-");
+  });
+
   it("renders the logo from an asset that exists", () => {
     const component = readFileSync(join(ROOT, "src", "components", "BrandLogo.tsx"), "utf8");
     const paths = [...component.matchAll(/"(\/brand\/[^"]+)"/g)].map((match) => match[1]);

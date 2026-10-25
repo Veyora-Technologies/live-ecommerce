@@ -183,3 +183,60 @@ branch. Grouped:
 - **Copy (≈110):** every file under `src/app/` and `src/components/` that carried the brand, plus `src/lib/*` strings, `prisma/seed*.ts`
 - **System (6):** `src/app/globals.css`, `src/app/layout.tsx`, `src/components/BrandLogo.tsx`, `docs/BRAND_GUIDE.md`, `README.md`, `DELIVERABLES.md`
 - **New (2):** `scripts/brand/generate-brand-assets.py`, `tests/unit/branding.test.ts`
+
+---
+
+## 7. Post-merge-preparation audit (what the rebrand itself missed)
+
+A second pass over the branch, run *before* merging, looked for places where the rename was
+incomplete or where it changed something it should not have. It found three defects. All three
+had passed both CI jobs, so none of them would have been caught by waiting for green.
+
+### 7.1 The site was still serving the old green favicon
+
+**Symptom.** Every browser tab kept the pre-rebrand green mark.
+
+**Cause.** The App Router serves `src/app/favicon.ico` *in preference to* `public/favicon.ico`.
+The generator only wrote the `public/` copy, so the app-directory file stayed at whatever the
+initial commit had put there — a green mark. Regenerating the brand art never touched it, and
+the existing brand test only checked that the `public/` paths referenced by `layout.tsx` existed.
+
+Measured on the committed files: `src/app/favicon.ico` had 213 green-dominant pixels and 0
+purple/orange ones; `public/favicon.ico` had 0 green and 134 purple/orange.
+
+**Fix.** `scripts/brand/generate-brand-assets.py` now renders the icon once and writes both
+files, so they cannot drift. A new guard asserts the two files are byte-identical.
+
+### 7.2 The integration docs advertised header names the code does not send
+
+**Symptom.** `docs/INTEGRATIONS.md` told partners to verify `X-Furnivo-Signature`,
+`X-Furnivo-Event` and `X-Furnivo-Delivery-Id`.
+
+**Cause.** The whole-word rename reached the documentation but was correctly blocked from the
+code, because `src/app/api/jobs/process/route.ts` sends `X-Live-*`. The result was documentation
+that contradicts the implementation: a partner who followed it would compute signature
+comparisons against a header that never arrives, and every delivery would look unsigned.
+
+**Fix.** The docs were reverted to the names the code actually sends, with an explicit note that
+the prefix is a frozen wire contract. A new guard asserts the doc and the code agree.
+
+This is the same failure mode as the audit's original `X-Furnivo-Signature` slip in code — prose
+is just as load-bearing as code when a third party implements against it.
+
+### 7.3 Python bytecode was committed
+
+`scripts/brand/__pycache__/generate-brand-assets.cpython-311.pyc` — a build artifact of the
+generator, committed by accident because `.gitignore` had no Python rules. It is now ignored and
+removed.
+
+### 7.4 Checked and found correct
+
+- No technical identifier moved: `LIVE_*` env vars, `live_token` / `live_theme` cookies,
+  `live-*` CSS classes, `--live-*` tokens, `/my-live`, `LivePulse.tsx`, `live-*.svg` filenames,
+  Prisma models and API routes are all intact at HEAD.
+- No auth, payment, database or deployment logic was touched by the rename: `git show` of the
+  rebrand commit on `src/lib/`, `src/proxy.ts` and `prisma/schema.prisma` contains only display
+  strings (one `Live is unavailable` → `Furnivo is unavailable` message, plus comments).
+- No secrets added, no `.env` tracked, no debug logging left in request paths
+  (`console.log` additions are confined to seeds and operator scripts).
+- `npm audit`: 0 vulnerabilities at every severity.
