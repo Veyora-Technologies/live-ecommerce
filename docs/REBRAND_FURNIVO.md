@@ -117,8 +117,29 @@ Every remaining `Live` in the repository is listed here; there are no others.
 | Manifest validity | `JSON.parse` | valid |
 | Visual | rasterised the shipped SVGs + inspected PNG exports | mark, wordmark, icons and social card render correctly (light, dark and 32 px favicon) |
 
-**Not verified here:** the browser-rendered UI. No Playwright browser binary is available, so the first
-real visual check is the CI `e2e` job plus a human look at the deployed app.
+### 3.1 CI result (the authoritative check)
+
+Run [`40145921929`](https://github.com/Veyora-Technologies/live-ecommerce/actions/runs/40145921929) on the final commit — **both jobs green**:
+
+| Job | Steps |
+| --- | --- |
+| `verify` (2m13s) | Prisma validate/generate ✓ · TypeScript ✓ · ESLint budget ✓ · unit tests ✓ · production dependency audit ✓ · `db push` ✓ · seed ✓ · **production build** ✓ · **HTTP integration suite** ✓ · full audit ✓ |
+| `e2e` (1m41s) | Chromium ✓ · fixture DB + seed ✓ · production build ✓ · **browser smoke tests** ✓ |
+
+That closes the three gaps the local sandbox could not: the app was built, the database-backed suites
+ran with a real generated Prisma client, and a real browser rendered the rebranded UI.
+
+### 3.2 The rebrand regression CI caught
+
+The first CI run on the rebrand (run `40145767216`) failed at **HTTP integration suite** while `e2e`
+passed. Cause: the demo accounts the suite signs in with (`admin@live.ng`, `owner0@live.ng`) had been
+renamed in `prisma/seed.ts` / `prisma/seed-v3.ts` but not in `tests/integration/{auth-flow,marketplace}.test.ts`,
+so every authenticated test got 401. The seed addresses are fixture identifiers, not brand copy, so the
+fix was to restore them (and record them in §2) rather than chase the rename through three test files.
+This is exactly the class of breakage the user asked to be told about rather than have hidden.
+
+**Not verified even now:** real-device visual QA of the new palette (screenshots from CI are not
+collected), and how the purple/orange reads on low-quality or sunlight-washed phone screens.
 
 ---
 
