@@ -164,9 +164,9 @@ touching any schema, route, or logic.
 | Task | Why it needs a human |
 | --- | --- |
 | Register/hold the trademark and confirm the “Furnivo” name is clear in your market | Legal decision; nothing in code can establish it. |
-| Point the sending domain (Resend) at `furnivo.ng` and set `EMAIL_FROM` | Requires the domain and provider account. Seed addresses now use `@furnivo.ng` for demo data only. |
+| Point the sending domain (Resend) at `furnivo.ng` and set `EMAIL_FROM` | Requires the domain and provider account. The demo fixtures deliberately still use `@live.ng` (see §2): the HTTP integration suite signs in as `admin@live.ng` / `owner0@live.ng`, so renaming them broke CI once already. |
 | Update `Contact:` in `public/.well-known/security.txt` | Must be a monitored, real address — inventing one would misroute vulnerability reports. |
-| Replace the remaining `@furnivo.ng` demo seeds with your real onboarding flow | Demo fixtures, not production accounts. |
+| Replace the `@live.ng` demo seeds with your real onboarding flow | Demo fixtures, not production accounts. If you do rename them, update `tests/integration/{auth-flow,marketplace}.test.ts` in the same commit. |
 | Deploy the icons to any existing PWA installs | Service-worker/browser icon caches can lag; users may need a reinstall to see new icons. |
 | Refresh social previews | Facebook/X/LinkedIn cache Open Graph images; re-scrape after deploy. |
 | Owner decision: full `emerald-*` → purple migration | Deliberately not attempted: those classes mark *success* states, and a blind sweep risks changing meaning. |
@@ -176,8 +176,8 @@ touching any schema, route, or logic.
 
 ## 6. Files modified
 
-148 files in total (467 insertions, 460 deletions) — listed in full by `git diff --name-only` on the
-branch. Grouped:
+Across the four rebrand commits: `75a62bd` 154 files (+1345/−460), `8b1d3b6` 5 files, `723fa7a` 1 file,
+`deba35f` 8 files. The whole PR against `main` is 195 files (+4315/−615). Grouped:
 
 - **Assets (25):** `public/brand/*` (14), `public/icon*`, `public/favicon.*`, `public/apple-touch-icon.png`, `public/manifest.json`, `public/offline.html`, `public/sw.js`, `public/.well-known/security.txt`
 - **Copy (≈110):** every file under `src/app/` and `src/components/` that carried the brand, plus `src/lib/*` strings, `prisma/seed*.ts`
