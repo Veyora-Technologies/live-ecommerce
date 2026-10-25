@@ -155,7 +155,7 @@ export default async function HomePage() {
       <section className="live-home-hero" aria-labelledby="home-title">
         <div className="live-home-hero-content">
           <div className="live-eyebrow"><span className="live-brand-dot" /> Furnivo · {locationName || "Nationwide Nigeria"}</div>
-          <h1 id="home-title">Everything You Need.<br /><span>All in One Place.</span></h1>
+          <h1 id="home-title">Shop. Sell. Grow.<br /><span>It&rsquo;s your next move.</span></h1>
           <p>Shop. Sell. Service. Grow. Explore currently supported merchant listings, compare posted details and availability notes, then choose your next step.</p>
           <SearchHero />
           <div className="live-hero-trust"><MapPin size={16} aria-hidden="true" /><span>Choose any Nigerian state, the FCT, or a supported locality manually. No GPS is required; location support does not imply merchant coverage.</span></div>

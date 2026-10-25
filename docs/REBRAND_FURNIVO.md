@@ -96,6 +96,7 @@ Every remaining `Live` in the repository is listed here; there are no others.
 | `live_token`, `live_theme` cookies | `src/lib/auth.ts`, `layout.tsx` | Renaming signs every existing user out and resets their theme. |
 | `/my-live` route, `LivePulse` component, `live-*` CSS classes and `--live-*` tokens | everywhere | Internal identifiers; thousands of references, zero user-visible benefit. |
 | `package.json` `"name": "live"` | package metadata | npm package identifier, never shown to a user. |
+| Demo fixture emails `admin@live.ng`, `owner0@live.ng`, … | `prisma/seed.ts`, `prisma/seed-v3.ts`, `tests/integration/*` | Fixture identifiers that the integration suite signs in with. These were briefly changed to `@furnivo.ng` and CI caught the break: the seeds and three test files must move together, and any already-seeded local database would stop working, for zero user-visible gain. Reverted. |
 | Asset filenames (`live-logo-*.svg`, …) | `public/` | Paths referenced in code and cached by browsers/CDNs. Content is Furnivo; renaming would only create churn plus broken caches. |
 | Database tables, API routes, Prisma models | `prisma/`, `src/app/api` | Schema and contract. The rename explicitly must not migrate data. |
 | Historical docs | `docs/PRODUCTION_READINESS_V8/V9.md`, `docs/RELEASE_3.0.md`, etc. | Dated records of past audits; rewriting them would falsify history. Their brand *mentions* were updated, their findings were not. |

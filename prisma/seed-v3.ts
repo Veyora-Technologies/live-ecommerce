@@ -9,7 +9,7 @@ const prisma = new PrismaClient();
 
 async function main() {
   assertDemoSeedAllowed("Furnivo 3.0 additive sample seed");
-  await prisma.user.updateMany({ where:{ email: "admin@furnivo.ng" }, data:{ adminRole: "SUPER" } });
+  await prisma.user.updateMany({ where:{ email: "admin@live.ng" }, data:{ adminRole: "SUPER" } });
 
   for (const [category, stale, recent] of [
     ["Pharmacy", 12, 4], ["Grocery", 24, 6], ["Essentials", 48, 12],

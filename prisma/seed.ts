@@ -26,7 +26,7 @@ async function main() {
   const adminPw = await bcrypt.hash(adminPassword, 12);
 
   const admin = await prisma.user.create({
-    data: { name: "Furnivo Admin", email: "admin@furnivo.ng", phone: "08000000001", passwordHash: adminPw, role: "ADMIN", isAdmin: true, adminRole: "SUPER" }
+    data: { name: "Furnivo Admin", email: "admin@live.ng", phone: "08000000001", passwordHash: adminPw, role: "ADMIN", isAdmin: true, adminRole: "SUPER" }
   });
   const consumer = await prisma.user.create({
     data: { name: "Amina Yusuf", email: "amina@example.com", phone: "08012345678", passwordHash: pw, role: "CONSUMER", preferredArea: "Wuse" }
@@ -131,7 +131,7 @@ async function main() {
     const md = merchantsData[i];
     // create owner user for each merchant
     const owner = await prisma.user.create({
-      data: { name: `${md.businessName} Owner`, email: `owner${i}@furnivo.ng`, phone: `0809990000${i}`, passwordHash: pw, role: "MERCHANT" }
+      data: { name: `${md.businessName} Owner`, email: `owner${i}@live.ng`, phone: `0809990000${i}`, passwordHash: pw, role: "MERCHANT" }
     });
     const merchant = await prisma.merchant.create({
       data: {
