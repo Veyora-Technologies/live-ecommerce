@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import MerchantGeographyFields from "@/components/MerchantGeographyFields";
 import ImageUploadField from "@/components/ImageUploadField";
 import { formatNaira } from "@/lib/utils";
@@ -18,7 +18,7 @@ export default function ConnectClient({ merchant }: any){
   const [keys,setKeys]=useState<any[]>([]);
   const canManage = ["OWNER","MANAGER"].includes(team?.myRole);
 
-  const load=async()=>{
+  const load=useCallback(async()=>{
     const [b,t,s,i,w,subR,keyR]=await Promise.all([
       fetch(`/api/merchant/branches?merchantId=${mid}`).then(r=>r.json()).catch(()=>({})),
       fetch(`/api/merchant/team?merchantId=${mid}`).then(r=>r.json()).catch(()=>({})),
@@ -29,8 +29,10 @@ export default function ConnectClient({ merchant }: any){
       fetch(`/api/api-keys?merchantId=${mid}`).then(r=>r.json()).catch(()=>({})),
     ]);
     setBranches(b.branches||[]); setTeam(t); setServices(s.services||[]); setIntegrations(i.integrations||[]); setWebhooks(w.webhooks||[]); setSub(subR); setKeys(keyR.keys||[]);
-  };
-  useEffect(()=>{ load(); },[]);
+  },[mid]);
+  // `load` is memoised on the merchant id, so this runs once per merchant and
+  // also satisfies exhaustive-deps without refetching on every render.
+  useEffect(()=>{ void load(); },[load]);
 
   const revokeKey=async(id:string)=>{
     const response=await fetch(`/api/api-keys?id=${encodeURIComponent(id)}`,{method:"DELETE"});

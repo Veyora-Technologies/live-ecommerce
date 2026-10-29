@@ -72,7 +72,7 @@ export default function BulkClient({ merchantId, canEdit = true }: { merchantId:
         </select>
         {branchError && <p className="mt-2 text-sm text-red-700" role="alert">{branchError}</p>}
         {!loadingBranches&&!branchError&&!branches.length&&<p className="mt-2 text-xs text-amber-800">No branch is recorded. <Link className="font-semibold underline" href={`/merchant/connect?merchantId=${encodeURIComponent(merchantId)}`}>Create a branch</Link> before importing inventory.</p>}
-        {branchId&&<p className="mt-2 text-xs text-slate-500">Every row in this import is assigned only to the selected branch. Other branches' quantities are unchanged.</p>}
+        {branchId&&<p className="mt-2 text-xs text-slate-500">Every row in this import is assigned only to the selected branch. Other branches&apos; quantities are unchanged.</p>}
         <h3 className="font-bold mt-5">2. Upload CSV</h3>
         <input type="file" accept=".csv,text/csv" onChange={e=>e.target.files?.[0] && onFile(e.target.files[0])} className="mt-3 block w-full text-sm" aria-label="Upload products CSV"/>
         <p className="text-xs text-slate-500 mt-2">Columns: name, category, brand, price (NGN major units), currency (required per row; currently NGN only), stockQuantity, unit, sku, barcode. Currencyless legacy CSV rows are rejected as ambiguous; no automatic conversion is made.</p>

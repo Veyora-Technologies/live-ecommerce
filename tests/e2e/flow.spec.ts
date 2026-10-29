@@ -44,3 +44,13 @@ test("merchant contact details are not present in public page source", async ({ 
   const html = await page.content();
   expect(html).not.toMatch(/href="tel:/);
 });
+
+test("an unknown URL shows the branded 404 with routes back into the app", async ({ page }) => {
+  // Before src/app/not-found.tsx existed, Next's bare default screen was served
+  // for every unknown URL and gave the visitor no way back.
+  const response = await page.goto("/definitely-not-a-real-page-xyz");
+  expect(response?.status()).toBe(404);
+  await expect(page.getByRole("heading", { level: 1 })).toContainText(/does not exist/i);
+  await expect(page.getByRole("link", { name: /Search listings/i })).toBeVisible();
+  await expect(page.getByRole("link", { name: /Home/i }).first()).toBeVisible();
+});

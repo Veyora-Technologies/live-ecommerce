@@ -31,7 +31,7 @@ async function main() {
   const consumer = await prisma.user.create({
     data: { name: "Amina Yusuf", email: "amina@example.com", phone: "08012345678", passwordHash: pw, role: "CONSUMER", preferredArea: "Wuse" }
   });
-  const consumer2 = await prisma.user.create({
+  await prisma.user.create({
     data: { name: "Emeka Okafor", email: "emeka@example.com", phone: "08087654321", passwordHash: pw, role: "CONSUMER", preferredArea: "Garki" }
   });
 

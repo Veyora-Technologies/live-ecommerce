@@ -4,7 +4,7 @@ import { formatNaira } from "@/lib/utils";
 import { availabilityConfidence } from "@/lib/confidence";
 
 export default function ListDetail({ initial, products }: any){
-  const [list,setList]=useState(initial);
+  const [list]=useState(initial);
   const [sel,setSel]=useState(products[0]?.id||"");
   const [custom,setCustom]=useState("");
   const [qty,setQty]=useState(1);

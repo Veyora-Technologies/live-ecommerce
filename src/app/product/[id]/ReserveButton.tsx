@@ -5,7 +5,7 @@ import { formatNairaMinor } from "@/lib/money";
 
 type Variant = { id: string; name: string; unit?: string | null; priceDelta: number; effectivePrice: number; availableQuantity: number };
 
-export default function ReserveButton({ productId, inStock, basePrice }: { productId: string; inStock: boolean; basePrice?: number }) {
+export default function ReserveButton({ productId, inStock }: { productId: string; inStock: boolean }) {
   const [qty, setQty] = useState(1);
   const [variants, setVariants] = useState<Variant[]>([]);
   const [variantId, setVariantId] = useState("");
@@ -69,7 +69,7 @@ export default function ReserveButton({ productId, inStock, basePrice }: { produ
       </div>
       <button onClick={addToPlan} className="mt-2 w-full h-11 rounded-full border border-slate-300 font-semibold text-sm">Add to my plan (multi-merchant cart)</button>
       {msg && <div className="mt-2 text-sm font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2" role="status">{msg}</div>}
-      <div className="mt-2 text-xs text-slate-500">Submitting creates a pending reservation and temporary stock hold. The merchant must confirm; Furnivo takes no payment. Hold release depends on the operator's scheduled expiry job; coordinate payment arrangements directly with the merchant.</div>
+      <div className="mt-2 text-xs text-slate-500">Submitting creates a pending reservation and temporary stock hold. The merchant must confirm; Furnivo takes no payment. Hold release depends on the operator&apos;s scheduled expiry job; coordinate payment arrangements directly with the merchant.</div>
     </div>
   );
 }

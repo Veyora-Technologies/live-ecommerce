@@ -24,7 +24,6 @@ export function fuzzyScore(a:string,b:string): number {
 }
 
 export async function semanticSearch(query: string, filters:any={}){
-  const expanded = query ? [query] : [];
   // get all products with basic filter
   const where:any={ archived:false, merchant:{ status:"APPROVED" } };
   if(filters.category) where.category=filters.category;

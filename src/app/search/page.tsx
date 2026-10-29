@@ -154,7 +154,7 @@ locationFilter = await getGeographicScopeFilter(locationCodes, locationScope, co
 
   // Ranking stays transparent. No current user location or road-routing integration is configured,
   // so distance filters and nearest sorting are deliberately not applied.
-  let ranked = products.map(p=>{
+  const ranked = products.map(p=>{
     const hrs = p.lastConfirmedAt ? (Date.now()-new Date(p.lastConfirmedAt).getTime())/3600000 : 999;
     const score = ((p as any)._score ?? 0.5) + (hrs<6?0.15:hrs<24?0.05:0) + (p.merchant.verificationStatus==="VERIFIED"?0.1:0);
     return { ...p, distance: null, _score: score };

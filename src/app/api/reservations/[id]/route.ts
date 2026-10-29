@@ -119,6 +119,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       return tx.reservation.findUnique({ where: { id: reservation.id } });
     });
     if (!updated) throw new Error("Reservation update was not found after commit.");
+    // Destructured purely to omit `consumerId` from the response body. The binding is
+    // intentionally unused: deleting it instead of renaming would leak the field.
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { consumerId: _consumerId, ...safeReservation } = updated;
     return NextResponse.json({ reservation: safeReservation }, noStore);
   } catch (error) {
