@@ -121,7 +121,7 @@ export default function PrivacyPortalClient({ initialMarketingConsent }: { initi
       <h2 id="privacy-actions-heading" className="text-lg font-bold">Your account data and preferences</h2>
       <div className="mt-4 flex flex-wrap gap-3">
         <button type="button" onClick={() => void downloadExport()} disabled={exporting || loading} className="min-h-11 rounded-full bg-slate-950 px-5 font-semibold text-white hover:bg-slate-800 disabled:opacity-50">{exporting ? "Preparing export…" : "Download my data"}</button>
-        <a href="/notifications/preferences" className="inline-flex min-h-11 items-center rounded-full border border-slate-300 px-5 text-sm font-semibold">Notification channel preferences</a>
+        <a href="/profile" className="inline-flex min-h-11 items-center rounded-full border border-slate-300 px-5 text-sm font-semibold">Notification channel preferences</a>
       </div>
       <p className="mt-2 text-xs text-slate-600">The export is generated for the signed-in account and downloaded by your browser. The file may contain personal data; keep it private.</p>
       <div className="mt-5 border-t border-slate-200 pt-4">

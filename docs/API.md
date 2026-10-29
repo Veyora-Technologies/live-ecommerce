@@ -1,6 +1,6 @@
 # Furnivo API reference (verified scope)
 
-The machine-readable contract is [`docs/openapi.json`](openapi.json). It intentionally covers only core routes with current tests; it is **not** an exhaustive contract for all 63 API route files. For an undocumented route, inspect its route handler and integration tests before relying on it. No production API hostname is configured.
+The machine-readable contract is [`docs/openapi.json`](openapi.json). It intentionally covers only core routes with current tests; it is **not** an exhaustive contract for all 90 API route files. For an undocumented route, inspect its route handler and integration tests before relying on it. No production API hostname is configured.
 
 ## Authentication and session
 
