@@ -72,6 +72,58 @@ const SECURITY_HEADERS: Record<string, string> = {
   ...(process.env.NODE_ENV === "production" ? { "Strict-Transport-Security": "max-age=63072000; includeSubDomains; preload" } : {}),
 };
 
+/**
+ * Requests for files that must never be served.
+ *
+ * These are the paths a scanner tries on every host it finds, and they are also
+ * what a misconfigured static handler would leak. Answering 404 (rather than
+ * 403) keeps the response indistinguishable from any other missing page, so the
+ * probe learns nothing about what exists.
+ *
+ * `.well-known` is deliberately not matched: it is a legitimate standards path
+ * (security.txt), not a dotfile leak.
+ */
+export const SENSITIVE_PATH = new RegExp(
+  "^(?:" + [
+    // NOTE: every alternative carries its own leading slash. Putting a single
+    // "/" before the group would bind it to the first alternative only, which
+    // silently let /.git/config, /id_rsa and every "*.sql" through — caught by
+    // tests/unit/request-guards.test.ts.
+    "/\\.env(?:\\.[\\w.-]+)?",
+    "/\\.git(?:/|$)",
+    "/\\.svn(?:/|$)",
+    "/\\.hg(?:/|$)",
+    "/\\.aws(?:/|$)",
+    "/\\.ssh(?:/|$)",
+    "/\\.docker(?:/|$)",
+    "/\\.netrc$",
+    "/\\.DS_Store$",
+    "/\\.htaccess$",
+    "/\\.htpasswd$",
+    "/id_rsa(?:\\.pub)?$",
+    "/wp-config\\.php$",
+    "/wp-admin(?:/|$)",
+    "/wp-login\\.php$",
+    "/phpmyadmin(?:/|$)",
+    "/server-status$",
+    "/actuator(?:/|$)",
+    "/[^/]*\\.(?:pem|key|p12|pfx|jks|keystore|sql|bak|old|swp)$",
+  ].join("|") + ")",
+  "i",
+);
+
+/** Body types a JSON API may accept. Anything else is a 415. */
+export const ALLOWED_BODY_TYPES = new Set([
+  "application/json",
+  "application/x-www-form-urlencoded",
+  "multipart/form-data",
+  "text/csv",
+  "application/octet-stream",
+]);
+
+/** Methods that carry a state-changing body. */
+const BODY_METHODS = new Set(["POST", "PUT", "PATCH"]);
+
 const CSRF_EXEMPT_PREFIXES = ["/api/jobs/"];
 const MAX_BODY_BYTES = 1_000_000; // 1MB (image upload handled separately below)
 const MAX_IMAGE_BYTES = 5_000_000;
@@ -80,6 +132,15 @@ export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const inboundRequestId = req.headers.get("x-request-id");
   const requestId = inboundRequestId && /^[A-Za-z0-9._-]{1,64}$/.test(inboundRequestId) ? inboundRequestId : crypto.randomUUID();
+
+  // Refuse to serve credential, VCS, and database-dump paths at all. Checked
+  // before routing so it cannot depend on any downstream handler's diligence.
+  if (SENSITIVE_PATH.test(pathname)) {
+    return new NextResponse(null, {
+      status: 404,
+      headers: { "Cache-Control": "no-store", "x-request-id": requestId, ...SECURITY_HEADERS },
+    });
+  }
 
   const withHeaders = (res: NextResponse) => {
     for (const [k, v] of Object.entries(SECURITY_HEADERS)) res.headers.set(k, v);
@@ -106,6 +167,18 @@ export function proxy(req: NextRequest) {
   }
 
   if (!pathname.startsWith("/api/")) return withHeaders(NextResponse.next());
+
+  // Declared body type must be one this API actually parses. Clients that send
+  // no Content-Type at all (curl, cron, server-to-server) are unaffected; this
+  // rejects a body that is clearly *not* the documented shape, which is the
+  // signature of a misconfigured or probing client rather than a real caller.
+  const bodyContentType = (req.headers.get("content-type") || "").split(";")[0].trim().toLowerCase();
+  if (BODY_METHODS.has(req.method.toUpperCase()) && bodyContentType && !ALLOWED_BODY_TYPES.has(bodyContentType)) {
+    return withHeaders(NextResponse.json(
+      { error: "Unsupported content type", code: "UNSUPPORTED_MEDIA_TYPE" },
+      { status: 415, headers: { "Cache-Control": "no-store", Accept: [...ALLOWED_BODY_TYPES].join(", ") } },
+    ));
+  }
 
   // Payload size
   const len = Number(req.headers.get("content-length") || 0);

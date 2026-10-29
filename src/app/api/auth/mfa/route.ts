@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getSessionContext, verifyPassword } from "@/lib/auth";
+import { isReauthFresh, reauthRequired } from "@/lib/reauth";
 import { logSecurityEvent } from "@/lib/security";
 import { authenticator } from "otplib";
 import QRCode from "qrcode";
@@ -39,6 +40,11 @@ export async function POST(req: NextRequest) {
   }
 
   if (body.action === "confirm") {
+    // Enabling MFA is a security-setting change. `begin` and `disable`
+    // already require the current password inline; this branch did not, so
+    // a stolen session cookie plus the authenticator app was enough to
+    // enable MFA on the account.
+    if (!isReauthFresh(ctx.session)) return reauthRequired();
     if (!user.mfaSecret || !body.code) return NextResponse.json({ error: "Invalid code" }, { status: 400 });
     let secret: string;
     try { secret = decryptSecret(user.mfaSecret); }

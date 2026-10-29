@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { Header } from "@/components/Header";
 import Link from "next/link";
+import { fetchWithStepUp } from "@/lib/step-up-client";
 
 export default function SecurityPage() {
   const [sessions, setSessions] = useState<any[]>([]);
@@ -19,7 +20,9 @@ export default function SecurityPage() {
   useEffect(() => { load(); }, []);
 
   async function act(url: string, body: any, ok: string, method = "POST") {
-    const res = await fetch(url, { method, headers:{ "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    // Step-up aware: if the session has not proved the password recently, the
+    // server answers 403 REAUTH_REQUIRED and this prompts once, then retries.
+    const res = await fetchWithStepUp(url, { method, headers:{ "Content-Type": "application/json" }, body: JSON.stringify(body) });
     const data = await res.json().catch(() => ({}));
     setMsg(res.ok ? (data.message || ok) : (data.error || "Action failed"));
     if (res.ok) load();

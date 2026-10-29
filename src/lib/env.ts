@@ -1,5 +1,29 @@
 import { z } from "zod";
 
+/**
+ * Server-only module.
+ *
+ * This file reads secrets (JWT_SECRET, database URLs, provider keys) straight
+ * off `process.env`. If a client component ever imports it — directly or by
+ * way of a module that does — the bundler will inline those reads into a
+ * JavaScript file the browser downloads.
+ *
+ * Next.js already replaces non-`NEXT_PUBLIC_` variables with `undefined` in
+ * client bundles, and Next 16 makes a bare `process.env` reference throw at
+ * build time. Those are safety nets, not guarantees: they depend on the bundler
+ * behaviour of the moment. This guard fails closed regardless, because the cost
+ * of being wrong once is a permanent credential leak into browser caches, CDNs
+ * and proxy logs.
+ *
+ * `typeof window` is used rather than importing `server-only` so this module
+ * keeps working in plain Node (tests, seed scripts) without an extra package.
+ */
+if (typeof window !== "undefined") {
+  throw new Error(
+    "src/lib/env.ts was imported into a browser bundle. Server environment variables must never be bundled — move the value behind an API route or expose it as NEXT_PUBLIC_* explicitly.",
+  );
+}
+
 /** Fail-closed environment validation. Never fall back to a dev secret. */
 const schema = z.object({
   DATABASE_URL: z.string().min(1),

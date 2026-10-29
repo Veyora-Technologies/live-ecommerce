@@ -71,3 +71,31 @@ These changes close findings from the repository audit. They do not change the N
 - **Email delivery fails closed.** `src/lib/email.ts` calls Resend over HTTPS with an 8-second timeout, never logs message bodies, tokens or the API key, and returns an explicit `NOT_CONFIGURED | PROVIDER_ERROR | TIMEOUT` instead of a fake success. A password-reset mail that fails to send burns its token and logs `PASSWORD_RESET_DELIVERY_FAILED`, so an undelivered link can never be redeemed later. Reset links require a public HTTPS origin (localhost, `.local` and preview hosts are rejected), and unknown accounts receive the same generic response as real ones.
 
 Residual gaps after this pass: per-process rate limiting (no shared store), optional admin MFA, **no SMS delivery** (email only), no payments, image storage is a single local directory — with more than one app instance you need object storage/CDN, and there is no virus scanning or EXIF stripping — and a SQLite-only datasource with no committed migration history.
+
+---
+
+## Hardening additions (row-level security, request guarding, jobs, step-up, env)
+
+Five controls were added on top of the above. Full rationale, the bugs found
+while building them, and their verification status are in
+[`HARDENING.md`](HARDENING.md). Summary:
+
+| Control | Where | Enforced by |
+| --- | --- | --- |
+| Tenant isolation (row-level security) | `src/lib/tenant.ts`, `prisma/rls/policies.sql` | `requireMerchantAccess` throws; classification test blocks an unclassified tenant table |
+| Request interception | `src/proxy.ts` | Blocks `.env`/VCS/dump paths with 404; `415` on unparseable body types |
+| Request error catching | `src/lib/api-handler.ts`, `src/lib/api-errors.ts` | Unhandled throws become JSON with a correlation id; non-`ApiError` messages never reach the client |
+| Response caching | `src/lib/http-cache.ts` | Nothing is cacheable unless a policy is named; a session cookie forces `no-store` |
+| Async jobs | `src/lib/jobs.ts`, `/api/jobs/worker` | Conditional-update claim, bounded retries, dead-letter, stuck-job requeue |
+| Re-authentication | `src/lib/reauth.ts`, `/api/auth/reauthenticate` | 15-minute per-session password proof for session revocation, MFA enablement, API-key lifecycle |
+| Environment files | `.gitignore`, `src/lib/env.ts`, proxy | Not committed, not in `public/`, not read by routes, not bundled into client JS |
+
+**Known gaps, stated plainly:**
+
+- `prisma/rls/policies.sql` is **written but never executed** — the datasource is
+  SQLite, which has no row-level security. The application guard is the only
+  enforcement today. Apply and verify the SQL against PostgreSQL with the
+  queries at the end of that file before relying on it.
+- `withApiHandler` is applied to the new endpoints. Existing routes still return
+  their own error responses; migrating them is mechanical but must be done
+  route-by-route with the full suite run between batches.

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser, getSessionContext } from "@/lib/auth";
+import { isReauthFresh, reauthRequired } from "@/lib/reauth";
 import { canManageTeam, merchantRole } from "@/lib/permissions";
 import crypto from "node:crypto";
 import bcrypt from "bcryptjs";
@@ -34,8 +35,12 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const user = await getCurrentUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401, ...noStore });
+  const ctx = await getSessionContext();
+  if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401, ...noStore });
+  // A credential outlives the session that created it, so a cookie alone must
+  // not be able to mint one.
+  if (!isReauthFresh(ctx.session)) return reauthRequired("Confirm your password before creating an API key.");
+  const user = ctx.user;
   const parsed = createSchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: parsed.error.issues[0]?.message || "Invalid API key request" }, { status: 400, ...noStore });
   const input = parsed.data;
@@ -55,8 +60,10 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const user = await getCurrentUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401, ...noStore });
+  const ctx = await getSessionContext();
+  if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401, ...noStore });
+  if (!isReauthFresh(ctx.session)) return reauthRequired("Confirm your password before revoking an API key.");
+  const user = ctx.user;
   const id = req.nextUrl.searchParams.get("id");
   if (!id || id.length > 64) return NextResponse.json({ error: "A valid key id is required" }, { status: 400, ...noStore });
   const credential = await prisma.apiCredential.findUnique({ where: { id }, select: { id: true, merchantId: true, userId: true, revoked: true } });

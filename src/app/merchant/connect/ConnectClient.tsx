@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import MerchantGeographyFields from "@/components/MerchantGeographyFields";
 import ImageUploadField from "@/components/ImageUploadField";
 import { formatNaira } from "@/lib/utils";
+import { fetchWithStepUp } from "@/lib/step-up-client";
 
 export default function ConnectClient({ merchant }: any){
   const mid=merchant.id;
@@ -35,14 +36,14 @@ export default function ConnectClient({ merchant }: any){
   useEffect(()=>{ void load(); },[load]);
 
   const revokeKey=async(id:string)=>{
-    const response=await fetch(`/api/api-keys?id=${encodeURIComponent(id)}`,{method:"DELETE"});
+    const response=await fetchWithStepUp(`/api/api-keys?id=${encodeURIComponent(id)}`,{method:"DELETE"});
     const data=await response.json().catch(()=>({}));
     setMsg(response.ok?"API key revoked.":(data.error||"Key was not revoked."));
     if(response.ok) load();
   };
 
   const post=async(url:string, body:any)=>{
-    const res=await fetch(url,{ method:"POST", headers:{ "Content-Type":"application/json"}, body: JSON.stringify(body)});
+    const res=await fetchWithStepUp(url,{ method:"POST", headers:{ "Content-Type":"application/json"}, body: JSON.stringify(body)});
     const d=await res.json();
     setMsg(res.ok? "Saved ✓" : (d.error||"Failed"));
     if(res.ok) load();

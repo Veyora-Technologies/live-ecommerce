@@ -89,8 +89,13 @@ describe("Furnivo branding", () => {
   it("preserves the technical identifiers the rename must not touch", () => {
     // Cookies and env vars are a live wire contract: renaming them would sign
     // every existing user out and break every deployment's configuration.
+    // The cookie name now lives in its own dependency-free module so that pure
+    // logic (cache safety) can reason about sessions without importing Prisma.
+    // The guarantee is unchanged: the cookie is still called `live_token`.
+    const authCookie = readFileSync(join(ROOT, "src", "lib", "auth-cookie.ts"), "utf8");
+    expect(authCookie).toContain("live_token");
     const auth = readFileSync(join(ROOT, "src", "lib", "auth.ts"), "utf8");
-    expect(auth).toContain("live_token");
+    expect(auth).toContain("AUTH_COOKIE");
     expect(readFileSync(join(ROOT, "src", "app", "api", "auth", "forgot", "route.ts"), "utf8")).toContain("RESEND_API_KEY");
     expect(readFileSync(join(ROOT, "src", "lib", "env.ts"), "utf8")).toContain("LIVE_DATA_MODE");
     // Webhook header names are consumed by third-party integrations.
