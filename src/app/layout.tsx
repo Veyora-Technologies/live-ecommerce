@@ -11,10 +11,10 @@ const socialCardUrl = publicBaseUrl ? `${publicBaseUrl}/brand/live-social-card.p
 
 export const metadata: Metadata = {
   ...(publicBaseUrl ? { metadataBase: new URL(publicBaseUrl) } : {}),
-  title: "Live — Everything You Need. All in One Place.",
+  title: "Furnivo — Shop, Sell, Grow",
   description: "Search merchant listings and services, compare posted details, and check current availability before taking the next step.",
   manifest: "/manifest.json",
-  applicationName: "Live",
+  applicationName: "Furnivo",
   icons: {
     icon: [
       { url: "/favicon.svg", type: "image/svg+xml" },
@@ -25,18 +25,18 @@ export const metadata: Metadata = {
     apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
   },
   openGraph: {
-    title: "Live — Everything You Need. All in One Place.",
-    description: "Shop. Sell. Service. Grow. Explore merchant listings and services, then check the details before you act.",
-    siteName: "Live",
-    ...(socialCardUrl ? { images: [{ url: socialCardUrl, width: 1200, height: 630, alt: "Live — Everything You Need. All in One Place." }] } : {}),
+    title: "Furnivo — Shop, Sell, Grow",
+    description: "Shop, sell and grow on Furnivo. Explore merchant listings and services, then check the details before you act.",
+    siteName: "Furnivo",
+    ...(socialCardUrl ? { images: [{ url: socialCardUrl, width: 1200, height: 630, alt: "Furnivo — Shop, Sell, Grow" }] } : {}),
   },
   twitter: {
     card: "summary_large_image",
-    title: "Live — Everything You Need. All in One Place.",
+    title: "Furnivo — Shop, Sell, Grow",
     description: "Search merchant listings and services; compare posted details and check current availability.",
     ...(socialCardUrl ? { images: [socialCardUrl] } : {}),
   },
-  appleWebApp: { capable: true, title: "Live", statusBarStyle: "default" },
+  appleWebApp: { capable: true, title: "Furnivo", statusBarStyle: "default" },
   formatDetection: { telephone: false },
 };
 

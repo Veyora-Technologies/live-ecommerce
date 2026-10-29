@@ -1,6 +1,6 @@
-# Live — Know what is available. Act on it instantly.
+# Furnivo — Shop · Sell · Grow
 
-Live helps people discover merchant listings, compare reported prices and availability, and submit pickup reservation requests. It is not a generic social network or checkout marketplace. Each reservation is revalidated server-side and belongs to one merchant; Live does not take payment.
+Furnivo helps people discover merchant listings, compare reported prices and availability, and submit pickup reservation requests. It is not a generic social network or checkout marketplace. Each reservation is revalidated server-side and belongs to one merchant; Furnivo does not take payment.
 
 > **Deployment status: not approved for production.** `LIVE_DATA_MODE` defaults to `demo`, and the included records are samples. Production data mode remains blocked until the SQLite-only datasource, unreviewed migration/deployment path, and operational deployment gates are resolved. See the [deployment readiness report](docs/DEPLOYMENT_READINESS.md); do not deploy or set `LIVE_DATA_MODE=production` yet.
 
@@ -8,16 +8,29 @@ Live helps people discover merchant listings, compare reported prices and availa
 
 The repository is a Next.js 16 / React 19 / Prisma modular monolith. It includes consumer, merchant, and admin surfaces; server-side session and role checks; discovery and location filtering; inventory/availability confidence; a planning cart with separate reservations; merchant inventory and CSV workflows; service bookings; saved lists/searches; in-app notifications; and limited authenticated job/webhook handling.
 
-A planner cart is not an order. A successful submission creates separate pending pickup reservations and temporarily holds stock. Merchant confirmation is still required; holds are released by the scheduled expiry job only when an operator configures and monitors it. Live does not arrange delivery, quote delivery fees, or take payment. No external payment, POS, supplier, routing, delivery, email/SMS, vision, or AI provider is configured.
+A planner cart is not an order. A successful submission creates separate pending pickup reservations and temporarily holds stock. Merchant confirmation is still required; holds are released by the scheduled expiry job only when an operator configures and monitors it. Furnivo does not arrange delivery, quote delivery fees, or take payment. No external payment, POS, supplier, routing, delivery, SMS, vision, or AI provider is configured. Email is the one optional integration with real code: when `RESEND_API_KEY` + `EMAIL_FROM` + a public HTTPS origin are set, registration and password-reset links are delivered; otherwise those endpoints say delivery is unavailable instead of pretending. Merchant product images can be uploaded through `/api/uploads` when `LIVE_UPLOAD_DIR` points at a writable absolute directory (single-instance storage).
 
-See the [deployment readiness report](docs/DEPLOYMENT_READINESS.md) for maintained architecture, feature status, test evidence, scope and deployment blockers. Live is **not production deployed or approved for go-live**.
+See the [deployment readiness report](docs/DEPLOYMENT_READINESS.md) for maintained architecture, feature status, test evidence, scope and deployment blockers. Furnivo is **not production deployed or approved for go-live**.
+
+## Branding
+
+The product is **Furnivo**. Brand assets live in `public/brand/` plus the root icons and
+`public/manifest.json`; all of them are generated from one source of truth by
+`scripts/brand/generate-brand-assets.py` (real typeface outlines, no placeholder art). See
+[`docs/BRAND_GUIDE.md`](docs/BRAND_GUIDE.md) for the palette, contrast rules, and the list of
+identifiers that intentionally still read `live-*`.
+
+Rebranding did **not** change the technical surface: environment variables (`LIVE_*`), the
+`live_token` / `live_theme` cookies, the `/my-live` route, database tables, API paths, webhook header
+names (`X-Live-*`), and CSS class/token names are unchanged, so existing deployments, integrations
+and sessions keep working.
 
 ## Product and safety boundaries
 
 - Search uses local merchant records and rule-based query parsing. Displayed availability is not a guarantee of physical stock on arrival; timestamps/confidence matter.
 - `nearest` is straight-line distance when coordinates are available, not a road route or travel time.
 - Barcode/QR are discovery aids, not proof of local stock, authenticity, payment, or authentication.
-- Delivery is unavailable through Live; a merchant record or flag is not proof of a configured delivery service.
+- Delivery is unavailable through Furnivo; a merchant record or flag is not proof of a configured delivery service.
 - Regulated products are not autonomously substituted or medically recommended; direct questions should be referred to a pharmacist.
 - Offline data is not confirmation: private API records are not cached and offline actions cannot confirm reservations.
 
@@ -46,12 +59,14 @@ Open `http://localhost:3000`. The base seed is destructive and now refuses to ru
 
 ```bash
 ./node_modules/.bin/tsc --noEmit --incremental false --pretty false
-npm run lint:ci
+npm run lint:ci          # ESLint debt budget (fails only if lint debt grows)
 npm test -- --reporter=dot
 npm run build
+npx playwright install chromium   # one-off, for the browser tests
+npm run test:e2e
 ```
 
-`npm run lint` is the strict full ESLint command; it currently reports a large pre-existing backlog. `lint:ci` enforces a per-file/per-rule non-regression baseline and does not mean lint is clean. HTTP integration tests require a seeded local server, the same `LIVE_DEMO_*_PASSWORD` values used for seeding, and refuse non-loopback targets. The Playwright runner/browser are not installed in the lockfile; the existing E2E spec has not been run.
+`npm run lint` is the strict full ESLint command; it currently reports a large pre-existing backlog. `lint:ci` enforces a per-file/per-rule non-regression baseline and does not mean lint is clean; `npm run lint:baseline` re-records it after deliberately paying debt down. HTTP integration tests require a seeded local server, the same `LIVE_DEMO_*_PASSWORD` values used for seeding, and refuse non-loopback targets. The Playwright runner is now a devDependency and CI installs Chromium, but the browser suite has not been executed in the audit sandbox (browser binaries are not downloadable there) — treat its first CI run as the real verification.
 
 ## Deployment and standards
 

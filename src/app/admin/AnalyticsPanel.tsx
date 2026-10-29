@@ -5,12 +5,18 @@ export default function AnalyticsPanel(){
   const [data,setData]=useState<any>(null);
   const [flags,setFlags]=useState<any[]>([]);
   const [msg,setMsg]=useState("");
+  // Analytics and feature flags are role-gated server-side (see src/lib/admin-roles.ts).
+  // An isAdmin account without an operational role receives 403 + { error }, so the
+  // panel must not assume `platform` exists.
+  const [denied,setDenied]=useState(false);
   const load=async()=>{
     const [a,f]=await Promise.all([
       fetch("/api/admin/analytics").then(r=>r.json()).catch(()=>null),
       fetch("/api/admin/flags").then(r=>r.json()).catch(()=>({flags:[]})),
     ]);
-    setData(a); setFlags(f.flags||[]);
+    if(!a || !a.platform){ setDenied(true); setData(null); }
+    else { setDenied(false); setData(a); }
+    setFlags(Array.isArray(f?.flags) ? f.flags : []);
   };
   useEffect(()=>{ load(); },[]);
 
@@ -20,7 +26,7 @@ export default function AnalyticsPanel(){
     load();
   };
   const seedFlags=async()=>{
-    for(const [key,name] of [["assist_enabled","Live Assist"],["image_search_enabled","Camera search"],["sponsored_discovery","Sponsored discovery (labelled)"],["services_enabled","Service bookings"]])
+    for(const [key,name] of [["assist_enabled","Furnivo Assist"],["image_search_enabled","Camera search"],["sponsored_discovery","Sponsored discovery (labelled)"],["services_enabled","Service bookings"]])
       await fetch("/api/admin/flags",{ method:"POST", headers:{ "Content-Type":"application/json"}, body: JSON.stringify({ key, name, enabled: key!=="sponsored_discovery" })});
     load();
   };
@@ -30,6 +36,7 @@ export default function AnalyticsPanel(){
     setMsg(JSON.stringify(d)); load();
   };
 
+  if(denied) return <div className="mt-6 bg-white border border-amber-200 rounded-2xl p-6 text-sm text-amber-900" role="status"><b>Platform analytics are not available to your admin role.</b><div className="mt-1 text-slate-600">Aggregate cross-tenant counts require the SUPPORT, REVIEWER, SECURITY or SUPER role, and feature flags require SUPER. Ask a SUPER administrator if you need this access.</div></div>;
   if(!data) return <div className="mt-6 bg-white border border-slate-200 rounded-2xl p-6 text-sm text-slate-500 animate-pulse">Loading platform intelligence…</div>;
   const p=data.platform;
   return (

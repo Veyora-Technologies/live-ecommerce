@@ -30,7 +30,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if ("response" in parsed) return parsed.response;
   const body = parsed.data;
   if (body.price !== undefined && !getMarketCurrencyConfiguration(DEFAULT_MARKET_CODE, product.currency || DEFAULT_MARKET_CODE)) {
-    return NextResponse.json({ error: "Price edits are unavailable for this product currency in the active market. Live has not converted the amount.", code: "CURRENCY_NOT_SUPPORTED" }, { status: 409, headers: { "Cache-Control": "no-store" } });
+    return NextResponse.json({ error: "Price edits are unavailable for this product currency in the active market. Furnivo has not converted the amount.", code: "CURRENCY_NOT_SUPPORTED" }, { status: 409, headers: { "Cache-Control": "no-store" } });
   }
   if (body.stockQuantity !== undefined && body.stockQuantity < product.reservedQuantity) {
     return NextResponse.json({ error: "Stock cannot be reduced below the quantity already reserved; reconcile pending reservations first." }, { status: 409, headers: { "Cache-Control": "no-store" } });

@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
     try {
       const existing = await prisma.product.findFirst({ where: { merchantId, branchId, name: row.name, sku, archived: false } });
       if (existing && !getMarketCurrencyConfiguration(DEFAULT_MARKET_CODE, existing.currency || DEFAULT_MARKET_CODE)) {
-        results.push({ row: index + 1, status: "failed", error: "Bulk price edits are unavailable for this product currency; Live has not converted it." });
+        results.push({ row: index + 1, status: "failed", error: "Bulk price edits are unavailable for this product currency; Furnivo has not converted it." });
         failed++; continue;
       }
       if (mode === "create" && existing) {
@@ -157,7 +157,7 @@ export async function GET(req: NextRequest) {
   const products = await prisma.product.findMany({ where: { merchantId, branchId, archived: false }, orderBy: { name: "asc" } });
   if (products.some((product) => !getMarketCurrencyConfiguration(DEFAULT_MARKET_CODE, product.currency || DEFAULT_MARKET_CODE)
     || formatBulkExportPrice(product.price, product.currency) === null)) {
-    return NextResponse.json({ error: "This catalogue contains a price or currency the NGN bulk-import format cannot preserve. No CSV was generated; Live has not converted any price.", code: "CURRENCY_NOT_SUPPORTED" }, { status: 409, headers: { "Cache-Control": "private, no-store" } });
+    return NextResponse.json({ error: "This catalogue contains a price or currency the NGN bulk-import format cannot preserve. No CSV was generated; Furnivo has not converted any price.", code: "CURRENCY_NOT_SUPPORTED" }, { status: 409, headers: { "Cache-Control": "private, no-store" } });
   }
   const header = ["name", "category", "brand", "price", "currency", "stockQuantity", "lowStockThreshold", "unit", "sku", "barcode", "availability"].join(",");
   const rows = products.map((product) => [product.name, product.category, product.brand, formatBulkExportPrice(product.price, product.currency)!, product.currency, product.stockQuantity, product.lowStockThreshold, product.unit, product.sku, product.barcode, product.availability].map(csv).join(","));

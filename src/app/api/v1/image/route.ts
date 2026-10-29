@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 
 /**
- * Secure upload boundary for the future image-recognition adapter. Image data
- * is signature-checked, processed in memory, and discarded. No visual-matching
+ * Secure boundary for the future image-recognition adapter. Image data is
+ * signature-checked, processed in memory, and discarded. No visual-matching
  * provider is currently wired, so this endpoint never guesses a product from a
  * filename or claims that image recognition occurred.
+ *
+ * This is NOT a storage endpoint. To keep a product photo, use POST /api/uploads
+ * (see src/lib/image-upload.ts), which validates bytes and returns a served URL.
  */
 const MAX_BYTES = 5 * 1024 * 1024;
 const SIGNATURES: { type: string; test: (b: Uint8Array) => boolean }[] = [

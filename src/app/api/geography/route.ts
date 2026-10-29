@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { findGeographicArea, geographicPath, normalizeGeographyText } from "@/lib/geography";
 import { DEFAULT_MARKET_CODE } from "@/lib/market-config";
 import { MarketUnavailableError, requireOperationalMarket } from "@/lib/market-runtime";
+import { CACHE_POLICIES, publicCache } from "@/lib/http-cache";
 
 export const dynamic = "force-dynamic";
 
@@ -95,6 +96,6 @@ export async function GET(request: NextRequest) {
   }).sort((a, b) => a.score - b.score || a.area.adminLevel - b.area.adminLevel || a.area.name.localeCompare(b.area.name)).slice(0, limit);
 
   return NextResponse.json({ locations: ranked.map(({ area }) => toOption(area)), query: rawQuery, countryCode }, {
-    headers: { "Cache-Control": "public, max-age=60, stale-while-revalidate=300" },
+    headers: publicCache(CACHE_POLICIES.geographyReference, request),
   });
 }

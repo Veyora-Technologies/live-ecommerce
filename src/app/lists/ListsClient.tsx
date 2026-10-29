@@ -33,7 +33,7 @@ export default function ListsClient({ initial }: { initial: any[] }) {
       setDesc("");
       setBudget("");
     } catch {
-      setMsg("Could not reach Live. Your list was not confirmed as created.");
+      setMsg("Could not reach Furnivo. Your list was not confirmed as created.");
     } finally {
       setSaving(false);
     }

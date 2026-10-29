@@ -30,7 +30,7 @@ export async function POST() {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const policyCheck = await requirePolicyAcceptances({ userId: user.id, keys: ["PLATFORM_TERMS", "PRIVACY_NOTICE", "CONSUMER_TERMS"] });
-  if (!policyCheck.allowed) return NextResponse.json({ error: policyCheck.message || "Review Live policies before submitting reservations.", code: policyCheck.code, missingPolicies: policyCheck.missing, policyUrl: "/legal" }, { status: policyCheck.code === "LEGAL_RELEASE_GATE" ? 503 : 428 });
+  if (!policyCheck.allowed) return NextResponse.json({ error: policyCheck.message || "Review Furnivo policies before submitting reservations.", code: policyCheck.code, missingPolicies: policyCheck.missing, policyUrl: "/legal" }, { status: policyCheck.code === "LEGAL_RELEASE_GATE" ? 503 : 428 });
 
   const cart = await prisma.cart.findFirst({ where: { userId: user.id, status: "PLANNING" } });
   if (!cart) return NextResponse.json({ error: "No active plan" }, { status: 400 });
@@ -76,7 +76,7 @@ export async function POST() {
           throw new CartItemError(`This listing uses ${product.currency || "an unsupported currency"}; reservations are not configured for that currency in this market.`);
         }
         if (item.merchantId !== product.merchantId) throw new CartItemError("The item's merchant changed. Remove it and add it again.");
-        if (item.fulfilment !== "PICKUP") throw new CartItemError("Live does not arrange delivery. Only pickup requests can be submitted.");
+        if (item.fulfilment !== "PICKUP") throw new CartItemError("Furnivo does not arrange delivery. Only pickup requests can be submitted.");
         if (product.merchant.status !== "APPROVED") throw new CartItemError("This merchant is not approved for reservations.");
         const sellerPolicy = await requirePolicyAcceptancesInTransaction(tx, { userId: product.merchant.ownerId, keys: ["SELLER_AGREEMENT"], merchantId: product.merchantId });
         if (!sellerPolicy.allowed) throw new CartItemError("The merchant owner has not accepted the current seller agreement; no reservation was created.");
@@ -185,7 +185,7 @@ export async function POST() {
   }
 
   const message = created.length
-    ? `${created.length} separate reservation request(s) submitted. Stock is temporarily held pending merchant confirmation or expiry. No payment or delivery is arranged by Live.`
+    ? `${created.length} separate reservation request(s) submitted. Stock is temporarily held pending merchant confirmation or expiry. No payment or delivery is arranged by Furnivo.`
     : "No reservations were created. Review the item messages and try again.";
 
   return NextResponse.json({ created, failed, message }, { headers: { "Cache-Control": "private, no-store" } });

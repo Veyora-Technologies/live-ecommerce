@@ -1,4 +1,4 @@
-# Live — deployment readiness and platform specification
+# Furnivo — deployment readiness and platform specification
 
 **As of:** 2026-10-21  
 **Decision:** **NO-GO for production.** No deployment, production database write, migration, domain cutover, or provider activation was performed.  
@@ -8,12 +8,12 @@ The recent changes address specific, evidenced defects and strengthen fail-close
 
 ## 1. Product and operating boundary
 
-Live is a Nigeria-first merchant-discovery and reservation-request platform. It is not currently a payment processor, delivery network, escrow/custody service, POS/supplier sync service, international marketplace, or external-AI product.
+Furnivo is a Nigeria-first merchant-discovery and reservation-request platform. It is not currently a payment processor, delivery network, escrow/custody service, POS/supplier sync service, international marketplace, or external-AI product.
 
 The candidate initial service scope, **only after the gates in §7 are closed**, is deliberately narrow:
 
 1. Nigeria-only product discovery from real, permissioned merchant listings that have passed human review and have a truthful price, location, stock/freshness state, and provenance label.
-2. No payment, payout, refund, wallet, escrow, deposit, or custody of customer/seller money by Live.
+2. No payment, payout, refund, wallet, escrow, deposit, or custody of customer/seller money by Furnivo.
 3. No delivery promise. Pickup may be offered only as a merchant-confirmed request; the platform does not invent a pickup window or confirm fulfilment.
 4. Keep stock-holding reservation requests **disabled until** the expiry scheduler, monitoring, expiry/reconciliation procedure, and support ownership are proven in the selected production environment. Discovery-only is the safer interim scope.
 5. Keep service bookings, regulated/high-risk categories, public seller contact/enquiry workflows, other countries/currencies, cross-border trade, and provider-dependent features off until their separate legal, safety, operational, and provider gates are approved.
@@ -63,8 +63,9 @@ The generated Nigeria tree contains 850 active nodes: country, 36 states, FCT, 7
 |---|---|---|
 | Sign-up and role assignment | **Local consumer registration only; verification/provider incomplete** | `POST /api/auth/register` creates only `CONSUMER` and ignores client-supplied privileged roles, then issues a session immediately. The latest fresh-fixture HTTP suite verifies role non-escalation, but not verified email/phone or provider-backed signup. `emailVerifiedAt`/`phoneVerifiedAt` fields exist, but no account-verification routes or delivery adapters were found. |
 | Sign-in, server-side sessions, logout | **Custom local auth only; external provider not selected** | The latest fresh-fixture local HTTP suite covers valid/invalid login, session lookup, logout revocation, protected pages and role checks. Current code uses bcrypt/JWT and Prisma `Session` over SQLite; no Supabase/Firebase SDK or provider-backed session is configured. This does not satisfy the requested provider integration or production-domain test. |
-| Email/phone verification | **Not implemented** | No verification route, OTP workflow, or sender integration exists in the inspected auth routes. Phone/email fields are accepted but not verified before a session is issued. |
-| Password recovery | **Unavailable in production** | Development-only reset token remains available for isolated testing. Production returns `503 PASSWORD_RESET_DELIVERY_UNAVAILABLE`, sends no email, creates no unusable token, and does not claim delivery. The old UI/API mismatch (`email` vs `emailOrPhone`) was fixed. A real sender adapter, verified sender/domain, delivery handling and support recovery path are still required. |
+| Email verification | **Implemented; requires a configured sender** | `POST /api/auth/register` issues a single-use token and, when `RESEND_API_KEY` + `EMAIL_FROM` + a public HTTPS origin are set, emails `/auth/verify?token=…`; `PUT /api/auth/verify-contact` redeems it and sets `emailVerifiedAt`. Without a sender the response says `verificationDelivered: false` and returns no token in production. The token is still not required before a session is issued. **Phone/SMS verification is not implemented.** |
+| Merchant image uploads | **Implemented locally; single-instance storage** | `POST /api/uploads` + `GET /api/media/[name]` (`src/lib/image-upload.ts`). Type is decided by magic bytes, 5 MB cap, random filenames, traversal-proof reads. Storage is one local directory (`LIVE_UPLOAD_DIR`, absolute path); multi-instance/CDN deployments must swap in object storage. Unconfigured deployments return `503 UPLOAD_NOT_CONFIGURED` instead of discarding files. |
+| Password recovery | **Implemented; requires a configured sender** | Production sends a 30-minute single-use reset link through Resend when `RESEND_API_KEY`, `EMAIL_FROM` and a public HTTPS origin are configured; a failed delivery burns the token and logs `PASSWORD_RESET_DELIVERY_FAILED`. Without a sender it returns `503 PASSWORD_RESET_DELIVERY_UNAVAILABLE`, creates no unusable token and never claims delivery. Unknown accounts get the same generic answer. Development keeps a `devResetToken` path for isolated tests. A verified sending domain and a human support recovery path remain owner tasks. |
 | Authentication provider and production configuration | **Blocked pending owner selection** | The owner selected “provider undecided.” No Supabase/Firebase SDK, provider credentials, production database, canonical domain, or production recovery sender is configured. SQLite is the only Prisma datasource and production data mode remains blocked. Do not claim the mandatory authentication acceptance criteria passed. |
 | TOTP MFA | **Partial** | Authenticated enable/confirm/disable flow and encrypted secret storage exist. Admins can still sign in without MFA and receive a warning; enforcing admin MFA requires an approved bootstrap, enrollment, recovery and break-glass process. |
 | Product discovery/search | **Implemented; data-dependent** | Local database/rule-based search, geography filters and freshness/availability labels are present. Search is not an external engine or LLM. `nearest` is straight-line distance, not routing. Production requires genuine, permissioned, human-approved, fresh listings. |
@@ -107,7 +108,7 @@ For production, disabled features must fail closed at the route/domain layer, no
 
 ### Qualified review required — not legal advice
 
-Before any real transactions or consumer-facing commercial launch, have qualified Nigerian counsel/privacy professionals review Live's actual operator role, data flows, categories, user terms, privacy notice, seller terms, pricing/disclosures, complaint and redress handling, cancellation/refund treatment, product-safety and IP processes, tax/fee/settlement design, retention, processor arrangements, data-subject rights, incident duties, and any sector-specific rules. Do not claim compliance from the presence of admin forms or an `approved` field.
+Before any real transactions or consumer-facing commercial launch, have qualified Nigerian counsel/privacy professionals review Furnivo's actual operator role, data flows, categories, user terms, privacy notice, seller terms, pricing/disclosures, complaint and redress handling, cancellation/refund treatment, product-safety and IP processes, tax/fee/settlement design, retention, processor arrangements, data-subject rights, incident duties, and any sector-specific rules. Do not claim compliance from the presence of admin forms or an `approved` field.
 
 Official/source material for review (not a legal determination):
 
@@ -157,10 +158,10 @@ The fresh-fixture HTTP integration suite passed, but these local custom-auth che
 
 | Required scenario | Current result | Evidence / limitation |
 |---|---|---|
-| Register a customer and verify the account | **Incomplete / not passed** | The latest HTTP suite verified registration always assigns `CONSUMER`, ignores client-supplied privileged role fields, and issues a local session. It did not verify email/phone; no verification route, delivery adapter, or external provider exists. |
+| Register a customer and verify the account | **Code path exists; delivery not exercised** | Registration always assigns `CONSUMER`, ignores client-supplied privileged roles, and issues a local session. A single-use email token and `/auth/verify` page now exist, but no unit/integration test in this repository sends a real email, and no sender was configured here. **Do not claim a verified-account journey passed.** |
 | Sign in; keep session after refresh | **Local HTTP session lookup passed; browser refresh not run** | The suite exercised valid login and `/api/auth/me` using the HttpOnly cookie. No real browser/device refresh test or external identity provider was used. |
 | Restrict logged-out protected pages; logout revokes access | **Local HTTP integration passed** | The suite verified logged-out redirects for `/profile` and `/admin`, logout cookie clearing, and that the revoked cookie no longer resolves a user. This is not provider-backed or browser evidence. |
-| Complete successful password reset | **Not available in production** | The latest suite confirmed production recovery returns 503 and explicitly says no email was sent; invalid reset tokens are rejected. A successful flow requires an authorized real sender/provider and production-domain configuration. |
+| Complete successful password reset | **Code path exists; delivery not exercised** | Invalid/expired/reused tokens are rejected in unit tests. Delivery is implemented but was never exercised against a real provider from this environment, and the earlier suite only proved the 503 path when no sender is configured. Furnivo verification needs a configured domain. |
 | Duplicate registration and invalid login | **Partial / incomplete** | The suite verified invalid credentials return 401 without issuing a session. It did not test duplicate registration, normalization edge cases, or concurrent duplicate registration. |
 | Merchant registration and customer/merchant/admin boundaries | **Partial** | The suite exercised local merchant login and server-side role/tenant boundaries, including customer denial of merchant/admin surfaces and redaction of customer identity from merchant responses. Merchant onboarding was not a required successful browser journey here. |
 | Production-domain redirects and recovery links | **Not run** | No canonical production domain or authorized redirect URL is selected. |
@@ -182,7 +183,7 @@ No owner identities or provider contracts were supplied. The roles below are res
 | Reservations and support | Marketplace operations + support owner | Keep holds off until scheduled expiry, alerting, retry/reconciliation, duplicate protection, stock-release audit, complaint/refund/cancellation procedure, pickup confirmation and on-call ownership pass rehearsal. |
 | Legal/privacy | Qualified Nigerian counsel/privacy professional + operator | Establish legal operator identity/contact; review current law and actual data flows/categories; publish reviewed policies and complaint/redress contact; complete privacy/DPIA/retention/processor assessment as applicable; store review evidence; do not claim compliance before sign-off. |
 | Email/SMS/notifications | Provider owner | Either keep password recovery unavailable and define a verified manual support path, or implement a real sender adapter with verified From/domain, secrets, retries, delivery/bounce handling, generic anti-enumeration behavior and monitored tests. An API key alone is insufficient. |
-| Finance/payments | Finance + qualified legal/compliance + chosen provider | Keep payments/payouts/refunds off until actual provider, signed webhooks/idempotency, fees, settlement, reconciliation, tax and funds-handling responsibilities are approved. Live must not custody funds absent an authorized reviewed arrangement. |
+| Finance/payments | Finance + qualified legal/compliance + chosen provider | Keep payments/payouts/refunds off until actual provider, signed webhooks/idempotency, fees, settlement, reconciliation, tax and funds-handling responsibilities are approved. Furnivo must not custody funds absent an authorized reviewed arrangement. |
 | Operations/continuity | Platform owner / SRE | Shared rate/abuse controls; centralized redacted logs, metrics/traces, alerts/on-call; encrypted off-site backups/PITR; documented RPO/RTO; independent restore drill; incident, breach, rollback and support runbooks. |
 | Quality/security | Engineering + independent reviewers | Add/install approved browser runner; run supported browser/device matrix, keyboard/screen-reader/zoom/contrast and WCAG 2.2 AA review; production-provider integration and load/failure tests; dependency remediation or documented risk acceptance; independent security review/penetration test. |
 | Geography/brand | Product/data owner | Review data freshness/licensing/attribution and all public listing/SEO copy; inspect the static asset gallery/brand output before replacing or publishing any asset. |
@@ -200,3 +201,36 @@ This file is the canonical current architecture, feature and readiness record. S
 - [`API.md`](API.md), [`openapi.json`](openapi.json) — documented API surface; not a complete proof of all routes.
 - [`DEPLOYMENT.md`](DEPLOYMENT.md), [`SECURITY.md`](SECURITY.md), [`THREAT_MODEL.md`](THREAT_MODEL.md), [`INTEGRATIONS.md`](INTEGRATIONS.md) — operational/security/integration boundaries.
 - [`ARCHITECTURE.md`](ARCHITECTURE.md) and [`FEATURE_STATUS.md`](FEATURE_STATUS.md) now point here for current status. Older readiness docs, feature snapshots, and backlog/performance artifacts are historical records, not current acceptance.
+
+## 9. Audit remediation 2026-10-24
+
+A read-only repository audit was followed by a remediation pass on the branch `arena/bf3e275f-live-ecommerce`. The deployment decision is unchanged (**NO-GO**); these changes remove defects that were not dependent on provider or owner decisions.
+
+### Fixed in source
+
+| Finding | Change | Evidence |
+|---|---|---|
+| `npm run lint:ci` referenced a missing `scripts/` directory and failed with `MODULE_NOT_FOUND` | Added `scripts/check-eslint-baseline.mjs` (debt-budget gate with `--update`) | `npm run lint:ci` → `OK — 282 errors / 24 warnings` |
+| `db:encrypt-secrets` referenced a missing script | Added `scripts/encrypt-existing-secrets.ts` (dry-run by default, refuses non-file DBs, never prints values) | Script parses and runs to the Prisma client construction |
+| `@prisma/client` was a devDependency | Moved to `dependencies`; added `postinstall: prisma generate` | `package.json` |
+| `test:e2e` had no runner installed and its spec used a selector that does not exist | Added `@playwright/test`; rewrote `tests/e2e/flow.spec.ts` against real landmarks; added a dedicated CI `e2e` job | Local run not possible (browser binaries are not fetchable in the audit sandbox) |
+| Spoofable `X-Forwarded-For` left-most entry | Trusted-proxy resolver `src/lib/client-ip.ts` + `TRUSTED_PROXY_HOPS` | `tests/unit/client-ip.test.ts` (11 assertions incl. spoofing, short chain, IPv6) |
+| `isAdmin` alone authorised merchant suspension, feature flags, freshness policy, analytics | `src/lib/admin-roles.ts` + `src/lib/admin-access.ts`; those routes now require the persisted `adminRole` | `tests/unit/admin-roles.test.ts` |
+| `/api/metrics` unauthenticated outside production | Fails closed in every environment | `src/app/api/metrics/route.ts` |
+| Merchant phone/email/WhatsApp harvested from public JSON and HTML | Removed from public responses; signed-in, audited reveal endpoints; masked UI | `src/app/api/products/[id]/contact/route.ts`, `src/app/api/merchant/[id]/contact/route.ts`, `tests/e2e/flow.spec.ts` |
+| Unset `LIVE_DATA_MODE` in a production build behaved like demo | Production requests blocked with 503 unless explicitly `demo`; health degraded | `src/proxy.ts`, `src/lib/env.ts` |
+| Product/storefront image URLs accepted `http:`/`data:`/`javascript:` | https-only validation | `tests/unit/image-url-validation.test.ts` |
+| Concurrent duplicate registration returned 500 | Maps unique-constraint violation to `409 ACCOUNT_EXISTS` | `src/app/api/auth/register/route.ts` |
+| No email/phone verification route existed | Added `POST/PUT /api/auth/verify-contact` (hashed, single-use, 24h) | `src/app/api/auth/verify-contact/route.ts` |
+| Notifications filtered categories after the DB page was fetched | Paginate before filter, bounded scan, explicit `truncated` flag | `src/app/api/notifications/route.ts` |
+| `JWT_SECRET` reused as the audit IP-hash salt | `IP_HASH_SECRET` with documented fallback | `src/lib/security.ts` |
+
+### Corrected documentation
+
+- The dependency-audit row above recorded five high-severity dev-tooling advisories. Re-running `npm audit --audit-level=high` on 2026-10-24 reported **0 vulnerabilities** (production and full). That gate is currently green.
+- The ESLint debt budget is now enforced by a working script at 282 errors / 24 warnings.
+- Uploads and image validation are covered by `tests/unit/media-upload.test.ts` (magic bytes, traversal-shaped names, SVG/HTML rejection, fail-closed `LIVE_UPLOAD_DIR`).
+
+### Still blocked (owner or provider decision)
+
+SQLite→PostgreSQL conversion and committed migrations; `PRODUCTION_DATA_MODE_ENABLED`; shared rate-limit store; enforced admin MFA with bootstrap/recovery; an owner-supplied Resend account, verified sending domain and `EMAIL_FROM` (the code path exists, the provider account does not); SMS sending; payments/payouts/refunds; object storage/CDN to replace single-directory image storage when running more than one instance; upload of seller identity documents (deliberately out of scope — do not improvise); seller-created service/rental/quote/auction listings; independent security review and browser matrix sign-off.

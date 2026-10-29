@@ -49,7 +49,7 @@ function parseWholeNaira(value: string): number | null {
 
 export function parseNaturalQuery(input: string): ParsedQuery {
   const original = input;
-  let text = input.toLowerCase().trim();
+  const text = input.toLowerCase().trim();
   const result: ParsedQuery = { original, q: "", intent:"search", confidence: 0.8 };
   let invalidPriceMention = false;
 

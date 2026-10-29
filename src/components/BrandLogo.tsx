@@ -47,7 +47,7 @@ export default function BrandLogo({
   return (
     <Image
       src={asset.src}
-      alt={decorative ? "" : "Live"}
+      alt={decorative ? "" : "Furnivo"}
       aria-hidden={decorative ? true : undefined}
       width={width ?? asset.width}
       height={height ?? asset.height}

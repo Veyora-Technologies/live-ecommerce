@@ -2,7 +2,7 @@ import { prisma } from "./db";
 import { stockoutRisk } from "./confidence";
 
 /**
- * Live Insights — real records only.
+ * Furnivo Insights — real records only.
  * Listing views / search appearances are NOT tracked yet, so they are
  * reported as null ("not tracked") instead of invented numbers.
  * Demand is aggregated and small groups (<3) are suppressed for privacy.

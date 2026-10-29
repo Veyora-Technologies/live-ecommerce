@@ -1,4 +1,4 @@
-# Live V8 production-readiness engineering report — historical checkpoint
+# Furnivo V8 production-readiness engineering report — historical checkpoint
 
 > Current status is maintained in [`DEPLOYMENT_READINESS.md`](DEPLOYMENT_READINESS.md). This V8 file and [`PRODUCTION_READINESS_V9.md`](PRODUCTION_READINESS_V9.md) are historical evidence snapshots only.
 
@@ -8,7 +8,7 @@
 
 ## Executive summary
 
-V8 preserved Live's identity and existing stack. Work concentrated on evidence-backed auth, inventory, cart, request-boundary, recovery-script, API-contract, seed-safety, and CI improvements. Local checks now include a full optimized build and a 113-test HTTP integration suite against that build with an isolated SQLite fixture. That is meaningful local evidence, not production evidence.
+V8 preserved Furnivo's identity and existing stack. Work concentrated on evidence-backed auth, inventory, cart, request-boundary, recovery-script, API-contract, seed-safety, and CI improvements. Local checks now include a full optimized build and a 113-test HTTP integration suite against that build with an isolated SQLite fixture. That is meaningful local evidence, not production evidence.
 
 The largest release blockers remain: SQLite-only persistence with no committed migrations/production DB, optional administrator MFA, process-local rate limiting, no configured scheduler or observability, unresolved strict-lint debt and five high development-tooling advisories, incomplete browser/accessibility testing, and no production restore/load/security verification.
 
@@ -16,7 +16,7 @@ The largest release blockers remain: SQLite-only persistence with no committed m
 
 - **Modular monolith:** Next.js 16.4.2 / React 19.3.0, TypeScript, Prisma 5.22, SQLite fixture. Existing Next App Router and Prisma remain; no new platform/service architecture was added.
 - **Server-side security:** revocable session cookie, `jti` hash in database, server-enforced route authorization, merchant memberships, admin roles, security headers, origin checks, request ID correlation, payload-length limits, per-process rate limits.
-- **Inventory/reservation:** batch exclusions and reserved quantities affect reservable availability. Product/variant stock mutations now use a compare-and-swap helper within a Prisma transaction. A submitted pending reservation creates a temporary hold immediately; no payment is taken by Live.
+- **Inventory/reservation:** batch exclusions and reserved quantities affect reservable availability. Product/variant stock mutations now use a compare-and-swap helper within a Prisma transaction. A submitted pending reservation creates a temporary hold immediately; no payment is taken by Furnivo.
 - **Planner cart:** item-by-item pickup submissions recheck current merchant/branch/stock/variant/price; separate reservations allow partial success; deterministic idempotency keys and cart-item deletion are in the same transaction; unsupported delivery is rejected; pickup windows are left unset rather than fabricated.
 - **External capabilities:** no payment, POS, supplier, delivery dispatch, road routing, mail/SMS, vision, external AI, shared cache/queue, production database, or production host is configured. API-key records are not accepted as bearer credentials. Generic background-job event handlers are not implemented.
 
@@ -36,7 +36,7 @@ More detail: [`ARCHITECTURE.md`](ARCHITECTURE.md), [`API.md`](API.md), and [`INT
 
 ## Geography data provenance
 
-The local geography import is based on the Nigeria COD administrative-boundaries dataset published through HDX (metadata lists 37 admin-1 units—36 states plus FCT—and 774 LGAs; the dataset page records CC BY-IGO terms and a 2025-10-30 review date). The bundled workbook is `prisma/data/nga_admin_boundaries.xlsx`; its capital-sheet P-codes differ from admin-sheet P-codes, so capitals are not joined by P-code. Unit tests cover the supported geography records, but feature completeness/currentness, attribution obligations, and redistribution licensing must be rechecked before production. A selectable/searchable geography is not proof of Live's merchant or delivery coverage.
+The local geography import is based on the Nigeria COD administrative-boundaries dataset published through HDX (metadata lists 37 admin-1 units—36 states plus FCT—and 774 LGAs; the dataset page records CC BY-IGO terms and a 2025-10-30 review date). The bundled workbook is `prisma/data/nga_admin_boundaries.xlsx`; its capital-sheet P-codes differ from admin-sheet P-codes, so capitals are not joined by P-code. Unit tests cover the supported geography records, but feature completeness/currentness, attribution obligations, and redistribution licensing must be rechecked before production. A selectable/searchable geography is not proof of Furnivo's merchant or delivery coverage.
 
 ## Authentication, UI, backend, and security tests
 

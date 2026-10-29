@@ -1,4 +1,5 @@
 import { getCurrentUser } from "@/lib/auth";
+import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { Header } from "@/components/Header";
 import { notFound, redirect } from "next/navigation";
@@ -73,7 +74,7 @@ export default async function ListPage({ params }: { params: Promise<{ id: strin
     <div className="min-h-screen">
       <Header user={user} />
       <main className="mx-auto max-w-[900px] px-4 py-6">
-        <a href="/lists" className="text-sm text-slate-600">← All lists</a>
+        <Link href="/lists" className="text-sm text-slate-600">← All lists</Link>
         <h1 className="mt-2 font-black text-2xl">{list.name}</h1>
         <p className="text-sm text-slate-500">{list.description || ""}{list.spendingLimit ? ` • Limit ${formatNaira(list.spendingLimit)}` : ""}</p>
         <ListDetail initial={JSON.parse(JSON.stringify(safeList))} products={JSON.parse(JSON.stringify(products))} />

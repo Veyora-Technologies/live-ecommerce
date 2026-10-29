@@ -1,4 +1,4 @@
-# Live — Prioritised Roadmap (post-2.0)
+# Furnivo — Prioritised Roadmap (post-2.0)
 
 ## Next release (highest value / lowest risk)
 1. **Impression logging (privacy-safe)** → unlock honest search-appearance & conversion metrics in Insights (aggregate, k-anonymised).

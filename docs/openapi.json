@@ -1,7 +1,7 @@
 {
   "openapi": "3.0.3",
   "info": {
-    "title": "Live HTTP API",
+    "title": "Furnivo HTTP API",
     "version": "8.0.0",
     "description": "A deliberately scoped contract for critical authentication, discovery, reservation, planner-cart, health, and job endpoints verified in the repository. It is not a complete API inventory. Other routes must be reviewed against their implementation and tests before client generation. No production hostname or external provider integration is configured. Merchant API-key records are not accepted by routes; no bearer-auth scheme is advertised."
   },

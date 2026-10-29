@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { extractUniversalSearchTerms, isActivityFocusedQuery } from "@/lib/unified-search";
 
-describe("unified Live search interpretation", () => {
+describe("unified Furnivo search interpretation", () => {
   it("extracts bounded, deduplicated intent terms without location boilerplate", () => {
     expect(extractUniversalSearchTerms("Find a barber near me in Jos for tomorrow" )).toEqual(["barber", "jos", "tomorrow"]);
     expect(extractUniversalSearchTerms("rice rice under ₦10,000")).toEqual(["rice"]);

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Copy, Share2 } from "lucide-react";
+import { Share2 } from "lucide-react";
 
 export default function ShareButton({ title, text }: { title: string; text?: string }) {
   const [message, setMessage] = useState("");

@@ -1,4 +1,4 @@
-# Live V9 production-grade engineering report — historical snapshot (superseded)
+# Furnivo V9 production-grade engineering report — historical snapshot (superseded)
 
 > Current architecture, feature status, verification evidence, and release decision are maintained in [`DEPLOYMENT_READINESS.md`](DEPLOYMENT_READINESS.md). This V9 file is retained for historical context and is not current acceptance evidence.
 
@@ -8,7 +8,7 @@
 
 ## Executive outcome
 
-The existing Live application was preserved as a modular monolith and audited before the V9 changes. Targeted defects were fixed and verified locally. The current evidence includes a production build and a 114-test HTTP integration run against that build with an isolated, randomly credentialed SQLite fixture. These results do not prove production operation, PostgreSQL transaction behaviour, supported-browser compatibility, recovery, sustained capacity, or deployment.
+The existing Furnivo application was preserved as a modular monolith and audited before the V9 changes. Targeted defects were fixed and verified locally. The current evidence includes a production build and a 114-test HTTP integration run against that build with an isolated, randomly credentialed SQLite fixture. These results do not prove production operation, PostgreSQL transaction behaviour, supported-browser compatibility, recovery, sustained capacity, or deployment.
 
 The repository is **not approved for a real launch**. The highest-risk blockers are the absence of a production host/domain and PostgreSQL migration path, optional administrator MFA, no monitored reservation-expiry scheduler, process-local rate limiting, no central observability/incident service, no production restore drill, incomplete browser/accessibility verification, and unresolved static-analysis/development dependency debt.
 

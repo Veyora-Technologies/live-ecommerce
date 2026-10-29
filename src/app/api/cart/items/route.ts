@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
   if (!parsed.success) {
     const deliveryRequested = typeof body === "object" && body !== null && "fulfilment" in body && body.fulfilment === "DELIVERY";
     return NextResponse.json({
-      error: deliveryRequested ? "Live does not arrange delivery. Add this item for pickup only." : "Invalid plan item details",
+      error: deliveryRequested ? "Furnivo does not arrange delivery. Add this item for pickup only." : "Invalid plan item details",
     }, { status: 400 });
   }
 

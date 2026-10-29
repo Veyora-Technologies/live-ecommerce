@@ -20,9 +20,12 @@
     "db:seed:v3": "tsx prisma/seed-v3.ts",
     "db:seed:geography": "tsx prisma/seed-geography.ts",
     "db:seed:marketplace": "tsx prisma/seed-marketplace-categories.ts",
-    "db:encrypt-secrets": "tsx scripts/encrypt-existing-secrets.ts"
+    "db:encrypt-secrets": "tsx scripts/encrypt-existing-secrets.ts",
+    "postinstall": "node scripts/postinstall.mjs",
+    "lint:baseline": "node scripts/check-eslint-baseline.mjs --update"
   },
   "dependencies": {
+    "@prisma/client": "^5.22.0",
     "bcryptjs": "^3.0.3",
     "date-fns": "^4.4.0",
     "jsonwebtoken": "^9.0.3",
@@ -37,7 +40,7 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
-    "@prisma/client": "^5.22.0",
+    "@playwright/test": "^1.64.1",
     "@tailwindcss/turbopack": "^4",
     "@types/bcryptjs": "^2.4.6",
     "@types/jsonwebtoken": "^9.0.10",

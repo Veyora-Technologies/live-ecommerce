@@ -1,4 +1,4 @@
-# Live threat model and residual-risk register
+# Furnivo threat model and residual-risk register
 
 Living engineering reference. OWASP ASVS 5.0.0 and NIST SSDF guide review activity; this document is not an assessment or certification. No independent penetration test has been completed.
 

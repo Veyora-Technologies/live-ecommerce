@@ -1,0 +1,8 @@
+Contact: mailto:security@live.ng
+Expires: 2027-12-31T23:59:59.000Z
+Preferred-Languages: en
+Canonical: /.well-known/security.txt
+Policy: /legal
+# Furnivo is not deployed to production. This file is a placeholder until the
+# operator profile (legal entity, monitored contact address) is verified in
+# docs/DEPLOYMENT_READINESS.md §6; replace the Contact value before launch.

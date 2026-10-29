@@ -40,7 +40,7 @@ export default function ClientCreate() {
     <fieldset className="grid sm:grid-cols-2 gap-3 text-sm">
       <legend className="text-xs font-semibold uppercase text-slate-500">Fulfilment you genuinely offer</legend>
       <label className="flex items-start gap-2 rounded-xl border border-slate-200 p-3"><input type="checkbox" name="pickupAvailable" className="mt-1" /><span><strong>Pickup</strong><small className="block text-xs text-slate-500">Customers can collect from this business.</small></span></label>
-      <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900 sm:col-span-2">Delivery integrations are not configured. Live does not verify or arrange delivery; customers should confirm any seller-managed arrangement directly with the business.</p>
+      <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900 sm:col-span-2">Delivery integrations are not configured. Furnivo does not verify or arrange delivery; customers should confirm any seller-managed arrangement directly with the business.</p>
     </fieldset>
     <p className="text-xs text-slate-500">New businesses are pending review. Selecting a location is not independent verification; stock and merchant coverage are not assumed.</p>
     {error && <p className="text-sm text-red-700" role="alert">{error}</p>}

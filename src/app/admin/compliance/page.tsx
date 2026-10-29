@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 import ComplianceClient from "./ComplianceClient";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Compliance casework · Live operations" };
+export const metadata = { title: "Compliance casework · Furnivo operations" };
 const allowedRoles = ["SUPER", "SECURITY", "REVIEWER", "SUPPORT"] as const;
 
 export default async function CompliancePage() {

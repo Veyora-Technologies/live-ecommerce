@@ -63,7 +63,7 @@ export async function POST(req: NextRequest){
   const gate=await getLegalReleaseGate("MARKETPLACE");
   if(!gate.ready) return NextResponse.json({error:gate.publicMessage,code:"LEGAL_RELEASE_GATE",policyUrl:"/legal"},{status:503,headers:{"Cache-Control":"no-store"}});
   const policyCheck=await requirePolicyAcceptances({userId:user.id,keys:["PLATFORM_TERMS","PRIVACY_NOTICE","CONSUMER_TERMS"]});
-  if(!policyCheck.allowed) return NextResponse.json({error:policyCheck.message||"Review Live policies before creating an item request.",code:policyCheck.code,missingPolicies:policyCheck.missing,policyUrl:"/legal"},{status:policyCheck.code==="LEGAL_RELEASE_GATE"?503:428});
+  if(!policyCheck.allowed) return NextResponse.json({error:policyCheck.message||"Review Furnivo policies before creating an item request.",code:policyCheck.code,missingPolicies:policyCheck.missing,policyUrl:"/legal"},{status:policyCheck.code==="LEGAL_RELEASE_GATE"?503:428});
   const parsed=itemRequestSchema.safeParse(await req.json().catch(()=>null));
   if(!parsed.success) return NextResponse.json({error:parsed.error.issues[0]?.message||"Valid item request details are required."},{status:400});
   const {productName,category,brand,specs,quantity,area,maxBudget,neededBy}=parsed.data;
@@ -88,7 +88,7 @@ export async function POST(req: NextRequest){
     return NextResponse.json({
       error:"Matches already available",
       matches: existing.map(p=>({ id:p.id, name:p.name, price:p.price, merchant:p.merchant.businessName, area:p.merchant.area })),
-      hint:"Live listings match this request. Check each merchant's location, terms, and current stock before travelling."
+      hint:"Furnivo listings match this request. Check each merchant's location, terms, and current stock before travelling."
     },{status:409});
   }
 

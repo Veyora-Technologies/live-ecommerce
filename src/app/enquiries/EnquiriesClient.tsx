@@ -112,7 +112,7 @@ export default function EnquiriesClient() {
   };
 
   return <main className="mx-auto max-w-[1100px] px-4 py-6 pb-24">
-    <p className="text-xs font-bold uppercase tracking-wide text-emerald-800">LIVE · private conversations</p>
+    <p className="text-xs font-bold uppercase tracking-wide text-emerald-800">FURNIVO · private conversations</p>
     <h1 className="mt-1 text-2xl font-black text-slate-950">Marketplace enquiries</h1>
     <p className="mt-2 max-w-3xl text-sm text-slate-600">Messages are visible only to the buyer and authorized merchant participants. Phone numbers and addresses are not shared by this feature. Enquiries, reservations, and appointments are separate records.</p>
     {notice && <p role="status" className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900">{notice}</p>}
@@ -148,7 +148,7 @@ export default function EnquiriesClient() {
           </div>
           {selected.status === "OPEN" || selected.status === "ANSWERED" ? <form onSubmit={sendMessage} className="mt-4 border-t border-slate-100 pt-4">
             <label htmlFor="enquiry-reply" className="text-xs font-semibold uppercase text-slate-500">Reply · max 1,000 characters</label>
-            <textarea id="enquiry-reply" value={draft} onChange={(event) => setDraft(event.target.value.slice(0, 1000))} maxLength={1000} rows={3} required className="mt-1 w-full rounded-xl border border-slate-300 p-3 text-sm" placeholder="Write a reply in Live" />
+            <textarea id="enquiry-reply" value={draft} onChange={(event) => setDraft(event.target.value.slice(0, 1000))} maxLength={1000} rows={3} required className="mt-1 w-full rounded-xl border border-slate-300 p-3 text-sm" placeholder="Write a reply in Furnivo" />
             <div className="flex flex-wrap justify-between gap-2"><span className="text-xs text-slate-500">{draft.length}/1,000 · Do not send payment or sensitive identity details.</span><div className="flex gap-2"><button type="button" disabled={busy} onClick={() => void closeThread()} className="min-h-10 rounded-full border border-slate-300 px-4 text-sm font-semibold disabled:opacity-50">Close conversation</button><button disabled={busy || !draft.trim()} className="min-h-10 rounded-full bg-live-black px-5 text-sm font-semibold text-white disabled:opacity-50">{busy ? "Sending…" : "Send reply"}</button></div></div>
           </form> : <p className="mt-4 border-t border-slate-100 pt-4 text-sm text-slate-500">This conversation is closed. It does not change a reservation or appointment.</p>}
           <details className="mt-4 border-t border-slate-100 pt-3">

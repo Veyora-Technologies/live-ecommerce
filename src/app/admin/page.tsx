@@ -2,6 +2,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { notFound, redirect } from "next/navigation";
 import AdminClient from "./AdminClient";
+import { normalizeAdminRole } from "@/lib/admin-roles";
 export const dynamic = "force-dynamic";
 
 export default async function AdminPage() {
@@ -10,6 +11,11 @@ export default async function AdminPage() {
   if (!user.isAdmin) notFound();
 
   const adminProfile = await prisma.user.findUnique({ where: { id: user.id }, select: { adminRole: true } });
+  const adminRole = normalizeAdminRole(adminProfile?.adminRole);
+  // `isAdmin` alone is not an operational role. An account with adminRole NONE
+  // must not receive cross-tenant data (user emails/phones, merchant list) that
+  // it cannot act on; the API routes enforce the same rule.
+  if (adminRole === "NONE") notFound();
   const [merchants, reservations, reports, users, audit] = await Promise.all([
     prisma.merchant.findMany({
       orderBy: { createdAt: "desc" },
@@ -44,5 +50,5 @@ export default async function AdminPage() {
     }),
   ]);
 
-  return <AdminClient user={{ ...user, adminRole: adminProfile?.adminRole || "NONE" }} merchants={merchants} reservations={reservations} reports={reports} users={users} audit={audit} />;
+  return <AdminClient user={{ ...user, adminRole }} merchants={merchants} reservations={reservations} reports={reports} users={users} audit={audit} />;
 }

@@ -27,10 +27,10 @@ export default async function LegalPoliciesPage() {
 
   return <main className="min-h-screen bg-slate-50 px-4 py-8 text-slate-900">
     <div className="mx-auto max-w-4xl">
-      <Link href="/" className="text-sm font-semibold text-emerald-800 underline">← Back to Live</Link>
-      <p className="mt-6 text-xs font-bold uppercase tracking-wide text-emerald-800">Live policy and release information</p>
+      <Link href="/" className="text-sm font-semibold text-emerald-800 underline">← Back to Furnivo</Link>
+      <p className="mt-6 text-xs font-bold uppercase tracking-wide text-emerald-800">Furnivo policy and release information</p>
       <h1 className="mt-1 text-3xl font-black">Policies, disclosures and contact details</h1>
-      <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-700">This page displays policy versions actually published in Live. It does not represent that external legal review has occurred unless a release gate below says its required review record is present. Nothing here removes rights that cannot lawfully be excluded.</p>
+      <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-700">This page displays policy versions actually published in Furnivo. It does not represent that external legal review has occurred unless a release gate below says its required review record is present. Nothing here removes rights that cannot lawfully be excluded.</p>
 
       <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-5" aria-labelledby="operator-heading">
         <h2 id="operator-heading" className="font-bold">Platform operator and contacts</h2>
@@ -57,7 +57,7 @@ export default async function LegalPoliciesPage() {
         {!marketplaceGate.ready && marketplaceGate.missing.length > 0 && <p className="mt-2 text-sm">Not recorded: {marketplaceGate.missing.join(", ")}.</p>}
       </section>
 
-      {!visiblePolicies.length ? <section className="mt-6 rounded-2xl border border-amber-300 bg-white p-5" role="status"><h2 className="font-bold">No current policy versions published</h2><p className="mt-2 text-sm text-slate-700">Live has no effective published policies to display. No generic placeholder terms are substituted.</p></section> : <section className="mt-7" aria-labelledby="policies-heading">
+      {!visiblePolicies.length ? <section className="mt-6 rounded-2xl border border-amber-300 bg-white p-5" role="status"><h2 className="font-bold">No current policy versions published</h2><p className="mt-2 text-sm text-slate-700">Furnivo has no effective published policies to display. No generic placeholder terms are substituted.</p></section> : <section className="mt-7" aria-labelledby="policies-heading">
         <h2 id="policies-heading" className="text-xl font-black">Current published versions</h2>
         <div className="mt-4 space-y-4">
           {visiblePolicies.map((policy) => {

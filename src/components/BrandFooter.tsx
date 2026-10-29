@@ -15,17 +15,17 @@ export default function BrandFooter() {
     <footer className="live-footer">
       <div className="live-wrap live-footer-inner">
         <div className="live-footer-brand">
-          <Link href="/" aria-label="Live home" className="live-footer-logo-link">
+          <Link href="/" aria-label="Furnivo home" className="live-footer-logo-link">
             <BrandLogo variant="inverse" width={148} height={45} decorative />
           </Link>
-          <p className="live-footer-tagline">Everything You Need. All in One Place.</p>
-          <p className="live-footer-note">Shop. Sell. Service. Grow.</p>
+          <p className="live-footer-tagline">Shop · Sell · Grow</p>
+          <p className="live-footer-note">More than a marketplace. It&rsquo;s your next move.</p>
         </div>
         <nav className="live-footer-links" aria-label="Footer">
           {footerLinks.map(({ href, label }) => <Link key={href} href={href}>{label}</Link>)}
         </nav>
         <div className="live-footer-bottom">
-          <span>Live · Nigeria</span>
+          <span>Furnivo · Nigeria</span>
           <span>Listing information is supplied by merchants and can change. Check details before making a decision.</span>
         </div>
       </div>

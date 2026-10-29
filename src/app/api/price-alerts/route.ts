@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
   });
   if (!product || !await isPublicMarketplaceProduct(product.id)) return NextResponse.json({ error: "Public product listing not found" }, { status: 404 });
   if (!getMarketCurrencyConfiguration(DEFAULT_MARKET_CODE, product.currency || DEFAULT_MARKET_CODE)) {
-    return NextResponse.json({ error: "Price alerts are not available for this listing's currency in the active market. Live has not converted the amount.", code: "CURRENCY_NOT_SUPPORTED" }, { status: 409, headers: { "Cache-Control": "no-store" } });
+    return NextResponse.json({ error: "Price alerts are not available for this listing's currency in the active market. Furnivo has not converted the amount.", code: "CURRENCY_NOT_SUPPORTED" }, { status: 409, headers: { "Cache-Control": "no-store" } });
   }
   const existing = await prisma.priceAlert.findFirst({ where: { userId: user.id, productId: product.id, thresholdKobo, active: true } });
   if (existing) return NextResponse.json({ alert: existing, note: "This in-app price target is already active; no duplicate was created." });

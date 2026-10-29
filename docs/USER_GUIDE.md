@@ -1,6 +1,6 @@
-# Live — Consumer Guide
+# Furnivo — Consumer Guide
 
-1. **Open Live** on your phone: `https://live.example.com`
+1. **Open Furnivo** on your phone: `https://live.example.com`
 2. **Allow location** or pick area (Wuse, Garki, etc.)
 3. **Search**: type “Paracetamol near me” or “Rice in stock in Wuse” — use filters (Open now, In stock, Price)
 4. **Check details**: price, distance, open status, last confirmed, verification badge

@@ -4,7 +4,7 @@ import { formatNaira } from "@/lib/utils";
 import { availabilityConfidence } from "@/lib/confidence";
 
 export default function ListDetail({ initial, products }: any){
-  const [list,setList]=useState(initial);
+  const [list]=useState(initial);
   const [sel,setSel]=useState(products[0]?.id||"");
   const [custom,setCustom]=useState("");
   const [qty,setQty]=useState(1);
@@ -67,7 +67,7 @@ export default function ListDetail({ initial, products }: any){
                 <input type="checkbox" checked={it.checked} onChange={()=>toggle(it)} className="mt-1"/>
                 <span className="flex-1">
                   <span className={`font-semibold ${it.checked?"line-through text-slate-400":""}`}>{it.product?.name||it.customName} ×{it.quantity}</span>
-                  {it.product && <span className="block text-xs text-slate-500">{it.product.merchant?.businessName} • {it.product.availability} • {conf?.label} • {it.product.priceAvailable ? formatNaira(BigInt(it.product.price) * BigInt(it.quantity)) : `Price unavailable in ${it.product.currencyCode}; Live has not converted it.`}</span>}
+                  {it.product && <span className="block text-xs text-slate-500">{it.product.merchant?.businessName} • {it.product.availability} • {conf?.label} • {it.product.priceAvailable ? formatNaira(BigInt(it.product.price) * BigInt(it.quantity)) : `Price unavailable in ${it.product.currencyCode}; Furnivo has not converted it.`}</span>}
                 </span>
               </label>
             );
@@ -75,7 +75,7 @@ export default function ListDetail({ initial, products }: any){
           {(!list.items||list.items.length===0) && <p className="text-sm text-slate-500">No items yet.</p>}
         </div>
         <button onClick={runCheck} disabled={checking} className="mt-4 w-full h-11 rounded-full bg-live-black text-white font-semibold">{checking?"Checking stock…":"Check full-list availability"}</button>
-        {check && <div className="mt-3 bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-sm text-emerald-900">{check.costEstimateComplete ? "Estimate" : "Known-price estimate"} {formatNaira(check.totalEstimate)} across {(check.items || []).length} items. {check.costEstimateComplete ? "" : "Some items have no supported price, so this is not a complete total or budget check. "}Items are sourced per merchant — Live does not claim this is one combined checkout. Reserve each item with its own merchant.</div>}
+        {check && <div className="mt-3 bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-sm text-emerald-900">{check.costEstimateComplete ? "Estimate" : "Known-price estimate"} {formatNaira(check.totalEstimate)} across {(check.items || []).length} items. {check.costEstimateComplete ? "" : "Some items have no supported price, so this is not a complete total or budget check. "}Items are sourced per merchant — Furnivo does not claim this is one combined checkout. Reserve each item with its own merchant.</div>}
       </div>
 
       <div className="space-y-4">

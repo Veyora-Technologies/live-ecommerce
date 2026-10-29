@@ -45,7 +45,7 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{id:stri
     exactAtOtherMerchants: exactElsewhere.map(p=>({ id:p.id, name:p.name, price:p.price, availability:p.availability, merchant:p.merchant.businessName, area:p.merchant.area })),
     alternatives: isRegulated ? [] : alternatives.map(p=>({ id:p.id, name:p.name, brand:p.brand, price:p.price, priceDiff:(p as any).priceDiff, availability:p.availability, merchant:p.merchant.businessName })),
     regulatedNotice: isRegulated
-      ? "This is a pharmacy product. Live does not recommend substitute medicines. The exact product at other merchants is shown above — for alternatives, please ask a licensed pharmacist."
+      ? "This is a pharmacy product. Furnivo does not recommend substitute medicines. The exact product at other merchants is shown above — for alternatives, please ask a licensed pharmacist."
       : "Alternatives are same-category listings, not guaranteed equivalent. Check size/spec/brand before buying.",
     note: "Two products are never merged just because names look similar. Specifications are shown so you can verify equivalence yourself.",
   });

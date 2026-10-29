@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 import LegalAdminClient from "./LegalAdminClient";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Legal and trust controls · Live operations" };
+export const metadata = { title: "Legal and trust controls · Furnivo operations" };
 
 export default async function LegalAdminPage() {
   const user = await getCurrentUser();

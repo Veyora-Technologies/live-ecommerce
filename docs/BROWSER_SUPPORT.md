@@ -1,4 +1,4 @@
-# Live browser-support policy
+# Furnivo browser-support policy
 
 This is a **support target**, not a completed compatibility audit. No cross-engine or responsive browser run was performed in the current verification pass; previous workspace checks did not retain browser-engine/version metadata.
 

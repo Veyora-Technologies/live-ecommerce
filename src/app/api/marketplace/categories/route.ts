@@ -4,6 +4,7 @@ import { getLegalReleaseGate } from "@/lib/legal";
 import { isMarketplaceWorkflowImplemented, publicMarketplaceCategoryWhere } from "@/lib/marketplace";
 import { DEFAULT_MARKET_CODE } from "@/lib/market-config";
 import { MarketUnavailableError, requireOperationalMarket } from "@/lib/market-runtime";
+import { CACHE_POLICIES, publicCache } from "@/lib/http-cache";
 
 export const dynamic = "force-dynamic";
 
@@ -24,7 +25,9 @@ export async function GET(request: NextRequest) {
   const categories = rows.filter(isMarketplaceWorkflowImplemented).map(({ slug, name, description, listingKind, requiresReview, requiresSellerVerification, schemaVersion, sortOrder }) => ({
     slug, name, description, listingKind, requiresReview, requiresSellerVerification, schemaVersion, sortOrder,
   }));
+  // Reference data, but only shared-cacheable when the caller is anonymous:
+  // `publicCache` degrades to no-store if the request carried a session cookie.
   return NextResponse.json({ market: { countryCode: market.countryCode, countryName: market.countryName }, categories }, {
-    headers: { "Cache-Control": "public, max-age=60, stale-while-revalidate=300" },
+    headers: publicCache(CACHE_POLICIES.marketplaceReference, request),
   });
 }
