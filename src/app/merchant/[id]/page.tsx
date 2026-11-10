@@ -6,6 +6,7 @@ import { availabilityConfidence } from "@/lib/confidence";
 import Link from "next/link";
 import MerchantExtras from "./MerchantExtras";
 import MerchantQrDisplay from "@/components/MerchantQrDisplay";
+import MerchantContactActions from "@/components/MerchantContactActions";
 import { withReservableAvailability } from "@/lib/inventory-availability";
 import { merchantLocationLabel } from "@/lib/location-label";
 import { publicMarketplaceProductIds, publicMarketplaceServiceIds, safeListingImageUrl } from "@/lib/marketplace";
@@ -18,9 +19,9 @@ export const dynamic="force-dynamic";
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
   const merchant = await prisma.merchant.findFirst({ where: { id, status: "APPROVED" }, select: { id: true, businessName: true, description: true, imageUrl: true, countryCode: true } });
-  if (!merchant || !merchantBelongsToMarket(merchant, DEFAULT_MARKET_CODE)) return { title: "Business unavailable · Live", robots: { index: false, follow: false } };
-  const title = `${merchant.businessName} · Live`;
-  const description = (merchant.description || `View ${merchant.businessName} on Live. Merchant-provided profile information is not independent verification.`).slice(0, 300);
+  if (!merchant || !merchantBelongsToMarket(merchant, DEFAULT_MARKET_CODE)) return { title: "Business unavailable · Furnivo", robots: { index: false, follow: false } };
+  const title = `${merchant.businessName} · Furnivo`;
+  const description = (merchant.description || `View ${merchant.businessName} on Furnivo. Merchant-provided profile information is not independent verification.`).slice(0, 300);
   const baseUrl = getPublicBaseUrl();
   const canonical = baseUrl ? `${baseUrl}/merchant/${encodeURIComponent(id)}` : undefined;
   const image = safeListingImageUrl(merchant.imageUrl) || undefined;
@@ -72,7 +73,7 @@ export default async function MerchantPage({ params }: { params: Promise<{id:str
               </div>
               <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
                 <div className="bg-slate-50 rounded-xl p-3"><div className="font-semibold">Address</div><div className="text-slate-600">{merchant.address}, {merchant.area}, {merchant.city}</div></div>
-                <div className="bg-slate-50 rounded-xl p-3"><div className="font-semibold">Contact</div><div className="text-slate-600">{merchant.phone} {merchant.email?`• ${merchant.email}`:""}</div></div>
+                <div className="bg-slate-50 rounded-xl p-3"><div className="font-semibold">Contact</div><div className="text-slate-600">Released to signed-in accounts — never shown publicly.</div></div>
               </div>
               {merchant.branches.length>0 && (
                 <div className="mt-4">
@@ -90,9 +91,9 @@ export default async function MerchantPage({ params }: { params: Promise<{id:str
                 <div className="text-sm font-semibold opacity-70">Opening hours</div>
                 <div className="mt-2 text-sm whitespace-pre-wrap">{hours? Object.entries(hours).map(([k,v])=>`${k}: ${v}`).join("\n") : (merchant.openingHours || "Hours not provided")}</div>
                 <div className="mt-1 text-xs text-white/60">Store open/closed is separate from product stock and from whether reservations are being accepted.</div>
-                <div className="mt-4 flex gap-2">
-                  <a href={`tel:${merchant.phone}`} className="flex-1 h-10 grid place-items-center rounded-full bg-white text-slate-900 font-semibold text-sm">Call</a>
-                  {merchant.lat != null && merchant.lng != null && <a href={`https://www.google.com/maps/search/?api=1&query=${merchant.lat},${merchant.lng}`} target="_blank" rel="noreferrer" className="flex-1 h-10 grid place-items-center rounded-full bg-live-green-ink text-white font-semibold text-sm">Map location</a>}
+                <div className="mt-4 space-y-2">
+                  <MerchantContactActions merchantId={merchant.id} signedIn={Boolean(user)} />
+                  {merchant.lat != null && merchant.lng != null && <a href={`https://www.google.com/maps/search/?api=1&query=${merchant.lat},${merchant.lng}`} target="_blank" rel="noreferrer" className="h-10 grid place-items-center rounded-full bg-live-green-ink text-white font-semibold text-sm">Map location</a>}
                 </div>
               </div>
               <div className="bg-white border border-slate-200 rounded-2xl p-4 flex gap-3 items-center">

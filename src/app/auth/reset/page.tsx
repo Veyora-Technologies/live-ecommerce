@@ -26,7 +26,7 @@ function Inner() {
       setDone(true);
       setTimeout(() => router.push("/auth/login"), 2000);
     } catch {
-      setErr("Unable to reach Live. Check your connection and try again.");
+      setErr("Unable to reach Furnivo. Check your connection and try again.");
     } finally {
       setBusy(false);
     }

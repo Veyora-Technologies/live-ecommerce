@@ -65,7 +65,7 @@ export default function LoginForm() {
       }
       router.replace(destination);
     } catch {
-      setErr("Unable to reach Live. Check your connection and try again.");
+      setErr("Unable to reach Furnivo. Check your connection and try again.");
     } finally {
       setLoading(false);
     }
@@ -74,7 +74,7 @@ export default function LoginForm() {
   return (
     <form onSubmit={submit} className="w-full min-w-0 max-w-[420px] rounded-[24px] border border-slate-200 bg-white p-6 sm:p-8">
       <div className="live-auth-brand-mark" aria-hidden="true"><BrandLogo variant="symbol" width={40} height={40} className="live-auth-brand-light" decorative /><BrandLogo variant="symbol-inverse" width={40} height={40} className="live-auth-brand-dark" decorative /></div>
-      <h1 className="mt-4 text-2xl font-black">Welcome back to Live</h1>
+      <h1 className="mt-4 text-2xl font-black">Welcome back to Furnivo</h1>
       <p className="text-sm text-slate-500">Sign in to reserve, track activity, and manage an authorized business workspace.</p>
       {err && <div id="login-error" className="mt-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700" role="alert" aria-live="assertive">{err}</div>}
       {warn && <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800" role="status" aria-live="polite">{warn} Redirecting…</div>}
@@ -131,7 +131,7 @@ export default function LoginForm() {
           aria-describedby={err ? "login-error" : "login-mfa-help"}
           className="mt-1 h-11 w-full rounded-xl border border-slate-200 px-4 tracking-[0.4em] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600"
         />
-        <p id="login-mfa-help" className="mt-2 text-xs text-slate-500">Open your authenticator app and enter the current code for Live.</p>
+        <p id="login-mfa-help" className="mt-2 text-xs text-slate-500">Open your authenticator app and enter the current code for Furnivo.</p>
         <button
           type="button"
           onClick={() => { setNeedsMfa(false); setMfaCode(""); setErr(""); }}
@@ -143,7 +143,7 @@ export default function LoginForm() {
         {loading ? "Checking…" : needsMfa ? "Verify code" : "Sign in"}
       </button>
       <div className="mt-4 text-center text-sm">No account? <Link href="/auth/register" className="font-semibold text-live-green-ink underline-offset-2 hover:underline">Create account</Link></div>
-      <p className="mt-6 text-center text-xs leading-relaxed text-slate-500">Use the credentials associated with your Live account. Never share your password or authenticator code.</p>
+      <p className="mt-6 text-center text-xs leading-relaxed text-slate-500">Use the credentials associated with your Furnivo account. Never share your password or authenticator code.</p>
     </form>
   );
 }

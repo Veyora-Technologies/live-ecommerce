@@ -7,7 +7,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ============ COUNTRY-AWARE GEOGRAPHY (Live 5.0 foundation) ============
+// ============ COUNTRY-AWARE GEOGRAPHY (v5 foundation) ============
 model Country {
   code                String               @id // ISO 3166-1 alpha-2 (NG)
   name                String
@@ -862,12 +862,19 @@ model BackgroundJob {
   payload   String // JSON
   status    String    @default("PENDING") // PENDING, PROCESSING, SUCCESS, FAILED, DEAD_LETTER
   attempts  Int       @default(0)
+  maxAttempts Int     @default(5)
   nextRunAt DateTime?
+  // Last failure, already scrubbed of secrets by src/lib/jobs.ts. Kept so an
+  // operator can tell a poison message from a transient outage without
+  // re-running it.
+  lastError String?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
   @@index([status])
   @@index([type])
+  // The claim query filters on status and orders by nextRunAt.
+  @@index([status, nextRunAt])
 }
 
 model ApiKey {
@@ -893,6 +900,10 @@ model Session {
   lastSeenAt DateTime  @default(now())
   expiresAt  DateTime
   revokedAt  DateTime?
+  // Set when the holder re-proved their password (re-authentication). Sensitive
+  // actions require this to be recent; it is separate from `lastSeenAt` because
+  // "active" and "recently proved who they are" are different questions.
+  reauthenticatedAt DateTime?
 
   @@index([userId])
 }

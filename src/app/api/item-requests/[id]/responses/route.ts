@@ -52,7 +52,7 @@ export async function POST(req:NextRequest, {params}:{params:Promise<{id:string}
   if(!parsed.success) return NextResponse.json({error:"Provide a merchant, a response message, and valid optional quote details."},{status:400});
   const { merchantId, productId, message, price, branchId, quantityAvailable, validUntil, fulfilment, additionalFees }=parsed.data;
   if (fulfilment === "DELIVERY" && !isMarketIntegrationReady(DEFAULT_MARKET_CODE, "deliveryIntegrations")) {
-    return NextResponse.json({ error: "Delivery quotes are unavailable because Live has no configured delivery integration.", code: "FEATURE_NOT_CONFIGURED" }, { status: 503, headers: { "Cache-Control": "no-store" } });
+    return NextResponse.json({ error: "Delivery quotes are unavailable because Furnivo has no configured delivery integration.", code: "FEATURE_NOT_CONFIGURED" }, { status: 503, headers: { "Cache-Control": "no-store" } });
   }
   const role=await merchantRole(merchantId,user.id);
   if(!canEditInventory(role)) return NextResponse.json({error:"Forbidden"},{status:403});

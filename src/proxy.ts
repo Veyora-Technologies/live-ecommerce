@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+import { clientIp } from "@/lib/client-ip";
 
 /**
  * Next.js 16 proxy protections (§21/§45):
  * - Rate limiting (in-memory per instance; move to Redis for multi-instance)
+ * - Trusted-proxy aware client IPs (TRUSTED_PROXY_HOPS); forwarded headers are
+ *   only honoured as far as the configured proxy chain makes them trustworthy
  * - Security headers on every response
  * - Request correlation IDs (x-request-id)
  * - Payload-size guard for APIs
@@ -69,6 +72,58 @@ const SECURITY_HEADERS: Record<string, string> = {
   ...(process.env.NODE_ENV === "production" ? { "Strict-Transport-Security": "max-age=63072000; includeSubDomains; preload" } : {}),
 };
 
+/**
+ * Requests for files that must never be served.
+ *
+ * These are the paths a scanner tries on every host it finds, and they are also
+ * what a misconfigured static handler would leak. Answering 404 (rather than
+ * 403) keeps the response indistinguishable from any other missing page, so the
+ * probe learns nothing about what exists.
+ *
+ * `.well-known` is deliberately not matched: it is a legitimate standards path
+ * (security.txt), not a dotfile leak.
+ */
+export const SENSITIVE_PATH = new RegExp(
+  "^(?:" + [
+    // NOTE: every alternative carries its own leading slash. Putting a single
+    // "/" before the group would bind it to the first alternative only, which
+    // silently let /.git/config, /id_rsa and every "*.sql" through — caught by
+    // tests/unit/request-guards.test.ts.
+    "/\\.env(?:\\.[\\w.-]+)?",
+    "/\\.git(?:/|$)",
+    "/\\.svn(?:/|$)",
+    "/\\.hg(?:/|$)",
+    "/\\.aws(?:/|$)",
+    "/\\.ssh(?:/|$)",
+    "/\\.docker(?:/|$)",
+    "/\\.netrc$",
+    "/\\.DS_Store$",
+    "/\\.htaccess$",
+    "/\\.htpasswd$",
+    "/id_rsa(?:\\.pub)?$",
+    "/wp-config\\.php$",
+    "/wp-admin(?:/|$)",
+    "/wp-login\\.php$",
+    "/phpmyadmin(?:/|$)",
+    "/server-status$",
+    "/actuator(?:/|$)",
+    "/[^/]*\\.(?:pem|key|p12|pfx|jks|keystore|sql|bak|old|swp)$",
+  ].join("|") + ")",
+  "i",
+);
+
+/** Body types a JSON API may accept. Anything else is a 415. */
+export const ALLOWED_BODY_TYPES = new Set([
+  "application/json",
+  "application/x-www-form-urlencoded",
+  "multipart/form-data",
+  "text/csv",
+  "application/octet-stream",
+]);
+
+/** Methods that carry a state-changing body. */
+const BODY_METHODS = new Set(["POST", "PUT", "PATCH"]);
+
 const CSRF_EXEMPT_PREFIXES = ["/api/jobs/"];
 const MAX_BODY_BYTES = 1_000_000; // 1MB (image upload handled separately below)
 const MAX_IMAGE_BYTES = 5_000_000;
@@ -78,6 +133,15 @@ export function proxy(req: NextRequest) {
   const inboundRequestId = req.headers.get("x-request-id");
   const requestId = inboundRequestId && /^[A-Za-z0-9._-]{1,64}$/.test(inboundRequestId) ? inboundRequestId : crypto.randomUUID();
 
+  // Refuse to serve credential, VCS, and database-dump paths at all. Checked
+  // before routing so it cannot depend on any downstream handler's diligence.
+  if (SENSITIVE_PATH.test(pathname)) {
+    return new NextResponse(null, {
+      status: 404,
+      headers: { "Cache-Control": "no-store", "x-request-id": requestId, ...SECURITY_HEADERS },
+    });
+  }
+
   const withHeaders = (res: NextResponse) => {
     for (const [k, v] of Object.entries(SECURITY_HEADERS)) res.headers.set(k, v);
     res.headers.set("x-request-id", requestId);
@@ -85,11 +149,14 @@ export function proxy(req: NextRequest) {
   };
 
   const configuredMode = process.env.LIVE_DATA_MODE;
-  const productionDataModeBlocked = process.env.NODE_ENV === "production"
-    && (configuredMode === "production" || (configuredMode !== undefined && configuredMode !== "demo"));
+  // Fail closed in production unless demo mode is explicitly declared. An
+  // unset LIVE_DATA_MODE must not silently behave like a demo deployment.
+  const productionDataModeBlocked = process.env.NODE_ENV === "production" && configuredMode !== "demo";
   const isReadinessProbe = pathname === "/api/v1/health" && req.method === "GET";
   if (productionDataModeBlocked && !isReadinessProbe) {
-    const message = "Live is unavailable until production release configuration is approved.";
+    const message = configuredMode === "production"
+      ? "Furnivo is unavailable until production release configuration is approved."
+      : "Furnivo is unavailable: LIVE_DATA_MODE must be explicitly set to \"demo\" in this build.";
     if (pathname.startsWith("/api/")) {
       return withHeaders(NextResponse.json({ error: message }, { status: 503, headers: { "Cache-Control": "no-store" } }));
     }
@@ -101,12 +168,32 @@ export function proxy(req: NextRequest) {
 
   if (!pathname.startsWith("/api/")) return withHeaders(NextResponse.next());
 
+  // Declared body type must be one this API actually parses. Clients that send
+  // no Content-Type at all (curl, cron, server-to-server) are unaffected; this
+  // rejects a body that is clearly *not* the documented shape, which is the
+  // signature of a misconfigured or probing client rather than a real caller.
+  const bodyContentType = (req.headers.get("content-type") || "").split(";")[0].trim().toLowerCase();
+  if (BODY_METHODS.has(req.method.toUpperCase()) && bodyContentType && !ALLOWED_BODY_TYPES.has(bodyContentType)) {
+    return withHeaders(NextResponse.json(
+      { error: "Unsupported content type", code: "UNSUPPORTED_MEDIA_TYPE" },
+      { status: 415, headers: { "Cache-Control": "no-store", Accept: [...ALLOWED_BODY_TYPES].join(", ") } },
+    ));
+  }
+
   // Payload size
   const len = Number(req.headers.get("content-length") || 0);
-  const cap = pathname.startsWith("/api/v1/image") ? MAX_IMAGE_BYTES : MAX_BODY_BYTES;
+  const isUploadPath = pathname.startsWith("/api/v1/image") || pathname.startsWith("/api/uploads");
+  const cap = isUploadPath ? MAX_IMAGE_BYTES : MAX_BODY_BYTES;
   if (len > cap) return withHeaders(NextResponse.json({ error: "Request too large" }, { status: 413 }));
 
-  // CSRF: cross-site Origin on mutations
+  // CSRF: cross-site Origin on mutations.
+  //
+  // Browsers send `Origin` on cross-site form/fetch POSTs, but the header can be
+  // absent on some legacy or same-origin navigation cases. `Sec-Fetch-Site` is
+  // sent by every modern browser and cannot be set by page script, so it is used
+  // as a second, independent signal. Non-browser clients (curl, cron, server-to-
+  // server, the integration suite) send neither header and hold no ambient
+  // cookie, so they are not blocked by this check.
   const method = req.method.toUpperCase();
   if (["POST", "PUT", "PATCH", "DELETE"].includes(method) && !CSRF_EXEMPT_PREFIXES.some(p => pathname.startsWith(p))) {
     const origin = req.headers.get("origin");
@@ -118,10 +205,19 @@ export function proxy(req: NextRequest) {
           return withHeaders(NextResponse.json({ error: "Cross-site request rejected" }, { status: 403 }));
         }
       } catch { return withHeaders(NextResponse.json({ error: "Invalid origin" }, { status: 403 })); }
+    } else {
+      const site = req.headers.get("sec-fetch-site");
+      if (site === "cross-site") {
+        return withHeaders(NextResponse.json({ error: "Cross-site request rejected" }, { status: 403 }));
+      }
     }
   }
 
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || "local";
+  const ip = clientIp(req.headers);
+  // Without a resolvable, trustworthy client address (e.g. no proxy configured),
+  // fall back to a single shared bucket rather than letting a caller mint a new
+  // bucket per request by rotating a spoofed header.
+  const bucketIdentity = ip ?? "unresolved";
   let category = "api";
   let max = 240;
   if (pathname.startsWith("/api/auth/")) {
@@ -130,9 +226,20 @@ export function proxy(req: NextRequest) {
   } else if (pathname.startsWith("/api/v1/search") || pathname.startsWith("/api/assist")) {
     category = "search";
     max = 120;
+  } else if (pathname.startsWith("/api/uploads")) {
+    // Each accepted upload can write 5MB to disk; keep this far below the
+    // general API budget so one client cannot fill the upload directory.
+    category = "upload";
+    max = 30;
+  } else if (pathname.startsWith("/api/media/")) {
+    // A single listing page legitimately loads many thumbnails. They are
+    // immutable and cheap, so they get their own generous bucket instead of
+    // exhausting the general API budget (which real listings would trip).
+    category = "media";
+    max = 1200;
   }
 
-  const res = limit(`${ip}:${category}`, max);
+  const res = limit(`${bucketIdentity}:${category}`, max);
   if (!res.ok) {
     const retry = Math.max(1, Math.ceil((res.resetAt - Date.now()) / 1000));
     return withHeaders(NextResponse.json(

@@ -7,7 +7,7 @@ const prisma = new PrismaClient();
 async function main() {
   assertDemoSeedAllowed("base sample seed");
   const { userPassword, adminPassword } = readDemoPasswords();
-  console.log("Seeding Live demo data into the explicitly allowed local SQLite fixture...");
+  console.log("Seeding Furnivo demo data into the explicitly allowed local SQLite fixture...");
 
   // clean
   await prisma.notification.deleteMany();
@@ -26,12 +26,12 @@ async function main() {
   const adminPw = await bcrypt.hash(adminPassword, 12);
 
   const admin = await prisma.user.create({
-    data: { name: "Live Admin", email: "admin@live.ng", phone: "08000000001", passwordHash: adminPw, role: "ADMIN", isAdmin: true, adminRole: "SUPER" }
+    data: { name: "Furnivo Admin", email: "admin@live.ng", phone: "08000000001", passwordHash: adminPw, role: "ADMIN", isAdmin: true, adminRole: "SUPER" }
   });
   const consumer = await prisma.user.create({
     data: { name: "Amina Yusuf", email: "amina@example.com", phone: "08012345678", passwordHash: pw, role: "CONSUMER", preferredArea: "Wuse" }
   });
-  const consumer2 = await prisma.user.create({
+  await prisma.user.create({
     data: { name: "Emeka Okafor", email: "emeka@example.com", phone: "08087654321", passwordHash: pw, role: "CONSUMER", preferredArea: "Garki" }
   });
 

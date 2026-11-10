@@ -1,7 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="112" fill="#0A0A0A"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title id="title">Furnivo app icon</title>
+  <defs><linearGradient id="furnivo-mark-gradient" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6C3BFF"/><stop offset="1" stop-color="#FF8A00"/></linearGradient></defs>
+  <rect width="512" height="512" rx="112" fill="#0B0F14"/>
   <g transform="translate(82 82) scale(3.48)">
-    <path d="M31.2 9.5c-12.2 0-22 9.8-22 22v34.2c0 16 13 29 29 29h5.2c11.6 0 22.7-4.8 30.6-13.3l9.5-10.2H48.2c-8.4 0-13.1-4.8-13.1-13.2V31.5c0-12.2-1.4-22-3.9-22Z" fill="#00C853"/>
-    <path d="M47.2 36.1c0-7 7.9-11.1 13.7-7.2l23.6 16.3c5.2 3.6 5.2 11.2 0 14.8L60.9 76.3c-5.8 4-13.7-.2-13.7-7.2V36.1Z" fill="#53E782"/>
+    <path d="M31.2 9.5c-12.2 0-22 9.8-22 22v34.2c0 16 13 29 29 29h5.2c11.6 0 22.7-4.8 30.6-13.3l9.5-10.2H48.2c-8.4 0-13.1-4.8-13.1-13.2V31.5c0-12.2-1.4-22-3.9-22Z" fill="url(#furnivo-mark-gradient)"/>
+    <path d="M47.2 36.1c0-7 7.9-11.1 13.7-7.2l23.6 16.3c5.2 3.6 5.2 11.2 0 14.8L60.9 76.3c-5.8 4-13.7-.2-13.7-7.2V36.1Z" stroke="#0B0F14" stroke-width="1.4" fill="#FFB566"/>
   </g>
 </svg>

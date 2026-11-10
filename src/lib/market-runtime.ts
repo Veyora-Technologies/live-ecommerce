@@ -30,18 +30,18 @@ export function requestedMarketCode(value: string | null | undefined): string {
  */
 export async function requireOperationalMarket(value?: string | null): Promise<MarketConfiguration> {
   if (process.env.NODE_ENV === "production" && !getEnvStatus().valid) {
-    throw new MarketUnavailableError("This market is unavailable until Live's production database and launch configuration pass release review.", 503);
+    throw new MarketUnavailableError("This market is unavailable until Furnivo's production database and launch configuration pass release review.", 503);
   }
 
   const code = requestedMarketCode(value);
   const configuration = getActiveMarketConfiguration(code);
-  if (!configuration) throw new MarketUnavailableError("This country is not enabled on Live.", 404);
+  if (!configuration) throw new MarketUnavailableError("This country is not enabled on Furnivo.", 404);
 
   const country = await prisma.country.findUnique({
     where: { code },
     select: { code: true, isActive: true, currencyCode: true, defaultLocale: true, defaultTimezone: true },
   });
-  if (!country || !country.isActive) throw new MarketUnavailableError("This country is not currently available on Live.", 404);
+  if (!country || !country.isActive) throw new MarketUnavailableError("This country is not currently available on Furnivo.", 404);
 
   // Prevent serving a market with conflicting persisted defaults. Config changes require
   // a reviewed data migration rather than silently changing how prices or local times render.

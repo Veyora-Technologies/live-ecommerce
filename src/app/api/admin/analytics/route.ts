@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { getCurrentUser } from "@/lib/auth";
+import { PLATFORM_ANALYTICS_ROLES, requireAdminRole } from "@/lib/admin-access";
 import { prisma } from "@/lib/db";
 
 export async function GET(){
-  const user=await getCurrentUser();
-  if(!user || !user.isAdmin) return NextResponse.json({error:"Forbidden"},{status:403});
+  const admin=await requireAdminRole(PLATFORM_ANALYTICS_ROLES);
+  if(!admin) return NextResponse.json({error:"Forbidden"},{status:403});
   const totalUsers=await prisma.user.count();
   const totalMerchants=await prisma.merchant.count();
   const pendingMerchants=await prisma.merchant.count({ where:{ status:"PENDING"}});

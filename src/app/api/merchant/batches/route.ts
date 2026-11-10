@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
   const now = new Date();
   return NextResponse.json({
     batches: batches.map(b => ({ ...b, effectiveStatus: b.status === "ACTIVE" && b.expiresAt && b.expiresAt < now ? "EXPIRED" : b.status })),
-    note: "Batch and expiry data is private by default. A product with no recall recorded is not certified safe — Live only enforces restrictions you record.",
+    note: "Batch and expiry data is private by default. A product with no recall recorded is not certified safe — Furnivo only enforces restrictions you record.",
   });
 }
 

@@ -1,7 +1,9 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import MerchantGeographyFields from "@/components/MerchantGeographyFields";
+import ImageUploadField from "@/components/ImageUploadField";
 import { formatNaira } from "@/lib/utils";
+import { fetchWithStepUp } from "@/lib/step-up-client";
 
 export default function ConnectClient({ merchant }: any){
   const mid=merchant.id;
@@ -17,7 +19,7 @@ export default function ConnectClient({ merchant }: any){
   const [keys,setKeys]=useState<any[]>([]);
   const canManage = ["OWNER","MANAGER"].includes(team?.myRole);
 
-  const load=async()=>{
+  const load=useCallback(async()=>{
     const [b,t,s,i,w,subR,keyR]=await Promise.all([
       fetch(`/api/merchant/branches?merchantId=${mid}`).then(r=>r.json()).catch(()=>({})),
       fetch(`/api/merchant/team?merchantId=${mid}`).then(r=>r.json()).catch(()=>({})),
@@ -28,18 +30,20 @@ export default function ConnectClient({ merchant }: any){
       fetch(`/api/api-keys?merchantId=${mid}`).then(r=>r.json()).catch(()=>({})),
     ]);
     setBranches(b.branches||[]); setTeam(t); setServices(s.services||[]); setIntegrations(i.integrations||[]); setWebhooks(w.webhooks||[]); setSub(subR); setKeys(keyR.keys||[]);
-  };
-  useEffect(()=>{ load(); },[]);
+  },[mid]);
+  // `load` is memoised on the merchant id, so this runs once per merchant and
+  // also satisfies exhaustive-deps without refetching on every render.
+  useEffect(()=>{ void load(); },[load]);
 
   const revokeKey=async(id:string)=>{
-    const response=await fetch(`/api/api-keys?id=${encodeURIComponent(id)}`,{method:"DELETE"});
+    const response=await fetchWithStepUp(`/api/api-keys?id=${encodeURIComponent(id)}`,{method:"DELETE"});
     const data=await response.json().catch(()=>({}));
     setMsg(response.ok?"API key revoked.":(data.error||"Key was not revoked."));
     if(response.ok) load();
   };
 
   const post=async(url:string, body:any)=>{
-    const res=await fetch(url,{ method:"POST", headers:{ "Content-Type":"application/json"}, body: JSON.stringify(body)});
+    const res=await fetchWithStepUp(url,{ method:"POST", headers:{ "Content-Type":"application/json"}, body: JSON.stringify(body)});
     const d=await res.json();
     setMsg(res.ok? "Saved ✓" : (d.error||"Failed"));
     if(res.ok) load();
@@ -73,7 +77,7 @@ export default function ConnectClient({ merchant }: any){
           <p className="text-xs text-slate-500 mt-1">Owner = everything • Manager = stock+orders+team • Inventory staff = stock only • Reservation staff = orders only • Read-only = reports. Enforced on the server.</p>
           <div className="mt-3 space-y-2">{team?.members?.map((m:any)=>(<div key={m.id} className="flex justify-between bg-slate-50 rounded-xl p-3 text-sm"><span>{m.name} ({m.email})</span><b>{m.role}</b></div>))}</div>
           {canManage&&<form onSubmit={e=>{e.preventDefault(); const f=new FormData(e.currentTarget); post("/api/merchant/team",{ merchantId:mid, emailOrPhone:f.get("who"), role:f.get("role") });}} className="mt-3 flex gap-2">
-            <input name="who" required placeholder="Staff email/phone (must have a Live account)" className="flex-1 h-10 px-3 rounded-xl border border-slate-200"/>
+            <input name="who" required placeholder="Staff email/phone (must have a Furnivo account)" className="flex-1 h-10 px-3 rounded-xl border border-slate-200"/>
             <select name="role" className="h-10 px-3 rounded-xl border border-slate-200"><option>MANAGER</option><option>INVENTORY_STAFF</option><option>RESERVATION_STAFF</option><option>READ_ONLY</option></select>
             <button className="h-10 px-5 rounded-full bg-live-green-ink text-white text-sm font-semibold">Add</button>
           </form>}
@@ -96,10 +100,23 @@ export default function ConnectClient({ merchant }: any){
         {/* Customize */}
         <section className="bg-white border border-slate-200 rounded-2xl p-5">
           <h3 className="font-bold">🎨 Storefront</h3>
-          {canManage&&<form onSubmit={async e=>{e.preventDefault(); const f=new FormData(e.currentTarget); const res=await fetch("/api/merchant/customize",{ method:"PUT", headers:{ "Content-Type":"application/json"}, body: JSON.stringify({ merchantId:mid, description:f.get("desc"), whatsapp:f.get("wa") })}); const d=await res.json(); setMsg(res.ok?"Storefront updated ✓":d.error);}} className="mt-3 space-y-2">
+          {canManage&&<form onSubmit={async e=>{
+              e.preventDefault();
+              const f=new FormData(e.currentTarget);
+              // Only send an image when one was just uploaded, so saving the form
+              // cannot wipe a logo or cover set earlier.
+              const body: Record<string, unknown> = { merchantId:mid, description:f.get("desc"), whatsapp:f.get("wa") };
+              const logo=f.get("logo"); if (logo) body.imageUrl=logo;
+              const cover=f.get("cover"); if (cover) body.coverImageUrl=cover;
+              const res=await fetch("/api/merchant/customize",{ method:"PUT", headers:{ "Content-Type":"application/json"}, body: JSON.stringify(body) });
+              const d=await res.json();
+              setMsg(res.ok?"Storefront updated ✓":d.error);
+            }} className="mt-3 space-y-2">
             <input name="desc" defaultValue={merchant.description||""} placeholder="Business description" className="w-full h-10 px-3 rounded-xl border border-slate-200"/>
             <input name="wa" defaultValue={merchant.whatsapp||""} placeholder="WhatsApp number" className="w-full h-10 px-3 rounded-xl border border-slate-200"/>
-            <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">Delivery integrations are not configured. Live does not verify or arrange delivery; contact a seller directly about any seller-managed option.</p>
+            <ImageUploadField merchantId={mid} name="logo" label="Business logo" />
+            <ImageUploadField merchantId={mid} name="cover" label="Cover photo" />
+            <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">Delivery integrations are not configured. Furnivo does not verify or arrange delivery; contact a seller directly about any seller-managed option.</p>
             <button className="h-10 px-6 rounded-full bg-live-black text-white text-sm font-semibold">Save storefront</button>
             <span className="block text-xs text-slate-400">Verification & reliability badges cannot be edited here.</span>
           </form>}
@@ -107,7 +124,7 @@ export default function ConnectClient({ merchant }: any){
       </div>
 
       <section className="bg-live-black text-white rounded-2xl p-5">
-        <h3 className="font-bold">🔌 Integrations, webhooks & API (Live Connect)</h3>
+        <h3 className="font-bold">🔌 Integrations, webhooks & API (Furnivo Connect)</h3>
         <div className="grid md:grid-cols-3 gap-4 mt-4 text-sm">
           <div className="bg-white/10 rounded-xl p-4">
             <b>POS / delivery adapters</b>

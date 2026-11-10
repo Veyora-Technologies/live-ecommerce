@@ -78,6 +78,6 @@ export async function compareProducts(input: {
     count: enriched.length,
     products: enriched,
     priceHistory: priceHistory.map((item) => ({ price: item.price, observedAt: item.observedAt, source: item.source })),
-    note: "Results match or resemble the supplied product name; they are not guaranteed to be the same brand, size, or specification. Listed prices are merchant-reported. Live delivery integrations are not configured; delivery is not verified or arranged here. Availability excludes blocked, expired, or already-reserved stock. Any distance is straight-line, not road distance.",
+    note: "Results match or resemble the supplied product name; they are not guaranteed to be the same brand, size, or specification. Listed prices are merchant-reported. Furnivo delivery integrations are not configured; delivery is not verified or arranged here. Availability excludes blocked, expired, or already-reserved stock. Any distance is straight-line, not road distance.",
   };
 }

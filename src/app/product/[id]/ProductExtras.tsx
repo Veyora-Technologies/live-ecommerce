@@ -31,10 +31,10 @@ export default function ProductExtras({ productId, merchantId, reviews, lists, l
       <div className="bg-white border border-slate-200 rounded-2xl p-5">
         <h3 className="font-bold">Alternatives</h3>
         {!currencySupported ? (
-          <div className="mt-2 bg-amber-50 border border-amber-200 rounded-xl p-3 text-sm text-amber-900">Price comparisons are unavailable because this currency is not configured for the active market. Live does not convert listing amounts.</div>
+          <div className="mt-2 bg-amber-50 border border-amber-200 rounded-xl p-3 text-sm text-amber-900">Price comparisons are unavailable because this currency is not configured for the active market. Furnivo does not convert listing amounts.</div>
         ) : isPharmacy ? (
           <div className="mt-2 bg-amber-50 border border-amber-200 rounded-xl p-3 text-sm text-amber-900">
-            Live does not recommend substitute medicines. Exact matches at other stores are shown above. For any alternative, please ask the licensed pharmacist.
+            Furnivo does not recommend substitute medicines. Exact matches at other stores are shown above. For any alternative, please ask the licensed pharmacist.
           </div>
         ) : subs?.alternatives?.length ? (
           <div className="mt-3 space-y-2">

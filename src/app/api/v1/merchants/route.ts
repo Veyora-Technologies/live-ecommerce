@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
         state: { select: { code: true, name: true, type: true } },
         lga: { select: { code: true, name: true, type: true } },
         cityArea: { select: { code: true, name: true, type: true } },
-        phone: true, whatsapp: true, imageUrl: true, coverImageUrl: true, openingHours: true, storeStatus: true,
+        imageUrl: true, coverImageUrl: true, openingHours: true, storeStatus: true,
         pickupAvailable: true, verificationStatus: true,
       },
     });

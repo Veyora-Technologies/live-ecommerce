@@ -24,7 +24,7 @@ export default function AdminClient({ user, merchants, reservations, reports, us
       <header className="bg-live-black text-white">
         <div className="mx-auto max-w-[1200px] px-4 h-16 flex items-center gap-4">
           <div className="flex items-center gap-3"><BrandLogo variant="inverse" width={126} height={38} /><span className="text-xs bg-white/10 border border-white/10 rounded-full px-2 py-0.5">ADMIN</span></div>
-          <div className="ml-auto text-sm">Hello, {user.name} • <a href="/" className="underline">Exit to store</a></div>
+          <div className="ml-auto text-sm">Hello, {user.name} • <Link href="/" className="underline">Exit to store</Link></div>
         </div>
       </header>
       <div className="mx-auto max-w-[1200px] px-4 py-6">

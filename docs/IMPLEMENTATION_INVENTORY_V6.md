@@ -1,4 +1,4 @@
-# Live V6 — Repository Inventory and Dependency-Aware Implementation Plan
+# Furnivo V6 — Repository Inventory and Dependency-Aware Implementation Plan
 
 **Inspection date:** 2026-10-21  
 **Repository:** `/home/user/live`  
@@ -70,7 +70,7 @@
 - Introduce normalized outbox/event handlers only with idempotency keys, retry/dead-letter behavior, transactional writes and tests.
 - Design proper Order, Payment, Delivery, quotation and shared purchase-session data models/migrations before adding any checkout/provider integration.
 - Harden integration credential storage, webhooks, API scopes and operational monitoring; then document provider adapters. Do not activate integrations without real credentials and verified tests.
-- Expand Live Assist through structured, permission-aware tools after the universal search and workflow APIs exist; retain manual fallbacks and confirmation for consequential actions.
+- Expand Furnivo Assist through structured, permission-aware tools after the universal search and workflow APIs exist; retain manual fallbacks and confirmation for consequential actions.
 - Build the larger Control Centre after route-level admin permissions are consistent and monitoring/verification queues are trustworthy.
 - Complete responsive/accessibility/performance/browser/security validation, Postgres migration strategy, backup drills, and independent security review before any production-readiness claim.
 

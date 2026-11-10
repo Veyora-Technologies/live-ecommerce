@@ -9,9 +9,19 @@ import { getEnvStatus } from "@/lib/env";
  */
 export async function GET(req: NextRequest) {
   const token = process.env.METRICS_TOKEN;
-  const provided = req.headers.get("authorization")?.replace("Bearer ", "");
-  if (process.env.NODE_ENV === "production" && (!token || provided !== token)) {
-    return NextResponse.json({ error: "Metrics require METRICS_TOKEN" }, { status: 401 });
+  // Fail closed in every environment. These counters expose cross-tenant
+  // operational volumes, so they must never be readable just because the
+  // deployment is not NODE_ENV=production (previews and staging are still
+  // internet-reachable).
+  if (!token) {
+    return NextResponse.json(
+      { error: "Metrics are not configured. Set METRICS_TOKEN to enable this endpoint." },
+      { status: 503, headers: { "Cache-Control": "no-store" } },
+    );
+  }
+  const provided = req.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
+  if (provided !== token) {
+    return NextResponse.json({ error: "Metrics require a valid METRICS_TOKEN bearer token" }, { status: 401, headers: { "Cache-Control": "no-store", "WWW-Authenticate": "Bearer" } });
   }
   const since = new Date(Date.now() - 24 * 3600000);
   const [reservations24h, failed, confirmedVsRequested, zeroSearches, failedWebhooks, securityEvents, openRisk] = await Promise.all([

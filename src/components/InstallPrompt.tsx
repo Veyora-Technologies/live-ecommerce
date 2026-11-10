@@ -30,7 +30,7 @@ export default function InstallPrompt() {
       await deferred.prompt();
       const result = await deferred.userChoice;
       if (result.outcome === "accepted") setDeferred(null);
-    }} aria-label="Install Live on this device">
+    }} aria-label="Install Furnivo on this device">
       <Download size={17} aria-hidden="true" /> <span>Install</span>
     </button>
   );

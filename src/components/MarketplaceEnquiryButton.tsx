@@ -55,7 +55,7 @@ export default function MarketplaceEnquiryButton({ merchantId, productId, servic
       <label htmlFor={`${formId}-body`} className="mt-3 block text-xs font-semibold uppercase text-slate-600">Message about {listingTitle}</label>
       <textarea id={`${formId}-body`} value={body} onChange={(event) => setBody(event.target.value.slice(0, 1000))} maxLength={1000} rows={3} required className="mt-1 w-full rounded-lg border border-slate-300 bg-white p-2 text-sm" placeholder="Write your question" />
       <div className="mt-1 text-right text-xs text-slate-500">{body.length}/1,000</div>
-      <p className="mt-2 text-xs leading-5 text-slate-600">No phone number or address is shared. Do not send payment details or leave Live for payment. For pharmacy products, contact a pharmacist for medicine-use or substitute questions.</p>
+      <p className="mt-2 text-xs leading-5 text-slate-600">No phone number or address is shared. Do not send payment details or leave Furnivo for payment. For pharmacy products, contact a pharmacist for medicine-use or substitute questions.</p>
       {error && <p role="alert" className="mt-2 text-sm text-red-800">{error}</p>}
       {success && <div role="status" className="mt-2 rounded-lg border border-emerald-200 bg-emerald-50 p-2 text-sm text-emerald-900">Enquiry sent. {success.message}<Link href={`/enquiries?selected=${encodeURIComponent(success.id)}`} className="ml-1 font-semibold underline">Open conversation</Link></div>}
       <button disabled={busy || !body.trim()} className="mt-3 min-h-10 w-full rounded-full bg-live-black px-4 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50">{busy ? "Sending…" : "Send enquiry"}</button>

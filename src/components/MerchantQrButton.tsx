@@ -45,7 +45,7 @@ export default function MerchantQrButton({ merchantId, businessName }: { merchan
         <button ref={closeRef} type="button" className="live-icon-button-sm live-modal-close" onClick={close} aria-label="Close QR code"><X size={18} /></button>
         <div className="live-eyebrow">Discovery only</div><h2 id="merchant-qr-title">{businessName} profile</h2>
         {loading && <div className="live-skeleton live-qr-skeleton" role="status" aria-label="Loading QR code" />}
-        {image && <img src={image} alt={`QR code linking to ${businessName}'s public Live profile`} width="256" height="256" className="live-qr-image" />}
+        {image && <img src={image} alt={`QR code linking to ${businessName}'s public Furnivo profile`} width="256" height="256" className="live-qr-image" />}
         {error && <p className="live-inline-error" role="alert">{error}</p>}
         {url && <p className="live-muted live-qr-url">{url}</p>}
         <p className="live-caveat">This QR opens the public merchant profile. It is not a payment code, login method, or proof of stock.</p>

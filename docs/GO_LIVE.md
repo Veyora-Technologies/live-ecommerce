@@ -32,4 +32,4 @@ No production deployment, production database write, migration, domain cutover, 
 
 ## Decision rule
 
-The current status remains **NO-GO**. Change it only when every critical gate has evidence and accountable sign-off. Do not represent Live as deployed, production-ready, legally compliant, accessible, load-tested, provider-connected, or geographically covered until those facts are independently verified.
+The current status remains **NO-GO**. Change it only when every critical gate has evidence and accountable sign-off. Do not represent Furnivo as deployed, production-ready, legally compliant, accessible, load-tested, provider-connected, or geographically covered until those facts are independently verified.

@@ -23,7 +23,7 @@ export async function POST(req: NextRequest){
   if(!canManageTeam(myRole)) return NextResponse.json({error:"Only owners/managers can manage the team"},{status:403});
   const newRole=(MERCHANT_ROLES as readonly string[]).includes(role) && role!=="OWNER" ? role : "READ_ONLY";
   const invitee=await prisma.user.findFirst({ where:{ OR:[{email:emailOrPhone},{phone:emailOrPhone}] }});
-  if(!invitee) return NextResponse.json({error:"No Live user with that email/phone. Ask them to create a free account first."},{status:404});
+  if(!invitee) return NextResponse.json({error:"No Furnivo user with that email/phone. Ask them to create a free account first."},{status:404});
   const member=await prisma.merchantMembership.upsert({
     where:{ merchantId_userId:{ merchantId, userId:invitee.id } },
     update:{ role:newRole, status:"ACTIVE" },

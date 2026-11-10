@@ -6,7 +6,7 @@ import { withReservableAvailability } from "@/lib/inventory-availability";
 import { addProductPriceDeltaMinor } from "@/lib/money";
 import { DEFAULT_MARKET_CODE, getMarketCurrencyConfiguration } from "@/lib/market-config";
 
-/** Multi-merchant planner cart. This is not an order; prices/stock are re-read from Live's current records. */
+/** Multi-merchant planner cart. This is not an order; prices/stock are re-read from Furnivo's current records. */
 export async function GET() {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401, headers: { "Cache-Control": "private, no-store" } });
@@ -117,7 +117,7 @@ export async function GET() {
     cartId: cart.id,
     groups: [...byMerchant.values()].map((group) => ({ ...group, subtotal: group.subtotal.toString() })),
     totalItemsValue: total.toString(),
-    deliveryNote: "Live does not arrange delivery. Plan submissions are pickup-only; no delivery or service fee is quoted or charged.",
+    deliveryNote: "Furnivo does not arrange delivery. Plan submissions are pickup-only; no delivery or service fee is quoted or charged.",
     warning: "A cart is a plan, not a reservation. Submission revalidates stock and creates separate pending holds; each merchant must confirm. Holds are released by the scheduled expiry job, which must be configured by the operator.",
   }, { headers: { "Cache-Control": "private, no-store" } });
 }

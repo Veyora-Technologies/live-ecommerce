@@ -18,5 +18,5 @@ export default function MerchantQrDisplay({ merchantId, businessName, className 
   }, [merchantId]);
   if (unavailable) return <div className={className} role="status" aria-label="Merchant QR code currently unavailable">QR unavailable</div>;
   if (!image) return <div className={`${className} merchant-qr-placeholder`} role="status" aria-label={`Loading ${businessName} profile QR`} />;
-  return <img src={image} alt={`QR code linking to ${businessName}'s public Live profile`} className={className} loading="lazy" />;
+  return <img src={image} alt={`QR code linking to ${businessName}'s public Furnivo profile`} className={className} loading="lazy" />;
 }

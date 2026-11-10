@@ -23,7 +23,7 @@ export async function GET() {
 
   return NextResponse.json({
     status: ready ? "ok" : "degraded",
-    service: "Live API v1",
+    service: "Furnivo API v1",
     time: new Date().toISOString(),
     version,
     checks: { database, dbLatencyMs, configValid: config.valid, configErrors: config.errors.length },

@@ -122,7 +122,7 @@ locationFilter = await getGeographicScopeFilter(locationCodes, locationScope, co
   }
   const deliveryRequested = delivery === "true" || delivery === true || parsed?.delivery === true;
   if (deliveryRequested && !isMarketIntegrationReady(countryCode, "deliveryIntegrations")) {
-    return NextResponse.json({ error: "Delivery search is unavailable because Live has no configured delivery integration.", code: "FEATURE_NOT_CONFIGURED", results: [], total: 0 }, { status: 503, headers: { "Cache-Control": "no-store" } });
+    return NextResponse.json({ error: "Delivery search is unavailable because Furnivo has no configured delivery integration.", code: "FEATURE_NOT_CONFIGURED", results: [], total: 0 }, { status: 503, headers: { "Cache-Control": "no-store" } });
   }
 
   // Record demand for analytics (aggregated, privacy-safe)

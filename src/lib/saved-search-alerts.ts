@@ -43,7 +43,7 @@ function withinPrice(price: number, bounds: PriceBounds): boolean {
 export function matchesSavedSearch(search: SearchLike, product: ProductLike): boolean {
   const parsed = parseNaturalQuery(search.query);
   const filters = unpackFilters(search.filters);
-  // Never broaden a location-dependent request when Live has no enabled location/routing source.
+  // Never broaden a location-dependent request when Furnivo has no enabled location/routing source.
   if (parsed.distanceKm || Number(filters.distanceKm) > 0 || typeof filters.fulfilment === "string") return false;
   const query = parsed.q.trim().toLocaleLowerCase("en");
   const productText = `${product.name} ${product.brand || ""} ${product.category || ""}`.toLocaleLowerCase("en");

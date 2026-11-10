@@ -93,7 +93,7 @@ export default async function HomePage() {
       </section>,
     },
     {
-      id: "pulse", label: "Live Pulse", node: <LivePulse initialUpdates={pulseUpdates} initialLocationCode={locationCode} initialLocationName={initialLocation?.name || (locationError ? "Saved location unavailable" : "")} userId={user?.id} />,
+      id: "pulse", label: "Furnivo Pulse", node: <LivePulse initialUpdates={pulseUpdates} initialLocationCode={locationCode} initialLocationName={initialLocation?.name || (locationError ? "Saved location unavailable" : "")} userId={user?.id} />,
     },
     {
       id: "available", label: "Available listings", node: <section aria-labelledby="available-title">
@@ -108,7 +108,7 @@ export default async function HomePage() {
           const icons = [PackageSearch, Store, Activity, ListChecks];
           const Icon = icons[index % icons.length];
           return <Link href={`/search?category=${encodeURIComponent(category)}`} className="live-category-card" key={category}><span><Icon size={20} /></span><strong>{category}</strong><small>Browse listings <ArrowRight size={12} /></small></Link>;
-        })}</div> : <div className="live-empty-card"><strong>Categories will appear as merchants publish listings.</strong><p>Try a text search to explore what is currently recorded.</p><Link className="live-button" href="/search">Search Live</Link></div>}
+        })}</div> : <div className="live-empty-card"><strong>Categories will appear as merchants publish listings.</strong><p>Try a text search to explore what is currently recorded.</p><Link className="live-button" href="/search">Search Furnivo</Link></div>}
       </section>,
     },
     {
@@ -122,7 +122,7 @@ export default async function HomePage() {
   if (user) {
     sections.push(
       { id: "saved-searches", label: "Saved searches", node: <section aria-labelledby="saved-search-title">
-        <div className="live-section-heading"><div><div className="live-eyebrow">Your saved discovery</div><h2 id="saved-search-title" className="live-section-title">Saved searches</h2></div><Link className="live-text-link" href="/my-live">Manage in My Live <ArrowRight size={15} /></Link></div>
+        <div className="live-section-heading"><div><div className="live-eyebrow">Your saved discovery</div><h2 id="saved-search-title" className="live-section-title">Saved searches</h2></div><Link className="live-text-link" href="/my-live">Manage in My Furnivo <ArrowRight size={15} /></Link></div>
         {savedSearches.length ? <div className="live-personal-row">{savedSearches.map((search) => <Link key={search.id} href={searchHref(search)} className="live-personal-card"><span className="live-personal-icon"><PackageSearch size={18} /></span><span><strong>{search.label || search.query}</strong><small>{search.alertEnabled ? `${search.alertFrequency.toLowerCase()} in-app matching alerts` : "Alerts paused"}</small></span><ArrowRight size={16} /></Link>)}</div> : <div className="live-empty-card"><strong>No saved searches yet.</strong><p>Search for something useful and save it to pick up later on any signed-in device.</p><Link href="/search" className="live-button">Start a search</Link></div>}
       </section> },
       { id: "reservations", label: "Upcoming reservations", node: <section aria-labelledby="upcoming-title">
@@ -130,8 +130,8 @@ export default async function HomePage() {
         {reservations.length ? <div className="live-personal-row">{reservations.map((reservation) => <Link href="/activity" key={reservation.id} className="live-reservation-preview"><span className={`live-status-pill ${reservation.status === "READY_FOR_PICKUP" ? "is-open" : "is-pending"}`}>{reservation.status.replaceAll("_", " ")}</span><strong>{reservation.product.name}</strong><small>{reservation.merchant.businessName} · {reservation.code} · Updated {dateLabel(reservation.updatedAt)}</small></Link>)}</div> : <div className="live-empty-card"><strong>No active reservations.</strong><p>When a reservation is created, its server-confirmed status appears here. A planning cart is not an order.</p><Link href="/search" className="live-button">Find an item</Link></div>}
       </section> },
       { id: "recent", label: "Recently viewed", node: <section aria-labelledby="recent-title">
-        <div className="live-section-heading"><div><div className="live-eyebrow">Continue from another device</div><h2 id="recent-title" className="live-section-title">Recently viewed</h2></div><Link className="live-text-link" href="/my-live">Open My Live <ArrowRight size={15} /></Link></div>
-        {recentViews.length ? <div className="live-recent-grid">{recentViews.map((view) => <Link key={view.id} href={`/product/${view.product.id}`} className="live-recent-card"><strong>{view.product.name}</strong><small>{view.product.merchant.businessName} · {view.product.merchant.area}</small><small>Viewed {dateLabel(view.viewedAt)}</small></Link>)}</div> : <div className="live-empty-card"><strong>Your recent product views will show up here.</strong><p>Product pages you open while signed in are stored to your account so you can continue on another device. You can clear this history in My Live.</p><Link href="/search" className="live-button">Search listings</Link></div>}
+        <div className="live-section-heading"><div><div className="live-eyebrow">Continue from another device</div><h2 id="recent-title" className="live-section-title">Recently viewed</h2></div><Link className="live-text-link" href="/my-live">Open My Furnivo <ArrowRight size={15} /></Link></div>
+        {recentViews.length ? <div className="live-recent-grid">{recentViews.map((view) => <Link key={view.id} href={`/product/${view.product.id}`} className="live-recent-card"><strong>{view.product.name}</strong><small>{view.product.merchant.businessName} · {view.product.merchant.area}</small><small>Viewed {dateLabel(view.viewedAt)}</small></Link>)}</div> : <div className="live-empty-card"><strong>Your recent product views will show up here.</strong><p>Product pages you open while signed in are stored to your account so you can continue on another device. You can clear this history in My Furnivo.</p><Link href="/search" className="live-button">Search listings</Link></div>}
       </section> },
       { id: "saved-items", label: "Saved products", node: <section aria-labelledby="saved-items-title">
         <div className="live-section-heading"><div><div className="live-eyebrow">Keep useful listings close</div><h2 id="saved-items-title" className="live-section-title">Saved products</h2></div><Link className="live-text-link" href="/my-live">Manage saved items <ArrowRight size={15} /></Link></div>
@@ -154,18 +154,18 @@ export default async function HomePage() {
       {locationError && <p className="live-home-location-error" role="status">{locationError} Results have not been widened automatically. Choose a new location in the header.</p>}
       <section className="live-home-hero" aria-labelledby="home-title">
         <div className="live-home-hero-content">
-          <div className="live-eyebrow"><span className="live-brand-dot" /> Live · {locationName || "Nationwide Nigeria"}</div>
-          <h1 id="home-title">Everything You Need.<br /><span>All in One Place.</span></h1>
+          <div className="live-eyebrow"><span className="live-brand-dot" /> Furnivo · {locationName || "Nationwide Nigeria"}</div>
+          <h1 id="home-title">Shop. Sell. Grow.<br /><span>It&rsquo;s your next move.</span></h1>
           <p>Shop. Sell. Service. Grow. Explore currently supported merchant listings, compare posted details and availability notes, then choose your next step.</p>
           <SearchHero />
           <div className="live-hero-trust"><MapPin size={16} aria-hidden="true" /><span>Choose any Nigerian state, the FCT, or a supported locality manually. No GPS is required; location support does not imply merchant coverage.</span></div>
         </div>
-        <aside className="live-home-hero-aside" aria-label="How Live works">
+        <aside className="live-home-hero-aside" aria-label="How Furnivo works">
           <div className="live-hero-aside-kicker">Made for real-world availability</div>
           <div className="live-hero-step"><span>01</span><div><strong>Search current listings</strong><small>Prices and quantities come from merchant records.</small></div></div>
           <div className="live-hero-step"><span>02</span><div><strong>Compare with context</strong><small>See area, freshness and pickup terms.</small></div></div>
           <div className="live-hero-step"><span>03</span><div><strong>Reserve with a recheck</strong><small>Stock is revalidated by the server. Pending is not confirmed.</small></div></div>
-          <Link href="/search" className="live-hero-aside-link">Search Live <ArrowRight size={16} /></Link>
+          <Link href="/search" className="live-hero-aside-link">Search Furnivo <ArrowRight size={16} /></Link>
         </aside>
       </section>
       <HomeSections sections={sections} userId={user?.id} initialLayout={user?.homeSections} />

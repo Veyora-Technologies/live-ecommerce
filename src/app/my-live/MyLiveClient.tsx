@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Bell, BellOff, Bookmark, Clock3, ListChecks, Pencil, RotateCw, Trash2 } from "lucide-react";
+import { ArrowRight, Bell, BellOff, Bookmark, Clock3, ListChecks, Pencil, Trash2 } from "lucide-react";
 import { formatNaira } from "@/lib/utils";
 import ImageWithFallback from "@/components/ImageWithFallback";
 import { DEFAULT_MARKET_CODE, getMarketCurrencyConfiguration } from "@/lib/market-config";

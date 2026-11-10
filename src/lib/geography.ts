@@ -25,7 +25,7 @@ const merchantLocationFields = ["stateCode", "lgaCode", "cityCode", "localityCod
  * Resolve and validate a public search scope into an explicit merchant location predicate.
  * `admin` includes the selected admin area and known descendants; `locality` is exact;
  * `multi` is a union of 2-10 selected areas. `nearby` is intentionally unavailable until
- * Live has adequate, consented user/merchant coordinates and an honest routing model.
+ * Furnivo has adequate, consented user/merchant coordinates and an honest routing model.
  */
 async function operationalGeographyMarket(countryCode: string) {
   try {
@@ -43,7 +43,7 @@ export async function getGeographicScopeFilter(
 ) {
   const market = await operationalGeographyMarket(countryCode);
   if (scope === "nearby") {
-    throw new GeographyRequestError("Nearby search is not available because Live does not have sufficiently verified location and routing data. Choose a locality or nationwide scope.", 422);
+    throw new GeographyRequestError("Nearby search is not available because Furnivo does not have sufficiently verified location and routing data. Choose a locality or nationwide scope.", 422);
   }
   if (scope === "nationwide") return { where: {}, areas: [], codes: [] as string[], countryCode: market.countryCode };
 

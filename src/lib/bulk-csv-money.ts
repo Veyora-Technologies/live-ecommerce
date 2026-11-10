@@ -11,7 +11,7 @@ export function bulkCurrencyError(currency: unknown): string | null {
   if (typeof currency !== "string" || !currency.trim()) {
     return `Currency is required for every row. Add an explicit ${DEFAULT_CURRENCY} currency column; currencyless prices are ambiguous and were not applied.`;
   }
-  return `Only explicit ${DEFAULT_CURRENCY} rows are accepted; Live does not convert catalogue prices.`;
+  return `Only explicit ${DEFAULT_CURRENCY} rows are accepted; Furnivo does not convert catalogue prices.`;
 }
 
 /** Parse a CSV price as exact major units only after its row explicitly identifies NGN. */

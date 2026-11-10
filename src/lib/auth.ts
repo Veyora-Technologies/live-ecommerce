@@ -7,7 +7,7 @@ import { toCurrentUserView, type CurrentUserView } from "./auth-user-view";
 import { sha256, hashIp, clientIp } from "./security";
 import crypto from "crypto";
 
-const COOKIE_NAME = "live_token";
+import { AUTH_COOKIE as COOKIE_NAME } from "./auth-cookie";
 const ABSOLUTE_MS = 7 * 24 * 3600000;
 const ADMIN_IDLE_MS = 4 * 3600000;
 
@@ -40,6 +40,10 @@ export async function createSessionForUser(user: { id: string; email?: string | 
       userAgent: headers?.get("user-agent")?.slice(0, 200) || null,
       ipHash: headers ? hashIp(clientIp(headers)) : null,
       expiresAt,
+      // Signing in *is* a password proof, so a brand-new session is already
+      // valid for step-up actions. Without this, every settings change would
+      // demand the password a second time immediately after login.
+      reauthenticatedAt: new Date(),
     },
   });
   const token = jwt.sign({ id: user.id, email: user.email, role: user.role, name: user.name }, env().JWT_SECRET, { expiresIn: "7d", jwtid: jti });

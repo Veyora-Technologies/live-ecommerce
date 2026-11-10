@@ -30,7 +30,7 @@ export default function ForgotPage() {
       setMsg(data.message || "If an account exists for that email, reset instructions have been prepared.");
       if (data.devResetToken) setDevToken(data.devResetToken);
     } catch {
-      setError("Unable to reach Live. Check your connection and try again.");
+      setError("Unable to reach Furnivo. Check your connection and try again.");
     } finally {
       setBusy(false);
     }

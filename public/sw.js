@@ -1,4 +1,4 @@
-// Live service worker: cache immutable/public assets only.
+// Furnivo service worker: cache immutable/public assets only.
 // HTML and all API/auth/account/merchant data remain network-only so cached
 // inventory is never implied to be current and private pages aren't shared.
 const CACHE = "live-brand-static-1";

@@ -4,7 +4,7 @@ import { getEnvStatus } from "./env";
 import { isOpaqueEvidenceReference } from "./compliance-access";
 
 export const POLICY_SPECS = {
-  PLATFORM_TERMS: { label: "Live Platform Terms", acceptanceMode: "ACCEPT" },
+  PLATFORM_TERMS: { label: "Furnivo Platform Terms", acceptanceMode: "ACCEPT" },
   PRIVACY_NOTICE: { label: "Privacy Notice", acceptanceMode: "ACKNOWLEDGE" },
   CONSUMER_TERMS: { label: "Consumer Marketplace Terms", acceptanceMode: "ACCEPT" },
   SELLER_AGREEMENT: { label: "Seller Agreement", acceptanceMode: "ACCEPT" },
@@ -136,7 +136,7 @@ export function evaluateLegalGate(
     bypassedOutsideProduction: false,
     missing,
     requiredPolicyKeys,
-    publicMessage: ready ? null : "This feature is not available in production because Live has not yet published a complete, reviewed legal and trust-information package.",
+    publicMessage: ready ? null : "This feature is not available in production because Furnivo has not yet published a complete, reviewed legal and trust-information package.",
   };
 }
 
@@ -149,7 +149,7 @@ export async function getLegalReleaseGate(feature: LegalFeature = "MARKETPLACE")
       bypassedOutsideProduction: false,
       missing: ["verified production database, migrations, and runtime configuration"],
       requiredPolicyKeys,
-      publicMessage: "This feature is unavailable until Live's production database and launch configuration have passed release review.",
+      publicMessage: "This feature is unavailable until Furnivo's production database and launch configuration have passed release review.",
     };
   }
 
@@ -195,7 +195,7 @@ export async function requirePolicyAcceptances(input: {
   merchantId?: string;
 }): Promise<{ allowed: boolean; code?: "LEGAL_RELEASE_GATE" | "POLICY_ACCEPTANCE_REQUIRED"; missing: PolicyKey[]; message?: string }> {
   if (process.env.NODE_ENV === "production" && !getEnvStatus().valid) {
-    return { allowed: false, code: "LEGAL_RELEASE_GATE", missing: [], message: "Live's production database and launch configuration have not passed release review." };
+    return { allowed: false, code: "LEGAL_RELEASE_GATE", missing: [], message: "Furnivo's production database and launch configuration have not passed release review." };
   }
   if (process.env.LIVE_DATA_MODE !== "production") return { allowed: true, missing: [] };
   const gate = await getLegalReleaseGate("MARKETPLACE");
@@ -226,7 +226,7 @@ export async function requirePolicyAcceptances(input: {
     if (acceptance?.action !== expectedAction) missing.push(key);
   }
   return missing.length
-    ? { allowed: false, code: "POLICY_ACCEPTANCE_REQUIRED", missing, message: "Review and record the current Live policy acknowledgements at /legal before continuing." }
+    ? { allowed: false, code: "POLICY_ACCEPTANCE_REQUIRED", missing, message: "Review and record the current Furnivo policy acknowledgements at /legal before continuing." }
     : { allowed: true, missing: [] };
 }
 
@@ -246,7 +246,7 @@ export async function getLegalReleaseGateInTransaction(tx: Prisma.TransactionCli
       bypassedOutsideProduction: false,
       missing: ["verified production database, migrations, and runtime configuration"],
       requiredPolicyKeys,
-      publicMessage: "This feature is unavailable until Live's production database and launch configuration have passed release review.",
+      publicMessage: "This feature is unavailable until Furnivo's production database and launch configuration have passed release review.",
     };
   }
   if (!isLegalProductionMode()) {
@@ -261,7 +261,7 @@ export async function getLegalReleaseGateInTransaction(tx: Prisma.TransactionCli
 
 export async function requirePolicyAcceptancesInTransaction(tx: Prisma.TransactionClient, input: { userId: string; keys: PolicyKey[]; merchantId?: string }) {
   if (process.env.NODE_ENV === "production" && !getEnvStatus().valid) {
-    return { allowed: false, missing: [] as PolicyKey[], code: "LEGAL_RELEASE_GATE" as const, message: "Live's production database and launch configuration have not passed release review." };
+    return { allowed: false, missing: [] as PolicyKey[], code: "LEGAL_RELEASE_GATE" as const, message: "Furnivo's production database and launch configuration have not passed release review." };
   }
   if (!isLegalProductionMode()) return { allowed: true, missing: [] as PolicyKey[] };
   const gate = await getLegalReleaseGateInTransaction(tx, "MARKETPLACE");

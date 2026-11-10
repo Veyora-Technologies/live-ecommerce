@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getSessionContext } from "@/lib/auth";
+import { isReauthFresh, reauthRequired } from "@/lib/reauth";
 import { logSecurityEvent } from "@/lib/security";
 
 export async function GET() {
@@ -19,6 +20,10 @@ export async function GET() {
 export async function DELETE(req: NextRequest) {
   const ctx = await getSessionContext();
   if (!ctx) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  // Revoking every other session is the action an attacker takes to lock the
+  // real owner out of their own account, so it must not be reachable with a
+  // cookie alone.
+  if (!isReauthFresh(ctx.session)) return reauthRequired();
   const { sessionId, all } = await req.json().catch(() => ({}));
   if (all) {
     await prisma.session.updateMany({ where:{ userId: ctx.user.id, id:{ not: ctx.session.id }, revokedAt: null }, data:{ revokedAt: new Date() } });

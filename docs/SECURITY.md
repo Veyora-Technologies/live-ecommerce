@@ -1,6 +1,6 @@
-# Live security posture and deployment gates
+# Furnivo security posture and deployment gates
 
-**Verification references:** OWASP ASVS 5.0.0 and NIST SSDF are used as review references. Live has not completed an ASVS assessment, NIST SSDF assessment, penetration test, security certification, or independent audit.
+**Verification references:** OWASP ASVS 5.0.0 and NIST SSDF are used as review references. Furnivo has not completed an ASVS assessment, NIST SSDF assessment, penetration test, security certification, or independent audit.
 
 ## Authentication and sessions
 
@@ -23,7 +23,7 @@
 - The Origin check rejects a mismatched `Origin` but does not reject a missing Origin. Only `/api/jobs/*` is exempt because production job requests require `CRON_SECRET`; webhook subscription management is cookie-authenticated and remains Origin-protected. CSRF protections must be reviewed with the actual hosting proxy and future custom domains.
 - CSP currently permits inline script/style for framework compatibility. This is not a strict nonce-based CSP; assess the impact before production.
 - The body-size check uses request `Content-Length` (1 MB general, 5 MB image); it is not a substitute for a proxy-level streaming limit/WAF.
-- Rate limits (20 auth/min, 120 search/assist/min, 240 general API/min) live in one process-local map. It is bounded against unbounded bucket growth but is not shared across instances or a DDoS control. The host must sanitize `x-forwarded-for` before it is trusted.
+- Rate limits (20 auth/min, 120 search/assist/min, 30 uploads/min, 1200 media reads/min, 240 general API/min) live in one process-local map. It is bounded against unbounded bucket growth but is not shared across instances or a DDoS control. The host must sanitize `x-forwarded-for` before it is trusted.
 - Request IDs are correlation labels, not trace spans. There is no configured APM, OpenTelemetry collector, central log shipper, or alert target.
 
 ## Input, inventory, and outbound requests
@@ -32,7 +32,9 @@
 - Reservation and planner flows revalidate merchant, branch, variants, batch blocks, price, and stock server-side. Product/variant stock counters use conditional compare-and-swap updates inside Prisma transactions. One isolated SQLite HTTP test confirms only one of two planner submissions can reserve a last unit; PostgreSQL/batch-quarantine race behavior is not verified.
 - Active/expired/recalled/quarantined batch quantities are excluded from reservable availability. A successful pending reservation creates a temporary stock hold immediately. Hold release depends on an external expiry job being scheduled and monitored.
 - Outbound webhook URLs are revalidated at delivery, disallow private/reserved destinations, pin public DNS resolution, limit payloads/timeouts, and do not follow redirects. Residual risk remains without production egress policy, partner review, and independent penetration testing.
-- Image upload checks allowed image magic bytes and size, is processed in memory, and is not proof of product recognition. External image/AI integrations are not configured.
+- **Merchant images are stored, not just sniffed.** `POST /api/uploads` (`src/lib/image-upload.ts`) authorises the caller against the target merchant (inventory-edit or storefront-customise permission), enforces a 5 MB cap, and decides the type from magic bytes only — the filename and the browser-declared `Content-Type` are ignored, so an SVG or HTML payload renamed `x.png` is rejected (`415`). Files are written under random 32-hex names to one absolute directory (`LIVE_UPLOAD_DIR`); an unset or relative path fails closed with `503`, never a silent discard.
+- **Serving is traversal-proof.** `GET /api/media/[name]` accepts only the exact `[a-f0-9]{32}.{jpg|png|webp|gif}` shape, so `../` and percent-encoded variants can never escape the directory. Responses carry the stored content type, `X-Content-Type-Options: nosniff` and a one-year immutable cache (names are never reused). Uploaded images are public URLs: identity documents and payment proofs must never be sent there.
+- The separate `/api/v1/image` recognition boundary still checks and discards bytes; no image-recognition provider is configured, and that endpoint never claims a match.
 
 ## Secrets, audit, and supply chain
 
@@ -51,3 +53,49 @@ The latest fresh-fixture HTTP integration suite passed 159/159 tests across 27 f
 ## Not claimed / required before launch
 
 No production database or migrations, hard-blocked admin MFA, global/shared rate limiting, production scheduler, centralized observability, external providers, independent penetration test, ASVS/NIST assessment, WCAG conformance audit, production backup/restore, load capacity, SLO, or production deployment is verified. See `docs/GO_LIVE.md`.
+
+## Hardening applied 2026-10-24
+
+These changes close findings from the repository audit. They do not change the NO-GO deployment decision.
+
+- **Trusted-proxy client IPs.** `X-Forwarded-For` is no longer parsed by taking the left-most value (which a caller controls). `src/lib/client-ip.ts` counts back `TRUSTED_PROXY_HOPS` entries from the right, validates the result as an IP, and returns `null` when the chain is shorter than configured. Set `TRUSTED_PROXY_HOPS=0` when the app is directly internet-facing.
+- **Separate IP-hash key.** Audit IP hashes use `IP_HASH_SECRET` when set, falling back to `JWT_SECRET`. Rotating the JWT signing key no longer invalidates stored IP hashes.
+- **Stronger CSRF signal.** Mutations with no `Origin` header are now checked against `Sec-Fetch-Site`; a browser-asserted `cross-site` value is rejected. Non-browser clients (cron, server-to-server, integration tests) send neither header and are unaffected.
+- **Merchant contact details are no longer public.** Phone, WhatsApp and email were previously returned by `GET /api/products/[id]` and `GET /api/v1/merchants` and embedded in server-rendered HTML (`tel:` links), which made every approved merchant trivially harvestable. They are now released only to signed-in accounts via `GET /api/products/[id]/contact` and `GET /api/merchant/[id]/contact`, and each release writes a `MERCHANT_CONTACT_REVEAL` security event.
+- **Admin roles are enforced, not decorative.** `src/lib/admin-access.ts` requires the persisted `adminRole`, not just `isAdmin`, for merchant moderation and platform analytics. Feature flags and freshness policies are `SUPER`-only. An account with `isAdmin=true` and `adminRole="NONE"` can no longer suspend merchants or change platform configuration.
+- **`/api/metrics` fails closed everywhere.** It returns 503 when `METRICS_TOKEN` is unset and 401 on a wrong bearer token, in every environment. It previously exposed cross-tenant counters whenever `NODE_ENV !== "production"`, which includes staging and preview deployments.
+- **Explicit production data mode.** In a production build, an unset `LIVE_DATA_MODE` now blocks requests with 503 and marks health degraded, instead of silently behaving like demo mode.
+- **Image URLs are https-only, or our own uploads.** Product create/patch and storefront customization reject `http:`, `data:`, `javascript:` and protocol-relative (`//host`) image values; the only non-https form accepted is the exact same-origin `/api/media/<32 hex>.<ext>` path produced by `/api/uploads` (`src/lib/media-path.ts`). Marketplace media keeps the https check via `safeListingImageUrl`.
+- **Concurrent duplicate sign-up returns 409.** A unique-constraint violation during registration maps to a clean `ACCOUNT_EXISTS` response instead of an unhandled 500.
+- **Contact verification is delivered, not just issued.** `POST/PUT /api/auth/verify-contact` issues and consumes a single-use, hashed, 24-hour challenge and sets `emailVerifiedAt`/`phoneVerifiedAt`. When a sender is configured the token travels only inside the emailed link (`/auth/verify?token=…`); the plaintext token is returned in JSON **only** outside production. Accounts remain unverified until the challenge is consumed; sign-in behaviour is unchanged.
+- **Email delivery fails closed.** `src/lib/email.ts` calls Resend over HTTPS with an 8-second timeout, never logs message bodies, tokens or the API key, and returns an explicit `NOT_CONFIGURED | PROVIDER_ERROR | TIMEOUT` instead of a fake success. A password-reset mail that fails to send burns its token and logs `PASSWORD_RESET_DELIVERY_FAILED`, so an undelivered link can never be redeemed later. Reset links require a public HTTPS origin (localhost, `.local` and preview hosts are rejected), and unknown accounts receive the same generic response as real ones.
+
+Residual gaps after this pass: per-process rate limiting (no shared store), optional admin MFA, **no SMS delivery** (email only), no payments, image storage is a single local directory — with more than one app instance you need object storage/CDN, and there is no virus scanning or EXIF stripping — and a SQLite-only datasource with no committed migration history.
+
+---
+
+## Hardening additions (row-level security, request guarding, jobs, step-up, env)
+
+Five controls were added on top of the above. Full rationale, the bugs found
+while building them, and their verification status are in
+[`HARDENING.md`](HARDENING.md). Summary:
+
+| Control | Where | Enforced by |
+| --- | --- | --- |
+| Tenant isolation (row-level security) | `src/lib/tenant.ts`, `prisma/rls/policies.sql` | `requireMerchantAccess` throws; classification test blocks an unclassified tenant table |
+| Request interception | `src/proxy.ts` | Blocks `.env`/VCS/dump paths with 404; `415` on unparseable body types |
+| Request error catching | `src/lib/api-handler.ts`, `src/lib/api-errors.ts` | Unhandled throws become JSON with a correlation id; non-`ApiError` messages never reach the client |
+| Response caching | `src/lib/http-cache.ts` | Nothing is cacheable unless a policy is named; a session cookie forces `no-store` |
+| Async jobs | `src/lib/jobs.ts`, `/api/jobs/worker` | Conditional-update claim, bounded retries, dead-letter, stuck-job requeue |
+| Re-authentication | `src/lib/reauth.ts`, `/api/auth/reauthenticate` | 15-minute per-session password proof for session revocation, MFA enablement, API-key lifecycle |
+| Environment files | `.gitignore`, `src/lib/env.ts`, proxy | Not committed, not in `public/`, not read by routes, not bundled into client JS |
+
+**Known gaps, stated plainly:**
+
+- `prisma/rls/policies.sql` is **written but never executed** — the datasource is
+  SQLite, which has no row-level security. The application guard is the only
+  enforcement today. Apply and verify the SQL against PostgreSQL with the
+  queries at the end of that file before relying on it.
+- `withApiHandler` is applied to the new endpoints. Existing routes still return
+  their own error responses; migrating them is mechanical but must be done
+  route-by-route with the full suite run between batches.

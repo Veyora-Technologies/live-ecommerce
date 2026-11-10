@@ -3,7 +3,7 @@ import { useState } from "react";
 import { formatNaira } from "@/lib/utils";
 import { parseMajorAmountToMinor } from "@/lib/money";
 
-export default function RequestsClient({ myRequests, openDemand }: any){
+export default function RequestsClient({ myRequests }: any){
   const [productName,setPN]=useState("");
   const [category,setCat]=useState("");
   const [area,setArea]=useState("Wuse");

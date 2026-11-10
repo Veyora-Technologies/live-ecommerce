@@ -22,7 +22,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const policyCheck = await requirePolicyAcceptances({ userId: user.id, keys: ["PLATFORM_TERMS", "PRIVACY_NOTICE", "CONSUMER_TERMS"] });
-  if (!policyCheck.allowed) return NextResponse.json({ error: policyCheck.message || "Review Live policies before requesting an appointment.", code: policyCheck.code, missingPolicies: policyCheck.missing, policyUrl: "/legal" }, { status: policyCheck.code === "LEGAL_RELEASE_GATE" ? 503 : 428 });
+  if (!policyCheck.allowed) return NextResponse.json({ error: policyCheck.message || "Review Furnivo policies before requesting an appointment.", code: policyCheck.code, missingPolicies: policyCheck.missing, policyUrl: "/legal" }, { status: policyCheck.code === "LEGAL_RELEASE_GATE" ? 503 : 428 });
   const parsed = bookingSchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: parsed.error.issues[0]?.message || "Invalid appointment request" }, { status: 400 });
   const { startTime, endTime } = parsed.data;

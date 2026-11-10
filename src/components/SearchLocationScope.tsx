@@ -55,7 +55,7 @@ export default function SearchLocationScope({ initialCodes = [], initialScope = 
     </select>
 
     {scope === "nationwide" && <p className="live-scope-explainer">Search records within {marketName}. This is not a claim that every area has listings.</p>}
-    {scope === "nearby" && <p className="live-scope-explainer" role="status">Nearby search is not available. Live does not have sufficiently verified, consented location and routing data. Use a selected area or nationwide scope.</p>}
+    {scope === "nearby" && <p className="live-scope-explainer" role="status">Nearby search is not available. Furnivo does not have sufficiently verified, consented location and routing data. Use a selected area or nationwide scope.</p>}
 
     {(scope === "admin" || scope === "locality") && <div className="live-scope-location-control">
       <GeographyPicker countryCode={marketCode} fieldName="locationCode" initialCode={codes[0] || null} emptyLabel={`Select an area in ${marketName}`} onSelectionChange={(location) => updateCode(0, location?.code || "")} />
